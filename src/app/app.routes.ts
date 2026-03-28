@@ -1,13 +1,9 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './pages/home.component';
-import { WeatherPageComponent } from './pages/weather.component';
-import { ElectricityPageComponent } from './pages/electricity.component';
-import { GithubPageComponent } from './pages/github.component';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'weather', component: WeatherPageComponent },
-  { path: 'electricity', component: ElectricityPageComponent },
-  { path: 'github', component: GithubPageComponent },
+  { path: '', loadComponent: () => import('./pages/home.component').then(m => m.HomeComponent) },
+  { path: 'weather', loadComponent: () => import('./pages/weather.component').then(m => m.WeatherPageComponent) },
+  { path: 'electricity', loadComponent: () => import('./pages/electricity.component').then(m => m.ElectricityPageComponent) },
+  { path: 'github', loadComponent: () => import('./pages/github.component').then(m => m.GithubPageComponent) },
   { path: '**', redirectTo: '' },
 ];

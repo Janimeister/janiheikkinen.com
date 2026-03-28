@@ -223,7 +223,7 @@ interface PriceResponse {
 export class ElectricityPageComponent {
   priceData = resource({
     loader: async (): Promise<PriceResponse> => {
-      const baseUrl = isDevMode() ? '/api/porssisahko' : 'https://api.porssisahko.net';
+      const baseUrl = isDevMode() ? '/api/porssisahko' : 'https://porssisahko-proxy.janimeister.workers.dev';
       const res = await fetch(`${baseUrl}/v2/latest-prices.json`);
       if (!res.ok) throw new Error('Electricity API error');
       return res.json();
