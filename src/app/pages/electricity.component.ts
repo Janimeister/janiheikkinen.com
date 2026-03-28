@@ -1,4 +1,4 @@
-import { Component, resource, computed, ChangeDetectionStrategy, isDevMode } from '@angular/core';
+import { Component, resource, computed, ChangeDetectionStrategy, isDevMode, effect, ElementRef, inject, afterNextRender, Injector } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
@@ -126,30 +126,32 @@ interface PriceResponse {
                 <span class="text-xl">📈</span>
                 <h2 class="text-lg font-semibold text-text-primary">Price Chart (Today + Tomorrow)</h2>
               </div>
-              <div class="relative">
-                <!-- Y-axis labels -->
-                <div class="flex items-end gap-0.5 h-48">
-                  @for (bar of chartBars(); track bar.hour) {
-                    <div class="flex-1 flex flex-col items-center justify-end h-full group relative">
-                      <div class="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 bg-bg-card border border-border rounded px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity">
-                        {{ bar.hour }}: {{ bar.price.toFixed(2) }} c/kWh
-                      </div>
-                      <div class="w-full rounded-t-sm transition-all duration-300 cursor-pointer"
-                           [class]="bar.isCurrent ? 'bg-accent-primary shadow-[0_0_10px_rgba(99,102,241,0.4)]' : bar.colorClass"
-                           [style.height.%]="bar.heightPct">
-                      </div>
-                    </div>
-                  }
-                </div>
-                <!-- X-axis labels -->
-                <div class="flex mt-1">
-                  @for (bar of chartBars(); track bar.hour; let i = $index) {
-                    @if (i % 12 === 0) {
-                      <div class="text-[9px] text-text-secondary" [style.width.%]="(12 / chartBars().length) * 100">
-                        {{ bar.hour }}
+              <div class="overflow-x-auto -mx-4 px-4" #chartScroller>
+                <div class="relative" [style.min-width.px]="chartBars().length * 10">
+                  <!-- Y-axis labels -->
+                  <div class="flex items-end gap-0.5 h-48">
+                    @for (bar of chartBars(); track bar.hour) {
+                      <div class="flex-1 flex flex-col items-center justify-end h-full group relative" [attr.data-current]="bar.isCurrent || null">
+                        <div class="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 bg-bg-card border border-border rounded px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity">
+                          {{ bar.hour }}: {{ bar.price.toFixed(2) }} c/kWh
+                        </div>
+                        <div class="w-full rounded-t-sm transition-all duration-300 cursor-pointer"
+                             [class]="bar.isCurrent ? 'bg-accent-primary shadow-[0_0_10px_rgba(99,102,241,0.4)]' : bar.colorClass"
+                             [style.height.%]="bar.heightPct">
+                        </div>
                       </div>
                     }
-                  }
+                  </div>
+                  <!-- X-axis labels -->
+                  <div class="flex mt-1">
+                    @for (bar of chartBars(); track bar.hour; let i = $index) {
+                      @if (i % 12 === 0) {
+                        <div class="text-[9px] text-text-secondary" [style.width.%]="(12 / chartBars().length) * 100">
+                          {{ bar.hour }}
+                        </div>
+                      }
+                    }
+                  </div>
                 </div>
               </div>
               <!-- Legend -->
@@ -221,6 +223,24 @@ interface PriceResponse {
   `,
 })
 export class ElectricityPageComponent {
+  private el = inject(ElementRef);
+  private injector = inject(Injector);
+
+  constructor() {
+    effect(() => {
+      const bars = this.chartBars();
+      if (!bars.length || !bars.some(b => b.isCurrent)) return;
+      afterNextRender(() => {
+        const scroller = this.el.nativeElement.querySelector('[data-current]')?.closest('.overflow-x-auto');
+        const currentBar = scroller?.querySelector('[data-current]') as HTMLElement | null;
+        if (scroller && currentBar) {
+          const scrollLeft = currentBar.offsetLeft - scroller.clientWidth / 2 + currentBar.offsetWidth / 2;
+          scroller.scrollTo({ left: scrollLeft, behavior: 'instant' });
+        }
+      }, { injector: this.injector });
+    });
+  }
+
   priceData = resource({
     loader: async (): Promise<PriceResponse> => {
       const baseUrl = isDevMode() ? '/api/porssisahko' : 'https://porssisahko-proxy.janimeister.workers.dev';
