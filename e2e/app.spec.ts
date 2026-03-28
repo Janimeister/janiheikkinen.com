@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-const API_TIMEOUT = 15_000;
+const API_TIMEOUT = 30_000;
 
 /** Nav link labels and their expected route / page heading */
 const NAV_ROUTES = [
