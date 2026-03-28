@@ -1,0 +1,10 @@
+{
+  "/api/porssisahko": {
+    "target": "https://api.porssisahko.net",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/porssisahko": ""
+    }
+  }
+}
