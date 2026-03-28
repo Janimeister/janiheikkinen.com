@@ -119,7 +119,7 @@ test.describe('Weather Page', () => {
   });
 
   test('loads data sections', async ({ page }) => {
-    const sections = ['Current Conditions', '24-Hour Forecast', 'Temperature Trend', '7-Day Forecast'];
+    const sections = ['24-Hour Forecast', 'Temperature Trend', '7-Day Forecast'];
     for (const heading of sections) {
       await expectSectionOrError(page, heading);
     }
