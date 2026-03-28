@@ -6,7 +6,7 @@ const API_TIMEOUT = 30_000;
 
 /** Nav link labels and their expected route / page heading */
 const NAV_ROUTES = [
-  { label: 'Weather', path: '/weather', heading: 'Weather' },
+  { label: 'Weather', path: '/weather', heading: 'Weather Conditions' },
   { label: 'Electricity', path: '/electricity', heading: 'Electricity Prices' },
   { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
 ] as const;
@@ -114,12 +114,12 @@ test.describe('Weather Page', () => {
   });
 
   test('has heading and back link', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('Weather');
+    await expect(page.locator('h1')).toContainText('Weather Conditions');
     await expectBackLink(page);
   });
 
   test('loads data sections', async ({ page }) => {
-    const sections = ['Current Conditions', '24-Hour Forecast', 'Temperature Trend', '7-Day Forecast'];
+    const sections = ['Today', '24-Hour Forecast', 'Temperature Trend', '7-Day Forecast'];
     for (const heading of sections) {
       await expectSectionOrError(page, heading);
     }
