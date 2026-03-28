@@ -1,4 +1,4 @@
-import { Component, resource, computed, ChangeDetectionStrategy, isDevMode, effect, ElementRef, inject, afterNextRender, Injector } from '@angular/core';
+import { Component, resource, computed, signal, ChangeDetectionStrategy, isDevMode, effect, ElementRef, inject, afterNextRender, Injector } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
@@ -126,31 +126,42 @@ interface PriceResponse {
                 <span class="text-xl">📈</span>
                 <h2 class="text-lg font-semibold text-text-primary">Price Chart (Today + Tomorrow)</h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4" #chartScroller>
-                <div class="relative" [style.min-width.px]="chartBars().length * 10">
-                  <!-- Y-axis labels -->
-                  <div class="flex items-end gap-0.5 h-48">
-                    @for (bar of chartBars(); track bar.hour) {
-                      <div class="flex-1 flex flex-col items-center justify-end h-full group relative" [attr.data-current]="bar.isCurrent || null">
-                        <div class="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 bg-bg-card border border-border rounded px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity">
-                          {{ bar.hour }}: {{ bar.price.toFixed(2) }} c/kWh
-                        </div>
-                        <div class="w-full rounded-t-sm transition-all duration-300 cursor-pointer"
-                             [class]="bar.isCurrent ? 'bg-accent-primary shadow-[0_0_10px_rgba(99,102,241,0.4)]' : bar.colorClass"
-                             [style.height.%]="bar.heightPct">
-                        </div>
-                      </div>
-                    }
-                  </div>
-                  <!-- X-axis labels -->
-                  <div class="flex mt-1">
-                    @for (bar of chartBars(); track bar.hour; let i = $index) {
-                      @if (i % 12 === 0) {
-                        <div class="text-[9px] text-text-secondary" [style.width.%]="(12 / chartBars().length) * 100">
-                          {{ bar.hour }}
+              <div class="flex">
+                <!-- Y-axis (outside scroll container) -->
+                <div class="flex flex-col justify-between h-48 pr-1.5 shrink-0 mt-8">
+                  @for (tick of yAxisTicks(); track $index) {
+                    <span class="text-[9px] text-text-secondary leading-none text-right font-mono">{{ tick }}</span>
+                  }
+                </div>
+                <!-- Scrollable chart -->
+                <div class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4" #chartScroller (click)="activeBarIdx.set(null)">
+                  <div [style.min-width.px]="chartBars().length * 10" class="pt-8">
+                    <div class="flex items-end gap-0.5 h-48">
+                      @for (bar of chartBars(); track bar.hour; let i = $index) {
+                        <div class="flex-1 flex flex-col items-center justify-end h-full group relative"
+                             (click)="onBarClick($event, i)"
+                             [attr.data-current]="bar.isCurrent || null">
+                          <div class="absolute bottom-full mb-1 bg-bg-card border border-border rounded px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100"
+                               [style.opacity]="activeBarIdx() === i ? 1 : null">
+                            {{ bar.hour }}: {{ bar.price.toFixed(2) }} c/kWh
+                          </div>
+                          <div class="w-full rounded-t-sm transition-all duration-300 cursor-pointer"
+                               [class]="bar.isCurrent ? 'bg-accent-primary shadow-[0_0_10px_rgba(99,102,241,0.4)]' : bar.colorClass"
+                               [style.height.%]="bar.heightPct">
+                          </div>
                         </div>
                       }
-                    }
+                    </div>
+                    <!-- X-axis labels -->
+                    <div class="flex mt-1">
+                      @for (bar of chartBars(); track bar.hour; let i = $index) {
+                        @if (i % 12 === 0) {
+                          <div class="text-[9px] text-text-secondary" [style.width.%]="(12 / chartBars().length) * 100">
+                            {{ bar.hour }}
+                          </div>
+                        }
+                      }
+                    </div>
                   </div>
                 </div>
               </div>
@@ -225,6 +236,7 @@ interface PriceResponse {
 export class ElectricityPageComponent {
   private el = inject(ElementRef);
   private injector = inject(Injector);
+  activeBarIdx = signal<number | null>(null);
 
   constructor() {
     effect(() => {
@@ -307,16 +319,30 @@ export class ElectricityPageComponent {
     return { avg, min: minVal, max: maxVal, cheapestHour: fmtHour(cheapest), priciestHour: fmtHour(priciest) };
   });
 
+  private chartMax = computed(() => {
+    const prices = this.sortedPrices();
+    if (!prices.length) return 1;
+    return Math.ceil(Math.max(...prices.map(p => p.price), 1));
+  });
+
+  yAxisTicks = computed(() => {
+    const max = this.chartMax();
+    const tickCount = 5;
+    return Array.from({ length: tickCount }, (_, i) =>
+      +((max * (tickCount - 1 - i)) / (tickCount - 1)).toFixed(1)
+    );
+  });
+
   chartBars = computed(() => {
     const prices = this.sortedPrices();
     if (!prices.length) return [];
     const curIdx = this.currentIdx();
-    const maxP = Math.max(...prices.map(p => Math.abs(p.price)), 1);
+    const maxP = this.chartMax();
 
     return prices.map((p, i) => ({
       hour: new Date(p.startDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
       price: p.price,
-      heightPct: Math.max(3, (Math.max(0, p.price) / maxP) * 95),
+      heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
       isCurrent: i === curIdx,
       colorClass: p.price < 5 ? 'bg-emerald-500/60' : p.price < 10 ? 'bg-amber-500/60' : 'bg-red-500/60',
     }));
@@ -352,6 +378,11 @@ export class ElectricityPageComponent {
     if (price < 5) return 'bg-emerald-400';
     if (price < 10) return 'bg-amber-400';
     return 'bg-red-400';
+  }
+
+  onBarClick(event: Event, i: number) {
+    event.stopPropagation();
+    this.activeBarIdx.set(this.activeBarIdx() === i ? null : i);
   }
 
   priceLevel(price: number): string {

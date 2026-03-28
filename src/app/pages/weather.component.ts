@@ -98,7 +98,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
             Back to Home
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-sky-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">{{ locationName() }} Weather</span>
+            <span class="bg-gradient-to-r from-sky-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">Weather Conditions</span>
           </h1>
           <p class="text-text-secondary mt-2">Detailed forecast from Open-Meteo • Updated every 15 minutes</p>
           <!-- Location search -->
@@ -143,7 +143,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">📍</span>
-                  <h2 class="text-lg font-semibold text-text-primary">Current Conditions</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ locationName() }} Weather</h2>
                 </div>
                 <div class="flex items-center gap-6 mb-6">
                   <span class="text-7xl md:text-8xl">{{ weatherInfo(data.current.weather_code).icon }}</span>
