@@ -143,7 +143,10 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">📍</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ locationName() }} Weather</h2>
+                  <div>
+                    <h2 class="text-lg font-semibold text-text-primary">Current Conditions</h2>
+                    <div class="text-sm text-text-secondary">{{ locationName() }}</div>
+                  </div>
                 </div>
                 <div class="flex items-center gap-6 mb-6">
                   <span class="text-7xl md:text-8xl">{{ weatherInfo(data.current.weather_code).icon }}</span>
