@@ -20,7 +20,7 @@ const SOCIAL_LINKS = [
 
 /** Assert that a section heading OR a fallback error is visible (for API-driven pages) */
 async function expectSectionOrError(page: Page, headingText: string) {
-  const section = page.locator('h2', { hasText: headingText });
+  const section = page.locator(':is(h1, h2)', { hasText: headingText });
   const error = page.locator('.text-red-400');
   await expect(section.or(error).first()).toBeVisible({ timeout: API_TIMEOUT });
 }
@@ -119,7 +119,7 @@ test.describe('Weather Page', () => {
   });
 
   test('loads data sections', async ({ page }) => {
-    const sections = ['24-Hour Forecast', 'Temperature Trend', '7-Day Forecast'];
+    const sections = ['Weather Conditions', '24-Hour Forecast', 'Temperature Trend', '7-Day Forecast'];
     for (const heading of sections) {
       await expectSectionOrError(page, heading);
     }
