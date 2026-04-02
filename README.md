@@ -1,59 +1,80 @@
-# JaniheikkinenCom
+# janiheikkinen.com
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.5.
+Personal portfolio and dashboard site built with Angular 21, Tailwind CSS 4, and TypeScript.
 
-## Development server
+## Tech Stack
 
-To start a local development server, run:
+| Layer | Technology |
+|---|---|
+| Framework | [Angular 21](https://angular.dev) (standalone components, signals) |
+| Language | [TypeScript 5.9](https://www.typescriptlang.org) |
+| Build tool | [Vite](https://vite.dev) via `@angular/build` |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com) via `@tailwindcss/postcss` |
+| Routing | Angular Router with lazy-loaded page components |
+| Data fetching | Angular `resource()` API |
+| E2E testing | [Playwright](https://playwright.dev) |
 
-```bash
-ng serve
+## Architecture
+
+```
+src/app/
+├── pages/              # Routed page components
+│   ├── home            # Landing page
+│   ├── weather         # Weather data (Open-Meteo API)
+│   ├── electricity     # Electricity prices (api.porssisahko.net)
+│   └── github          # GitHub activity (GitHub REST API)
+├── components/
+│   ├── hero/           # Hero section with particle canvas and typing effect
+│   ├── navbar/         # Top navigation bar
+│   ├── footer/         # Site footer
+│   ├── shared/         # GlowCardComponent, FloatingOrbComponent
+│   └── cookie-notice/  # Cookie consent banner
+├── app.routes.ts       # Route definitions
+└── app.config.ts       # Application configuration
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Theme tokens and animation keyframes are centralized in `src/styles.css`.
 
-## Code scaffolding
+## External APIs
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+| Page | API | Notes |
+|---|---|---|
+| Weather | [Open-Meteo](https://open-meteo.com) | Free, no key required |
+| Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Proxied via dev server to avoid CORS |
+| GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
 
-```bash
-ng generate component component-name
-```
+## Commands
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Development server
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Start the dev server with the proxy configuration (required for the Electricity API):
 
 ```bash
-ng build
+npx ng serve --port 4200
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Open `http://localhost:4200/` in your browser. The app reloads automatically on file changes.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Production build
 
 ```bash
-ng test
+npx ng build
 ```
 
-## Running end-to-end tests
+Build artifacts are written to the `dist/` directory.
 
-For end-to-end (e2e) testing, run:
+### Watch mode (development build)
 
 ```bash
-ng e2e
+npm run watch
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### End-to-end tests
 
-## Additional Resources
+Playwright tests cover navigation, page structure, and API data loading:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+npx playwright test
+```
+
+Tests run against a local dev server that Playwright starts automatically. HTML reports are written to `playwright-report/`.
