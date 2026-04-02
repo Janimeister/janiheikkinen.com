@@ -18,19 +18,19 @@ Personal portfolio and dashboard site built with Angular 21, Tailwind CSS 4, and
 
 ```
 src/app/
-├── pages/              # Routed page components
-│   ├── home            # Landing page
-│   ├── weather         # Weather data (Open-Meteo API)
-│   ├── electricity     # Electricity prices (api.porssisahko.net)
-│   └── github          # GitHub activity (GitHub REST API)
+├── pages/                   # Routed page components
+│   ├── home.component.ts        # Landing page
+│   ├── weather.component.ts     # Weather data (Open-Meteo API)
+│   ├── electricity.component.ts # Electricity prices (api.porssisahko.net)
+│   └── github.component.ts      # GitHub activity (GitHub REST API)
 ├── components/
-│   ├── hero/           # Hero section with particle canvas and typing effect
-│   ├── navbar/         # Top navigation bar
-│   ├── footer/         # Site footer
-│   ├── shared/         # GlowCardComponent, FloatingOrbComponent
-│   └── cookie-notice/  # Cookie consent banner
-├── app.routes.ts       # Route definitions
-└── app.config.ts       # Application configuration
+│   ├── hero/                # Hero section with particle canvas and typing effect
+│   ├── navbar/              # Top navigation bar
+│   ├── footer/              # Site footer
+│   ├── shared/              # GlowCardComponent, FloatingOrbComponent
+│   └── cookie-notice/       # Cookie consent banner
+├── app.routes.ts            # Route definitions
+└── app.config.ts            # Application configuration
 ```
 
 Theme tokens and animation keyframes are centralized in `src/styles.css`.
