@@ -40,7 +40,7 @@ Theme tokens and animation keyframes are centralized in `src/styles.css`.
 | Page | API | Notes |
 |---|---|---|
 | Weather | [Open-Meteo](https://open-meteo.com) | Free, no key required |
-| Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Proxied via dev server to avoid CORS |
+| Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Dev: proxied via `proxy.conf.json`; Prod: routed through a Cloudflare Worker (`porssisahko-proxy.janimeister.workers.dev`) |
 | GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
 
 ## Commands
