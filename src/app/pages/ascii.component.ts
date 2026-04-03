@@ -3,8 +3,10 @@ import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 
+type AlgorithmId = 'plasma' | 'mandelbrot' | 'waves' | 'spiral' | 'terrain';
+
 interface ArtAlgorithm {
-  id: string;
+  id: AlgorithmId;
   label: string;
   icon: string;
 }
@@ -18,7 +20,6 @@ const ASPECT_CORRECTION = 0.5;
 
 @Component({
   selector: 'app-ascii-art-page',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
@@ -100,7 +101,7 @@ export class AsciiArtPageComponent implements OnDestroy {
     { id: 'terrain', label: 'Terrain', icon: '⛰️' },
   ];
 
-  readonly currentAlgorithm = signal('plasma');
+  readonly currentAlgorithm = signal<AlgorithmId>('plasma');
   readonly displayText = signal('');
   readonly isAnimating = signal(false);
 
@@ -116,7 +117,7 @@ export class AsciiArtPageComponent implements OnDestroy {
     }
   }
 
-  selectAlgorithm(id: string): void {
+  selectAlgorithm(id: AlgorithmId): void {
     this.currentAlgorithm.set(id);
     this.generate();
   }
@@ -135,7 +136,7 @@ export class AsciiArtPageComponent implements OnDestroy {
     this.isAnimating.set(true);
     const centerR = ROWS / 2;
     const centerC = COLS / 2;
-    const maxDist = Math.sqrt(centerR * centerR + centerC * centerC);
+    const maxDist = Math.sqrt(centerR * centerR + (centerC * ASPECT_CORRECTION) ** 2);
     const startTime = performance.now();
 
     // Pre-compute delay for each cell (radial wave from center)
@@ -178,7 +179,7 @@ export class AsciiArtPageComponent implements OnDestroy {
 
   // ── Grid generation ──────────────────────────────────────────────────
 
-  private generateGrid(algorithm: string): string[][] {
+  private generateGrid(algorithm: AlgorithmId): string[][] {
     const seed = Math.random() * 1000;
     switch (algorithm) {
       case 'mandelbrot':

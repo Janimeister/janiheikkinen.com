@@ -195,17 +195,23 @@ test.describe('ASCII Page', () => {
   test('generates ASCII art on load', async ({ page }) => {
     const pre = page.locator('pre.ascii-art');
     await expect(pre).toBeVisible();
-    // Wait for animation to complete and art to appear
-    await expect(pre).not.toHaveText('', { timeout: API_TIMEOUT });
+    // Wait for animation to complete and visible art to appear
+    await expect(pre).toHaveText(/\S/, { timeout: API_TIMEOUT });
   });
 
   test('generates new art when algorithm is changed', async ({ page }) => {
     const pre = page.locator('pre.ascii-art');
-    // Wait for initial art
-    await expect(pre).not.toHaveText('', { timeout: API_TIMEOUT });
+    // Wait for initial visible art
+    await expect(pre).toHaveText(/\S/, { timeout: API_TIMEOUT });
+    const initialArt = (await pre.textContent())?.trim() ?? '';
+
     // Click a different algorithm
     await page.click('button:has-text("Mandelbrot")');
-    // Art should still be present after switching
-    await expect(pre).toBeVisible();
+
+    // Art should be regenerated and remain non-whitespace after switching
+    await expect(pre).toHaveText(/\S/, { timeout: 15_000 });
+    await expect
+      .poll(async () => ((await pre.textContent())?.trim() ?? ''), { timeout: 15_000 })
+      .not.toBe(initialArt);
   });
 });
