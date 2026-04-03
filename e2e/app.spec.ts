@@ -9,6 +9,7 @@ const NAV_ROUTES = [
   { label: 'Weather', path: '/weather', heading: 'Weather Conditions' },
   { label: 'Electricity', path: '/electricity', heading: 'Electricity Prices' },
   { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
+  { label: 'ASCII', path: '/ascii', heading: 'ASCII Art' },
 ] as const;
 
 /** Social link expectations */
@@ -167,5 +168,44 @@ test.describe('GitHub Page', () => {
     for (const heading of sections) {
       await expectSectionOrError(page, heading);
     }
+  });
+});
+
+test.describe('ASCII Page', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/ascii');
+  });
+
+  test('has heading and back link', async ({ page }) => {
+    await expect(page.locator('h1')).toContainText('ASCII Art');
+    await expectBackLink(page);
+  });
+
+  test('displays algorithm selector buttons', async ({ page }) => {
+    const algorithms = ['Plasma', 'Mandelbrot', 'Waves', 'Galaxy', 'Terrain'];
+    for (const algo of algorithms) {
+      await expect(page.locator('button', { hasText: algo })).toBeVisible();
+    }
+  });
+
+  test('displays generate button', async ({ page }) => {
+    await expect(page.locator('button', { hasText: 'Generate' })).toBeVisible();
+  });
+
+  test('generates ASCII art on load', async ({ page }) => {
+    const pre = page.locator('pre.ascii-art');
+    await expect(pre).toBeVisible();
+    // Wait for animation to complete and art to appear
+    await expect(pre).not.toHaveText('', { timeout: API_TIMEOUT });
+  });
+
+  test('generates new art when algorithm is changed', async ({ page }) => {
+    const pre = page.locator('pre.ascii-art');
+    // Wait for initial art
+    await expect(pre).not.toHaveText('', { timeout: API_TIMEOUT });
+    // Click a different algorithm
+    await page.click('button:has-text("Mandelbrot")');
+    // Art should still be present after switching
+    await expect(pre).toBeVisible();
   });
 });

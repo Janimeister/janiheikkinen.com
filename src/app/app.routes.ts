@@ -5,5 +5,6 @@ export const routes: Routes = [
   { path: 'weather', loadComponent: () => import('./pages/weather.component').then(m => m.WeatherPageComponent) },
   { path: 'electricity', loadComponent: () => import('./pages/electricity.component').then(m => m.ElectricityPageComponent) },
   { path: 'github', loadComponent: () => import('./pages/github.component').then(m => m.GithubPageComponent) },
+  { path: 'ascii', loadComponent: () => import('./pages/ascii.component').then(m => m.AsciiPageComponent) },
   { path: '**', redirectTo: '' },
 ];
