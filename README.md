@@ -22,7 +22,8 @@ src/app/
 │   ├── home.component.ts        # Landing page
 │   ├── weather.component.ts     # Weather data (Open-Meteo API)
 │   ├── electricity.component.ts # Electricity prices (api.porssisahko.net)
-│   └── github.component.ts      # GitHub activity (GitHub REST API)
+│   ├── github.component.ts      # GitHub activity (GitHub REST API)
+│   └── ascii.component.ts       # Procedural ASCII art generator
 ├── components/
 │   ├── hero/                # Hero section with particle canvas and typing effect
 │   ├── navbar/              # Top navigation bar
@@ -42,6 +43,18 @@ Theme tokens and animation keyframes are centralized in `src/styles.css`.
 | Weather | [Open-Meteo](https://open-meteo.com) | Free, no key required |
 | Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Dev: proxied via `proxy.conf.json`; Prod: routed through a Cloudflare Worker (`porssisahko-proxy.janimeister.workers.dev`) |
 | GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
+
+## ASCII Art Page
+
+The `/ascii` page procedurally generates ASCII art using five algorithms:
+
+- **Plasma** — layered sine waves producing organic flowing patterns
+- **Mandelbrot** — fractal with randomized zoom into interesting regions
+- **Wave Interference** — multiple point sources creating moiré patterns
+- **Spiral Galaxy** — logarithmic arms with bright center and star field
+- **Terrain** — mountain landscape with moon, stars, trees, and water
+
+Characters reveal via a smooth radial wave animation from center outward. Each generation uses a random seed for unique results.
 
 ## Commands
 

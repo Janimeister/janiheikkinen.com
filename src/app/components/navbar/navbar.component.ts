@@ -48,6 +48,7 @@ export class NavbarComponent {
     { label: 'Weather', route: '/weather' },
     { label: 'Electricity', route: '/electricity' },
     { label: 'GitHub', route: '/github' },
+    { label: 'ASCII', route: '/ascii' },
   ];
 
   onScroll() {
