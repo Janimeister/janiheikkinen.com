@@ -13,9 +13,11 @@ const CHAR_RAMP = ' .·:;=+*#%@';
 const COLS = 80;
 const ROWS = 35;
 const REVEAL_DURATION = 2000;
+/** Aspect ratio correction: characters are ~2× taller than wide */
+const ASPECT_CORRECTION = 0.5;
 
 @Component({
-  selector: 'app-ascii-page',
+  selector: 'app-ascii-art-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
@@ -89,7 +91,7 @@ const REVEAL_DURATION = 2000;
     }
   `,
 })
-export class AsciiPageComponent implements OnDestroy {
+export class AsciiArtPageComponent implements OnDestroy {
   readonly algorithms: ArtAlgorithm[] = [
     { id: 'plasma', label: 'Plasma', icon: '🌊' },
     { id: 'mandelbrot', label: 'Mandelbrot', icon: '🔬' },
@@ -102,14 +104,16 @@ export class AsciiPageComponent implements OnDestroy {
   readonly displayText = signal('');
   readonly isAnimating = signal(false);
 
-  private animationFrameId = 0;
+  private animationFrameId: number | null = null;
 
   constructor() {
     afterNextRender(() => this.generate());
   }
 
   ngOnDestroy(): void {
-    cancelAnimationFrame(this.animationFrameId);
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
   }
 
   selectAlgorithm(id: string): void {
@@ -118,7 +122,9 @@ export class AsciiPageComponent implements OnDestroy {
   }
 
   generate(): void {
-    cancelAnimationFrame(this.animationFrameId);
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
     const grid = this.generateGrid(this.currentAlgorithm());
     this.animateReveal(grid);
   }
@@ -137,7 +143,7 @@ export class AsciiPageComponent implements OnDestroy {
     for (let r = 0; r < ROWS; r++) {
       delays[r] = [];
       for (let c = 0; c < COLS; c++) {
-        const dist = Math.sqrt((r - centerR) ** 2 + ((c - centerC) * 0.5) ** 2);
+        const dist = Math.sqrt((r - centerR) ** 2 + ((c - centerC) * ASPECT_CORRECTION) ** 2);
         delays[r][c] = (dist / maxDist) * REVEAL_DURATION;
       }
     }
@@ -193,6 +199,12 @@ export class AsciiPageComponent implements OnDestroy {
     return CHAR_RAMP[idx];
   }
 
+  /** Hash-based PRNG returning a value in [0, 1) for pseudo-random patterns */
+  private hashNoise(x: number, y: number, seed: number): number {
+    const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
+    return n - Math.floor(n);
+  }
+
   // ── Algorithms ───────────────────────────────────────────────────────
 
   private generatePlasma(seed: number): string[][] {
@@ -218,6 +230,7 @@ export class AsciiPageComponent implements OnDestroy {
         v += Math.sin(Math.sqrt(x * x + y * y) / s4 + p4);
         v += Math.sin(x * Math.cos(p1 * 0.3) + y * Math.sin(p2 * 0.3)) * 0.5;
         v += Math.cos(Math.sqrt((x - 5) ** 2 + (y - 5) ** 2) * 1.5 + p3) * 0.4;
+        // Normalize sum of ~6 sine components (range ≈ ±5.9) to [0, 1]
         v = (v + 5.9) / 11.8;
         grid[r][c] = this.charFromValue(v);
       }
@@ -244,7 +257,8 @@ export class AsciiPageComponent implements OnDestroy {
       grid[r] = [];
       for (let c = 0; c < COLS; c++) {
         const x0 = region.x + ((c - COLS / 2) / (region.zoom * 10)) * 2;
-        const y0 = region.y + ((r - ROWS / 2) / (region.zoom * 10)) * 2 * (COLS / ROWS / 2);
+        // Correct aspect ratio: COLS/ROWS compensates for character cell proportions
+        const y0 = region.y + ((r - ROWS / 2) / (region.zoom * 10)) * (COLS / ROWS);
 
         let x = 0,
           y = 0,
@@ -329,9 +343,9 @@ export class AsciiPageComponent implements OnDestroy {
         // Bright galactic center
         v += Math.exp(-dist * dist * 10) * 0.9;
 
-        // Star field
-        const noise = Math.sin(c * 12.9898 + r * 78.233 + seed) * 43758.5453;
-        if (noise - Math.floor(noise) > 0.96) v += 0.25;
+        // Star field (hash-based PRNG)
+        const noise = this.hashNoise(c, r, seed);
+        if (noise > 0.96) v += 0.25;
 
         grid[r][c] = this.charFromValue(Math.min(v, 1));
       }
@@ -385,13 +399,11 @@ export class AsciiPageComponent implements OnDestroy {
         }
 
         if (yNorm < 0.12) {
-          // Stars
-          const sn = Math.sin(c * 12.9898 + r * 78.233 + seed) * 43758.5453;
-          grid[r][c] = sn - Math.floor(sn) > 0.94 ? '·' : ' ';
+          // Stars (hash-based PRNG for pseudo-random placement)
+          grid[r][c] = this.hashNoise(c, r, seed) > 0.94 ? '·' : ' ';
         } else if (yNorm < bgLine) {
           // Open sky
-          const sn = Math.sin(c * 12.9898 + r * 78.233 + seed) * 43758.5453;
-          grid[r][c] = sn - Math.floor(sn) > 0.97 ? '·' : ' ';
+          grid[r][c] = this.hashNoise(c, r, seed) > 0.97 ? '·' : ' ';
         } else if (yNorm < fgLine) {
           // Background mountains
           const depth = (yNorm - bgLine) / (fgLine - bgLine);
@@ -403,8 +415,7 @@ export class AsciiPageComponent implements OnDestroy {
 
           // Trees near the terrain line
           if (depth < 0.18) {
-            const tn = Math.sin(c * 5.7 + seed * 2) * 43758.5453;
-            if (tn - Math.floor(tn) > 0.6) {
+            if (this.hashNoise(c, 0, seed * 2) > 0.6) {
               grid[r][c] = depth < 0.06 ? '^' : '|';
             }
           }
