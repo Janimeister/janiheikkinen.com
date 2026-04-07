@@ -450,8 +450,8 @@ export class AsciiArtPageComponent implements OnDestroy {
 
   /**
    * Lightweight reaction-diffusion approximation.
-   * Seeds random activator blobs, then iterates a blur-sharpen-threshold loop
-   * to grow organic coral / lichen structures.
+   * Seeds random activator blobs, then iterates a blur → diffusion/reaction → clamp
+   * loop to grow organic coral / lichen structures.
    */
   private generateCoral(seed: number): string[][] {
     // Initialise a scalar field with seed-driven blobs
@@ -521,18 +521,20 @@ export class AsciiArtPageComponent implements OnDestroy {
     return f;
   }
 
-  /** Simple 3×3 box blur on a 2D field (COLS×ROWS) */
+  /** Simple 3×3 box blur on a 2D field, deriving dimensions from the input */
   private blurField(field: number[][]): number[][] {
-    const out = this.createField(COLS, ROWS, 0);
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
+    const rows = field.length;
+    const cols = rows > 0 ? field[0].length : 0;
+    const out = this.createField(cols, rows, 0);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
         let sum = 0;
         let count = 0;
         for (let dr = -1; dr <= 1; dr++) {
           for (let dc = -1; dc <= 1; dc++) {
             const nr = r + dr;
             const nc = c + dc;
-            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
               sum += field[nr][nc];
               count++;
             }
