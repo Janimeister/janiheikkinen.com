@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 
-type AlgorithmId = 'plasma' | 'mandelbrot' | 'waves' | 'spiral' | 'terrain';
+type AlgorithmId = 'plasma' | 'mandelbrot' | 'waves' | 'spiral' | 'terrain' | 'coral' | 'windlines' | 'island';
 
 interface ArtAlgorithm {
   id: AlgorithmId;
@@ -99,6 +99,9 @@ export class AsciiArtPageComponent implements OnDestroy {
     { id: 'waves', label: 'Waves', icon: '🌀' },
     { id: 'spiral', label: 'Galaxy', icon: '🌌' },
     { id: 'terrain', label: 'Terrain', icon: '⛰️' },
+    { id: 'coral', label: 'Coral Bloom', icon: '🪸' },
+    { id: 'windlines', label: 'Wind Lines', icon: '💨' },
+    { id: 'island', label: 'Island Contours', icon: '🗺️' },
   ];
 
   readonly currentAlgorithm = signal<AlgorithmId>('plasma');
@@ -190,6 +193,12 @@ export class AsciiArtPageComponent implements OnDestroy {
         return this.generateSpiral(seed);
       case 'terrain':
         return this.generateTerrain(seed);
+      case 'coral':
+        return this.generateCoral(seed);
+      case 'windlines':
+        return this.generateWindLines(seed);
+      case 'island':
+        return this.generateIslandContours(seed);
       default:
         return this.generatePlasma(seed);
     }
@@ -434,6 +443,314 @@ export class AsciiArtPageComponent implements OnDestroy {
       }
     }
 
+    return grid;
+  }
+
+  // ── Coral Bloom ─────────────────────────────────────────────────────
+
+  /**
+   * Lightweight reaction-diffusion approximation.
+   * Seeds random activator blobs, then iterates a blur → diffusion/reaction → clamp
+   * loop to grow organic coral / lichen structures.
+   */
+  private generateCoral(seed: number): string[][] {
+    // Initialise a scalar field with seed-driven blobs
+    let field = this.createField(COLS, ROWS, 0);
+    const numBlobs = 5 + Math.floor(Math.abs(Math.sin(seed * 4.7)) * 6);
+    for (let i = 0; i < numBlobs; i++) {
+      const bx = Math.floor(this.hashNoise(i, 0, seed) * COLS);
+      const by = Math.floor(this.hashNoise(0, i, seed) * ROWS);
+      const br = 2 + this.hashNoise(i, i, seed) * 4;
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const dx = c - bx;
+          const dy = (r - by) * 2; // aspect correction
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < br) field[r][c] += (1 - d / br) * 0.8;
+        }
+      }
+    }
+
+    // Add low-frequency sine variation for spatial interest
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        field[r][c] += 0.25 * Math.sin(c * 0.08 + seed) * Math.cos(r * 0.15 + seed * 0.7);
+      }
+    }
+
+    // Reaction-diffusion-style iterations: blur → sharpen → threshold
+    const feedRate = 0.055 + Math.sin(seed * 2.1) * 0.015;
+    const killRate = 0.062 + Math.cos(seed * 1.3) * 0.01;
+    const iterations = 14;
+    for (let iter = 0; iter < iterations; iter++) {
+      const blurred = this.blurField(field);
+      const next = this.createField(COLS, ROWS, 0);
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const v = field[r][c];
+          const b = blurred[r][c];
+          // Feed-kill inspired step: activator growth around mid-values
+          const reaction = v * (1 - v) * 4; // logistic-like growth
+          const diffusion = (b - v) * 0.45;
+          next[r][c] = v + diffusion + reaction * feedRate - v * killRate;
+          next[r][c] = Math.max(0, Math.min(1, next[r][c]));
+        }
+      }
+      field = next;
+    }
+
+    // Map to character grid, boosting mid-range for visible structure
+    const grid: string[][] = [];
+    for (let r = 0; r < ROWS; r++) {
+      grid[r] = [];
+      for (let c = 0; c < COLS; c++) {
+        // Apply a curve to emphasise mid-to-upper characters
+        const v = Math.pow(field[r][c], 0.6);
+        grid[r][c] = this.charFromValue(v);
+      }
+    }
+    return grid;
+  }
+
+  /** Create a 2D field filled with a constant value */
+  private createField(w: number, h: number, fill: number): number[][] {
+    const f: number[][] = [];
+    for (let r = 0; r < h; r++) {
+      f[r] = new Array<number>(w).fill(fill);
+    }
+    return f;
+  }
+
+  /** Simple 3×3 box blur on a 2D field, deriving dimensions from the input */
+  private blurField(field: number[][]): number[][] {
+    const rows = field.length;
+    const cols = rows > 0 ? field[0].length : 0;
+    const out = this.createField(cols, rows, 0);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        let sum = 0;
+        let count = 0;
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = r + dr;
+            const nc = c + dc;
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+              sum += field[nr][nc];
+              count++;
+            }
+          }
+        }
+        out[r][c] = sum / count;
+      }
+    }
+    return out;
+  }
+
+  // ── Wind Lines ──────────────────────────────────────────────────────
+
+  /**
+   * Generates a flow field from layered trig functions, then traces short
+   * streamlines through it. Renders direction with -, |, /, \ characters
+   * and density via the character ramp.
+   */
+  private generateWindLines(seed: number): string[][] {
+    const density = this.createField(COLS, ROWS, 0);
+
+    // Store dominant angle at each cell for directional character choice
+    const angles = this.createField(COLS, ROWS, 0);
+
+    // Build angle field from layered sine/cosine
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const x = c / COLS;
+        const y = r / ROWS;
+        let angle = 0;
+        angle += Math.sin(x * 6.5 + seed) * 1.2;
+        angle += Math.cos(y * 5.3 + seed * 0.8) * 1.0;
+        angle += Math.sin((x + y) * 4.1 + seed * 1.5) * 0.8;
+        angle += Math.cos((x - y) * 3.7 + seed * 2.2) * 0.6;
+        angle += Math.sin(x * 9 + y * 7 + seed * 0.3) * 0.4;
+        angles[r][c] = angle;
+      }
+    }
+
+    // Trace streamlines
+    const numLines = 600 + Math.floor(Math.abs(Math.sin(seed * 3.1)) * 200);
+    const lineLen = 15 + Math.floor(Math.abs(Math.cos(seed * 1.7)) * 10);
+
+    for (let i = 0; i < numLines; i++) {
+      let px = this.hashNoise(i, 0, seed) * COLS;
+      let py = this.hashNoise(0, i, seed) * ROWS;
+
+      for (let step = 0; step < lineLen; step++) {
+        const ci = Math.floor(px);
+        const ri = Math.floor(py);
+        if (ci < 0 || ci >= COLS || ri < 0 || ri >= ROWS) break;
+
+        density[ri][ci] += 0.3;
+
+        const angle = angles[ri][ci];
+        px += Math.cos(angle) * 0.8;
+        py += Math.sin(angle) * 0.4; // aspect correction
+      }
+    }
+
+    // Normalise density
+    let maxDen = 0;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (density[r][c] > maxDen) maxDen = density[r][c];
+      }
+    }
+    if (maxDen === 0) maxDen = 1;
+
+    // Render to character grid
+    const grid: string[][] = [];
+    // 8-octant directional chars: the pattern repeats because 0°≡180° for undirected flow
+    const dirChars = ['-', '\\', '|', '/', '-', '\\', '|', '/'];
+
+    for (let r = 0; r < ROWS; r++) {
+      grid[r] = [];
+      for (let c = 0; c < COLS; c++) {
+        const d = density[r][c] / maxDen;
+        if (d < 0.05) {
+          // Sparse area: dot or space
+          grid[r][c] = d > 0.02 ? '.' : ' ';
+        } else {
+          // Directional character for low-to-mid density, ramp char for high
+          if (d < 0.45) {
+            // Normalise angle to [0, π) so opposite directions map to the same glyph
+            const a = ((angles[r][c] % Math.PI) + Math.PI) % Math.PI;
+            const octant = Math.floor((a / Math.PI) * 8) % 8;
+            grid[r][c] = dirChars[octant];
+          } else {
+            grid[r][c] = this.charFromValue(d);
+          }
+        }
+      }
+    }
+    return grid;
+  }
+
+  // ── Island Contours ─────────────────────────────────────────────────
+
+  /**
+   * Builds a height field shaped like an island, then renders quantised
+   * contour bands with distinct line and fill characters for a
+   * topographic-map aesthetic.
+   */
+  private generateIslandContours(seed: number): string[][] {
+    // Generate height field with layered sine waves + radial island falloff
+    const height = this.createField(COLS, ROWS, 0);
+    const cx = COLS / 2 + Math.sin(seed * 1.4) * 5;
+    const cy = ROWS / 2 + Math.cos(seed * 0.9) * 2;
+
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const x = c / COLS;
+        const y = r / ROWS;
+
+        // Layered noise-like height
+        let h = 0;
+        h += Math.sin(x * 5.2 + seed) * Math.cos(y * 4.8 + seed * 0.7) * 0.35;
+        h += Math.sin(x * 9.1 + y * 7.3 + seed * 1.3) * 0.2;
+        h += Math.cos(x * 3.4 - y * 6.1 + seed * 2.1) * 0.15;
+        h += Math.sin((x + y) * 11.5 + seed * 0.5) * 0.1;
+        h += Math.sin(x * 7.7 + seed * 3.2) * Math.sin(y * 8.9 + seed * 1.8) * 0.12;
+
+        // Secondary island bump (creates archipelago feel)
+        const sx = COLS * 0.32 + Math.cos(seed * 2.5) * 6;
+        const sy = ROWS * 0.55 + Math.sin(seed * 1.1) * 3;
+        const sdx = (c - sx) / (COLS * 0.25);
+        const sdy = ((r - sy) * 2) / (ROWS * 0.25);
+        const secondaryFalloff = Math.max(0, 1 - (sdx * sdx + sdy * sdy));
+        h += secondaryFalloff * 0.45;
+
+        // Third bump for more complex coastline
+        const tx = COLS * 0.65 + Math.sin(seed * 3.1) * 5;
+        const ty = ROWS * 0.4 + Math.cos(seed * 2.3) * 3;
+        const tdx = (c - tx) / (COLS * 0.2);
+        const tdy = ((r - ty) * 2) / (ROWS * 0.2);
+        const tertiaryFalloff = Math.max(0, 1 - (tdx * tdx + tdy * tdy));
+        h += tertiaryFalloff * 0.3;
+
+        // Radial island falloff from main center
+        const dx = (c - cx) / (COLS * 0.48);
+        const dy = ((r - cy) * 2) / (ROWS * 0.48);
+        const distSq = dx * dx + dy * dy;
+        const falloff = Math.max(0, 1 - distSq);
+        h *= falloff;
+
+        // Boost and clamp
+        h = h * 2.2 + 0.25 * falloff;
+        height[r][c] = Math.max(0, Math.min(1, h));
+      }
+    }
+
+    // Render contour bands
+    const grid: string[][] = [];
+    const seaLevel = 0.18;
+    const numContours = 8;
+    // Elevation band characters, from lowest (·) to highest (@)
+    const contourChars = '·:;=+*#@';
+
+    for (let r = 0; r < ROWS; r++) {
+      grid[r] = [];
+      for (let c = 0; c < COLS; c++) {
+        const h = height[r][c];
+
+        if (h < seaLevel) {
+          // Ocean: sparse texture
+          const wave = Math.sin(c * 0.4 + r * 0.2 + seed) * 0.5 + 0.5;
+          if (h > seaLevel * 0.7) {
+            grid[r][c] = wave > 0.4 ? '~' : '·';
+          } else if (h > seaLevel * 0.3) {
+            grid[r][c] = wave > 0.75 ? '·' : ' ';
+          } else {
+            grid[r][c] = wave > 0.85 ? '·' : ' ';
+          }
+          continue;
+        }
+
+        // Land: detect contour lines (where height crosses a band boundary)
+        const landH = (h - seaLevel) / (1 - seaLevel); // normalise land to [0,1]
+        const band = landH * numContours;
+        const frac = band - Math.floor(band);
+
+        // Check neighbours for band transitions (contour line detection)
+        let isContour = false;
+        const myBand = Math.floor(band);
+        for (let dr = -1; dr <= 1 && !isContour; dr++) {
+          for (let dc = -1; dc <= 1 && !isContour; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = r + dr;
+            const nc = c + dc;
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+              const nh = height[nr][nc];
+              if (nh >= seaLevel) {
+                const nBand = Math.floor(((nh - seaLevel) / (1 - seaLevel)) * numContours);
+                if (nBand !== myBand) isContour = true;
+              } else {
+                isContour = true; // Shore line
+              }
+            }
+          }
+        }
+
+        if (isContour) {
+          // Contour lines: use band-appropriate character for elevation
+          const idx = Math.min(myBand, contourChars.length - 1);
+          grid[r][c] = contourChars[idx];
+        } else {
+          // Fill between contours: lighter char or space for map clarity
+          if (frac < 0.5) {
+            grid[r][c] = myBand > numContours * 0.7 ? '·' : ' ';
+          } else {
+            grid[r][c] = myBand > numContours * 0.7 ? ':' : '·';
+          }
+        }
+      }
+    }
     return grid;
   }
 }

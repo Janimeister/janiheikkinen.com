@@ -182,7 +182,7 @@ test.describe('ASCII Page', () => {
   });
 
   test('displays algorithm selector buttons', async ({ page }) => {
-    const algorithms = ['Plasma', 'Mandelbrot', 'Waves', 'Galaxy', 'Terrain'];
+    const algorithms = ['Plasma', 'Mandelbrot', 'Waves', 'Galaxy', 'Terrain', 'Coral Bloom', 'Wind Lines', 'Island Contours'];
     for (const algo of algorithms) {
       await expect(page.locator('button', { hasText: algo })).toBeVisible();
     }
