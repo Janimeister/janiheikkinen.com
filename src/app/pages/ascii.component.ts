@@ -604,6 +604,7 @@ export class AsciiArtPageComponent implements OnDestroy {
 
     // Render to character grid
     const grid: string[][] = [];
+    // 8-octant directional chars: the pattern repeats because 0°≡180° for undirected flow
     const dirChars = ['-', '\\', '|', '/', '-', '\\', '|', '/'];
 
     for (let r = 0; r < ROWS; r++) {
@@ -616,6 +617,7 @@ export class AsciiArtPageComponent implements OnDestroy {
         } else {
           // Directional character for low-to-mid density, ramp char for high
           if (d < 0.45) {
+            // Normalise angle to [0, π) so opposite directions map to the same glyph
             const a = ((angles[r][c] % Math.PI) + Math.PI) % Math.PI;
             const octant = Math.floor((a / Math.PI) * 8) % 8;
             grid[r][c] = dirChars[octant];
@@ -687,6 +689,7 @@ export class AsciiArtPageComponent implements OnDestroy {
     const grid: string[][] = [];
     const seaLevel = 0.18;
     const numContours = 8;
+    // Elevation band characters, from lowest (·) to highest (@)
     const contourChars = '·:;=+*#@';
 
     for (let r = 0; r < ROWS; r++) {
