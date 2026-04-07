@@ -46,13 +46,16 @@ Theme tokens and animation keyframes are centralized in `src/styles.css`.
 
 ## ASCII Art Page
 
-The `/ascii` page procedurally generates ASCII art using five algorithms:
+The `/ascii` page procedurally generates ASCII art using eight algorithms:
 
-- **Plasma** — layered sine waves producing organic flowing patterns
-- **Mandelbrot** — fractal with randomized zoom into interesting regions
-- **Wave Interference** — multiple point sources creating moiré patterns
-- **Spiral Galaxy** — logarithmic arms with bright center and star field
-- **Terrain** — mountain landscape with moon, stars, trees, and water
+- **Plasma** — four layered sine waves (horizontal, vertical, diagonal, radial) combined and normalised to `[0, 1]`, producing organic flowing colour-field patterns. Scale and phase are seeded randomly for unique results every generation.
+- **Mandelbrot** — classic Mandelbrot set iteration with smooth (continuous) colouring via escape-time logarithmic normalisation. One of six hand-picked interesting regions is chosen randomly per generation and zoomed into at varying magnification.
+- **Wave Interference** — three to five point wave sources are placed at random positions, each emitting circular sine waves with their own wavelength and phase. The superposition of all waves is normalised to `[0, 1]`, creating moiré-style interference patterns.
+- **Spiral Galaxy** — logarithmic spiral arms (2–4 arms, seeded tightness and rotation) rendered with a Gaussian arm-width kernel, a bright Gaussian galactic-centre blob, and sparse hash-noise star field.
+- **Terrain** — layered-sine heightmap for foreground and background mountain ridges, hash-noise star/tree placement, a circular moon, and a sinusoidal water surface at the bottom.
+- **Coral Bloom** — lightweight reaction-diffusion approximation: random activator blobs seed a scalar field, which is then iterated through a box-blur → logistic-growth / feed-kill → clamp loop to grow organic coral / lichen structures.
+- **Wind Lines** — a vector flow field built from layered trigonometric functions, then sampled by tracing hundreds of short streamlines through it. Sparse cells show directional characters (`-`, `|`, `/`, `\`); dense cells use the luminance ramp.
+- **Island Contours** — a height field shaped with three radially-falloff Gaussian island bumps plus layered sine noise, rendered as a topographic map: contour lines are detected by comparing each cell's elevation band against its neighbours, and each band is drawn with an elevation-appropriate character.
 
 Characters reveal via a smooth radial wave animation from center outward. Each generation uses a random seed for unique results.
 
