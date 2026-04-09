@@ -23,10 +23,11 @@ src/app/
 │   ├── weather.component.ts     # Weather data (Open-Meteo API)
 │   ├── electricity.component.ts # Electricity prices (api.porssisahko.net)
 │   ├── github.component.ts      # GitHub activity (GitHub REST API)
-│   └── ascii.component.ts       # Procedural ASCII art generator
+│   ├── ascii.component.ts       # Procedural ASCII art generator
+│   └── snake.component.ts       # Classic Snake game
 ├── components/
 │   ├── hero/                # Hero section with particle canvas and typing effect
-│   ├── navbar/              # Top navigation bar
+│   ├── navbar/              # Top navigation bar (scrollable on small screens)
 │   ├── footer/              # Site footer
 │   ├── shared/              # GlowCardComponent, FloatingOrbComponent
 │   └── cookie-notice/       # Cookie consent banner
@@ -58,6 +59,20 @@ The `/ascii` page procedurally generates ASCII art using eight algorithms:
 - **Island Contours** — a height field shaped with three radial quadratic/parabolic falloff island bumps plus layered sine noise, rendered as a topographic map: contour lines are detected by comparing each cell's elevation band against its neighbours, and each band is drawn with an elevation-appropriate character.
 
 Characters reveal via a smooth radial wave animation from centre outward. Each generation uses a random seed for unique results.
+
+## Snake Game Page
+
+The `/snake` page is a classic Snake game rendered on an HTML5 canvas, built with Angular signals and `requestAnimationFrame` for smooth gameplay.
+
+**Controls:**
+- **Desktop:** Arrow keys or WASD to steer, Space/P to pause, Enter to start/restart.
+- **Mobile:** Swipe on the canvas to change direction, or use the on-screen D-pad buttons (shown only on small screens).
+
+**Features:**
+- Progressive speed increase as the score grows (5 speed levels).
+- Persistent high score stored in `localStorage`.
+- Responsive canvas that adapts to viewport size.
+- Touch-optimised — `touch-none` canvas prevents scroll interference, dedicated D-pad for precise control on mobile.
 
 ## Commands
 
