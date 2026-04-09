@@ -99,7 +99,7 @@ export class NavbarComponent implements AfterViewInit, OnDestroy {
     { label: 'Snake', route: '/snake' },
   ];
 
-  private resizeObserver: ResizeObserver | null = null;
+  private resizeObserver: ResizeObserver | undefined;
 
   ngAfterViewInit() {
     this.checkOverflow();

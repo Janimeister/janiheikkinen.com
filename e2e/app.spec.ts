@@ -242,8 +242,9 @@ test.describe('Snake Page', () => {
 
   test('starts game when start button is clicked', async ({ page }) => {
     await page.click('[data-testid="snake-start-btn"]');
-    // Start button should disappear after the game starts
+    // Start button should disappear and game-over text should not be visible
     await expect(page.locator('[data-testid="snake-start-btn"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="snake-game-over"]')).not.toBeVisible();
   });
 
   test('shows how-to-play instructions', async ({ page }) => {
