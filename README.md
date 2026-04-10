@@ -71,7 +71,7 @@ The `/snake` page is a classic Snake game rendered on an HTML5 canvas, built wit
 **Features:**
 - Progressive speed increase as the score grows (5 speed levels).
 - Persistent high score stored in `localStorage`.
-- Responsive canvas that adapts to viewport size.
+- Fixed-size canvas for consistent gameplay and rendering.
 - Touch-optimised — `touch-none` canvas prevents scroll interference, dedicated D-pad for precise control on mobile.
 
 ## Commands

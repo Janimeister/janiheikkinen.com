@@ -106,6 +106,17 @@ interface Point {
                   </button>
                 </div>
               }
+              @if (gameState() === 'won') {
+                <div class="mt-6 text-center">
+                  <p class="text-emerald-400 text-lg font-semibold mb-2" data-testid="snake-game-won">🎉 You Win!</p>
+                  <p class="text-text-secondary text-sm mb-4">Perfect score: {{ score() }}</p>
+                  <button (click)="startGame()"
+                          data-testid="snake-restart-btn"
+                          class="px-8 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-all text-lg">
+                    Play Again
+                  </button>
+                </div>
+              }
               @if (gameState() === 'paused') {
                 <div class="mt-6 text-center">
                   <p class="text-amber-400 text-lg font-semibold mb-2">Paused</p>
@@ -215,17 +226,23 @@ export class SnakePageComponent implements OnDestroy {
   displayHeight = computed(() => this.ROWS * this.CELL_SIZE);
 
   // Game state
-  gameState = signal<'idle' | 'playing' | 'paused' | 'over'>('idle');
+  gameState = signal<'idle' | 'playing' | 'paused' | 'over' | 'won'>('idle');
   score = signal(0);
   highScore = signal(this.loadHighScore());
-  speed = computed(() => {
+  private static readonly SPEED_TIERS: readonly { minScore: number; level: number; interval: number }[] = [
+    { minScore: 50, level: 5, interval: 70 },
+    { minScore: 30, level: 4, interval: 90 },
+    { minScore: 15, level: 3, interval: 110 },
+    { minScore: 5, level: 2, interval: 130 },
+    { minScore: 0, level: 1, interval: 150 },
+  ];
+
+  private readonly speedTier = computed(() => {
     const s = this.score();
-    if (s >= 50) return 5;
-    if (s >= 30) return 4;
-    if (s >= 15) return 3;
-    if (s >= 5) return 2;
-    return 1;
+    return SnakePageComponent.SPEED_TIERS.find(t => s >= t.minScore) ?? SnakePageComponent.SPEED_TIERS.at(-1)!;
   });
+
+  speed = computed(() => this.speedTier().level);
 
   // Snake internals
   private snake: Point[] = [];
@@ -238,13 +255,7 @@ export class SnakePageComponent implements OnDestroy {
   private touchStartY = 0;
 
   private get tickInterval(): number {
-    const base = 150;
-    const s = this.score();
-    if (s >= 50) return 70;
-    if (s >= 30) return 90;
-    if (s >= 15) return 110;
-    if (s >= 5) return 130;
-    return base;
+    return this.speedTier().interval;
   }
 
   ngOnDestroy() {
@@ -296,7 +307,7 @@ export class SnakePageComponent implements OnDestroy {
     const state = this.gameState();
 
     // Start/restart with Enter
-    if (key === 'Enter' && (state === 'idle' || state === 'over')) {
+    if (key === 'Enter' && (state === 'idle' || state === 'over' || state === 'won')) {
       event.preventDefault();
       this.startGame();
       return;
@@ -351,15 +362,21 @@ export class SnakePageComponent implements OnDestroy {
     this.stopLoop();
   }
 
-  private placeFood() {
-    let pos: Point;
-    do {
-      pos = {
-        x: Math.floor(Math.random() * this.COLS),
-        y: Math.floor(Math.random() * this.ROWS),
-      };
-    } while (this.snake.some(s => s.x === pos.x && s.y === pos.y));
-    this.food = pos;
+  private placeFood(): boolean {
+    const totalCells = this.COLS * this.ROWS;
+    if (this.snake.length >= totalCells) return false;
+
+    const occupied = new Set(this.snake.map(s => s.y * this.COLS + s.x));
+    const free: Point[] = [];
+    for (let y = 0; y < this.ROWS; y++) {
+      for (let x = 0; x < this.COLS; x++) {
+        if (!occupied.has(y * this.COLS + x)) {
+          free.push({ x, y });
+        }
+      }
+    }
+    this.food = free[Math.floor(Math.random() * free.length)];
+    return true;
   }
 
   private tick() {
@@ -380,18 +397,24 @@ export class SnakePageComponent implements OnDestroy {
       return;
     }
 
-    // Self collision
-    if (this.snake.some(s => s.x === newHead.x && s.y === newHead.y)) {
+    // Determine if snake will eat food this tick
+    const eatsFood = newHead.x === this.food.x && newHead.y === this.food.y;
+
+    // Self collision — exclude tail when not eating, since it will move away
+    const checkSegments = eatsFood ? this.snake : this.snake.slice(0, -1);
+    if (checkSegments.some(s => s.x === newHead.x && s.y === newHead.y)) {
       this.endGame();
       return;
     }
 
     this.snake.unshift(newHead);
 
-    // Food collision
-    if (newHead.x === this.food.x && newHead.y === this.food.y) {
+    if (eatsFood) {
       this.score.update(s => s + 1);
-      this.placeFood();
+      if (!this.placeFood()) {
+        this.winGame();
+        return;
+      }
     } else {
       this.snake.pop();
     }
@@ -400,12 +423,23 @@ export class SnakePageComponent implements OnDestroy {
   private endGame() {
     this.gameState.set('over');
     this.stopLoop();
+    this.updateHighScore();
+    this.draw();
+  }
+
+  private winGame() {
+    this.gameState.set('won');
+    this.stopLoop();
+    this.updateHighScore();
+    this.draw();
+  }
+
+  private updateHighScore() {
     const s = this.score();
     if (s > this.highScore()) {
       this.highScore.set(s);
       this.saveHighScore(s);
     }
-    this.draw();
   }
 
   private startLoop() {
