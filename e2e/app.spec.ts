@@ -10,6 +10,7 @@ const NAV_ROUTES = [
   { label: 'Electricity', path: '/electricity', heading: 'Electricity Prices' },
   { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
   { label: 'ASCII', path: '/ascii', heading: 'ASCII Art' },
+  { label: 'Snake', path: '/snake', heading: 'Snake Game' },
 ] as const;
 
 /** Social link expectations */
@@ -213,5 +214,48 @@ test.describe('ASCII Page', () => {
     await expect
       .poll(async () => ((await pre.textContent())?.trim() ?? ''), { timeout: 15_000 })
       .not.toBe(initialArt);
+  });
+});
+
+test.describe('Snake Page', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/snake');
+  });
+
+  test('has heading and back link', async ({ page }) => {
+    await expect(page.locator('h1')).toContainText('Snake Game');
+    await expectBackLink(page);
+  });
+
+  test('displays game canvas', async ({ page }) => {
+    await expect(page.locator('[data-testid="snake-canvas"]')).toBeVisible();
+  });
+
+  test('displays score and high score cards', async ({ page }) => {
+    await expect(page.locator('[data-testid="snake-score"]')).toBeVisible();
+    await expect(page.locator('[data-testid="snake-highscore"]')).toBeVisible();
+  });
+
+  test('displays start button', async ({ page }) => {
+    await expect(page.locator('[data-testid="snake-start-btn"]')).toBeVisible();
+  });
+
+  test('starts game when start button is clicked', async ({ page }) => {
+    await page.click('[data-testid="snake-start-btn"]');
+    // Start button should disappear and game-over text should not be visible
+    await expect(page.locator('[data-testid="snake-start-btn"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="snake-game-over"]')).not.toBeVisible();
+  });
+
+  test('shows how-to-play instructions', async ({ page }) => {
+    await expect(page.locator('h2', { hasText: 'How to Play' })).toBeVisible();
+  });
+
+  test('shows d-pad controls on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await expect(page.locator('button[aria-label="Move up"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Move left"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Move right"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Move down"]')).toBeVisible();
   });
 });
