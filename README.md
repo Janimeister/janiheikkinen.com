@@ -24,7 +24,8 @@ src/app/
 │   ├── electricity.component.ts # Electricity prices (api.porssisahko.net)
 │   ├── github.component.ts      # GitHub activity (GitHub REST API)
 │   ├── ascii.component.ts       # Procedural ASCII art generator
-│   └── snake.component.ts       # Classic Snake game
+│   ├── snake.component.ts       # Classic Snake game
+│   └── tamagotchi.component.ts  # Virtual pet / Tamagotchi-style page
 ├── components/
 │   ├── hero/                # Hero section with particle canvas and typing effect
 │   ├── navbar/              # Top navigation bar (scrollable on small screens)
@@ -73,6 +74,24 @@ The `/snake` page is a classic Snake game rendered on an HTML5 canvas, built wit
 - Persistent high score stored in `localStorage`.
 - Fixed-size canvas for consistent gameplay and rendering.
 - Touch-optimised — `touch-none` canvas prevents scroll interference, dedicated D-pad for precise control on mobile.
+
+## Virtual Pet Page
+
+The `/tamagotchi` page is a Tamagotchi-style virtual pet simulator. Each run starts with a mystery egg that hatches into one of eight randomly-assigned species (kitten, puppy, dragonling, alien, fox, bunny, chick, axolotl), each with its own personality and colour accent.
+
+**Care mechanics:**
+- Four core stats — **Hunger**, **Happiness**, **Energy**, **Cleanliness** — plus overall **Health**.
+- All four core stats decay over real time (including while the tab is closed, capped at 8 hours of offline decay).
+- Five care actions: **Feed**, **Play**, **Clean**, **Sleep/Wake**, and **Give Medicine**.
+- Pets progress through life stages — Baby → Child → Teen → Adult — based on real-time age, with the displayed sprite changing accordingly.
+- Health passively recovers when the pet is well cared for, and drops when core stats stay at zero. If Health reaches 0, the pet passes away and a new egg must be hatched.
+
+**Randomness:**
+- Which species hatches from each egg is random.
+- While awake, the pet may trigger random events (surprise snacks, new friends, sneezes, burst of energy, …) that nudge stats in either direction. Events appear in the on-screen log.
+
+**Persistence:**
+- Pet state (species, name, age, stats) is stored in `localStorage` so your pet keeps growing across visits.
 
 ## Commands
 

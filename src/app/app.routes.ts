@@ -7,5 +7,6 @@ export const routes: Routes = [
   { path: 'github', loadComponent: () => import('./pages/github.component').then(m => m.GithubPageComponent) },
   { path: 'ascii', loadComponent: () => import('./pages/ascii.component').then(m => m.AsciiArtPageComponent) },
   { path: 'snake', loadComponent: () => import('./pages/snake.component').then(m => m.SnakePageComponent) },
+  { path: 'tamagotchi', loadComponent: () => import('./pages/tamagotchi.component').then(m => m.TamagotchiPageComponent) },
   { path: '**', redirectTo: '' },
 ];
