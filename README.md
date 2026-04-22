@@ -25,7 +25,7 @@ src/app/
 │   ├── github.component.ts      # GitHub activity (GitHub REST API)
 │   ├── ascii.component.ts       # Procedural ASCII art generator
 │   ├── snake.component.ts       # Classic Snake game
-│   └── tamagotchi.component.ts  # Virtual pet / Tamagotchi-style page
+│   └── pet.component.ts         # Virtual pet simulator
 ├── components/
 │   ├── hero/                # Hero section with particle canvas and typing effect
 │   ├── navbar/              # Top navigation bar (scrollable on small screens)
@@ -77,7 +77,7 @@ The `/snake` page is a classic Snake game rendered on an HTML5 canvas, built wit
 
 ## Virtual Pet Page
 
-The `/tamagotchi` page is a Tamagotchi-style virtual pet simulator. Each run starts with a mystery egg that hatches into one of eight randomly-assigned species (kitten, puppy, dragonling, alien, fox, bunny, chick, axolotl), each with its own personality and colour accent.
+The `/pet` page is a virtual pet simulator. Each run starts with a mystery egg that hatches into one of eight randomly-assigned species (kitten, puppy, dragonling, alien, fox, bunny, chick, axolotl), each with its own personality and colour accent.
 
 **Care mechanics:**
 - Four core stats — **Hunger**, **Happiness**, **Energy**, **Cleanliness** — plus overall **Health**.

@@ -96,13 +96,13 @@ const SPECIES: readonly Species[] = [
   },
 ];
 
-const STORAGE_KEY = 'tamagotchi-pet-v1';
+const STORAGE_KEY = 'virtual-pet-v1';
 const TICK_MS = 1000;                 // update cadence
 const DECAY_PER_MINUTE = 4;           // stat point loss per minute (approx, per stat)
 const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returning users aren't wiped
 
 @Component({
-  selector: 'app-tamagotchi-page',
+  selector: 'app-pet-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
@@ -128,7 +128,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
           <!-- No pet yet: show egg hatching card -->
           <div class="animate-fade-slide-up stagger-1">
             <app-glow-card>
-              <div class="flex flex-col items-center text-center py-8 gap-6" data-testid="tama-hatch">
+              <div class="flex flex-col items-center text-center py-8 gap-6" data-testid="pet-hatch">
                 <div class="text-8xl md:text-9xl select-none" aria-hidden="true">🥚</div>
                 <div>
                   <h2 class="text-xl font-semibold text-text-primary mb-2">A mysterious egg</h2>
@@ -145,11 +145,11 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                          [value]="nameInput()"
                          (input)="onNameInput($event)"
                          placeholder="Give your pet a name"
-                         data-testid="tama-name-input"
+                         data-testid="pet-name-input"
                          class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent-primary transition-colors" />
                   <button (click)="hatch()"
                           [disabled]="!canHatch()"
-                          data-testid="tama-hatch-btn"
+                          data-testid="pet-hatch-btn"
                           class="px-8 py-3 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-semibold hover:bg-fuchsia-500/30 transition-all text-lg disabled:opacity-40 disabled:cursor-not-allowed">
                     Hatch!
                   </button>
@@ -165,8 +165,8 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
               <app-glow-card>
                 <div class="flex flex-col items-center text-center gap-4 py-4">
                   <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-                    <h2 class="text-2xl font-bold" [class]="speciesAccent()" data-testid="tama-pet-name">{{ pet()!.name }}</h2>
-                    <span class="text-xs text-text-secondary uppercase tracking-wider" data-testid="tama-pet-stage">
+                    <h2 class="text-2xl font-bold" [class]="speciesAccent()" data-testid="pet-name">{{ pet()!.name }}</h2>
+                    <span class="text-xs text-text-secondary uppercase tracking-wider" data-testid="pet-stage">
                       {{ stageLabel() }} · {{ ageLabel() }}
                     </span>
                   </div>
@@ -177,7 +177,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                          [class.animate-float]="!pet()!.dead && !pet()!.asleep"
                          [style.filter]="spriteFilter()"
                          aria-hidden="true"
-                         data-testid="tama-sprite">
+                         data-testid="pet-sprite">
                       {{ sprite() }}
                     </div>
                     @if (pet()!.asleep) {
@@ -185,17 +185,17 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                     }
                   </div>
 
-                  <p class="text-sm min-h-5" [class]="moodColorClass()" data-testid="tama-mood">{{ moodMessage() }}</p>
+                  <p class="text-sm min-h-5" [class]="moodColorClass()" data-testid="pet-mood">{{ moodMessage() }}</p>
 
                   @if (pet()!.dead) {
                     <button (click)="reset()"
-                            data-testid="tama-reset-btn"
+                            data-testid="pet-reset-btn"
                             class="mt-2 px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all">
                       Find a new egg
                     </button>
                   } @else {
                     <button (click)="reset()"
-                            data-testid="tama-reset-btn"
+                            data-testid="pet-reset-btn"
                             class="mt-2 text-xs text-text-secondary/60 hover:text-text-secondary transition-colors underline underline-offset-2">
                       Release pet &amp; start over
                     </button>
@@ -209,7 +209,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
               <div class="animate-fade-slide-up stagger-2">
                 <app-glow-card>
                   <h3 class="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">Stats</h3>
-                  <div class="flex flex-col gap-3" data-testid="tama-stats">
+                  <div class="flex flex-col gap-3" data-testid="pet-stats">
                     @for (stat of stats(); track stat.key) {
                       <div>
                         <div class="flex justify-between text-xs mb-1">
@@ -233,31 +233,31 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                   <div class="grid grid-cols-2 gap-2">
                     <button (click)="feed()"
                             [disabled]="!canAct()"
-                            data-testid="tama-feed-btn"
+                            data-testid="pet-feed-btn"
                             class="care-btn care-btn-amber">
                       🍎 Feed
                     </button>
                     <button (click)="play()"
                             [disabled]="!canAct() || pet()!.asleep"
-                            data-testid="tama-play-btn"
+                            data-testid="pet-play-btn"
                             class="care-btn care-btn-pink">
                       🎲 Play
                     </button>
                     <button (click)="clean()"
                             [disabled]="!canAct()"
-                            data-testid="tama-clean-btn"
+                            data-testid="pet-clean-btn"
                             class="care-btn care-btn-sky">
                       🛁 Clean
                     </button>
                     <button (click)="toggleSleep()"
                             [disabled]="pet()!.dead"
-                            data-testid="tama-sleep-btn"
+                            data-testid="pet-sleep-btn"
                             class="care-btn care-btn-indigo">
                       {{ pet()!.asleep ? '☀️ Wake' : '🌙 Sleep' }}
                     </button>
                     <button (click)="heal()"
                             [disabled]="!canAct() || pet()!.health >= 100"
-                            data-testid="tama-heal-btn"
+                            data-testid="pet-heal-btn"
                             class="care-btn care-btn-emerald col-span-2">
                       💊 Give Medicine
                     </button>
@@ -274,7 +274,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
               @if (eventLog().length === 0) {
                 <p class="text-text-secondary text-sm">No events yet — try interacting with your pet!</p>
               } @else {
-                <ul class="flex flex-col gap-1 text-sm" data-testid="tama-log">
+                <ul class="flex flex-col gap-1 text-sm" data-testid="pet-log">
                   @for (entry of eventLog(); track entry.id) {
                     <li class="text-text-secondary">
                       <span class="text-text-primary/70 font-[JetBrains_Mono,monospace] text-xs mr-2">{{ entry.time }}</span>
@@ -334,7 +334,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
     .care-btn-emerald:hover:not(:disabled) { background: rgba(16,185,129,0.15);  border-color: rgba(16,185,129,0.35);  color: #34d399; }
   `,
 })
-export class TamagotchiPageComponent implements OnInit, OnDestroy {
+export class PetPageComponent implements OnInit, OnDestroy {
   private readonly zone = inject(NgZone);
 
   // ── State ─────────────────────────────────────────────────────────
