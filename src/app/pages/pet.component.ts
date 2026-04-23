@@ -124,40 +124,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
           <p class="text-text-secondary mt-2">Hatch a mystery egg and raise your very own companion</p>
         </div>
 
-        @if (!pet(); as _) {
-          <!-- No pet yet: show egg hatching card -->
-          <div class="animate-fade-slide-up stagger-1">
-            <app-glow-card>
-              <div class="flex flex-col items-center text-center py-8 gap-6" data-testid="pet-hatch">
-                <div class="text-8xl md:text-9xl select-none" aria-hidden="true">🥚</div>
-                <div>
-                  <h2 class="text-xl font-semibold text-text-primary mb-2">A mysterious egg</h2>
-                  <p class="text-text-secondary text-sm max-w-md">
-                    You found an unidentified egg. Give it a name and hatch it to discover which creature lives inside —
-                    each hatch reveals a random species with its own personality.
-                  </p>
-                </div>
-                <div class="w-full max-w-sm flex flex-col gap-3">
-                  <label for="pet-name" class="text-xs text-text-secondary uppercase tracking-wider text-left">Name</label>
-                  <input id="pet-name"
-                         type="text"
-                         maxlength="16"
-                         [value]="nameInput()"
-                         (input)="onNameInput($event)"
-                         placeholder="Give your pet a name"
-                         data-testid="pet-name-input"
-                         class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent-primary transition-colors" />
-                  <button (click)="hatch()"
-                          [disabled]="!canHatch()"
-                          data-testid="pet-hatch-btn"
-                          class="px-8 py-3 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-semibold hover:bg-fuchsia-500/30 transition-all text-lg disabled:opacity-40 disabled:cursor-not-allowed">
-                    Hatch!
-                  </button>
-                </div>
-              </div>
-            </app-glow-card>
-          </div>
-        } @else {
+        @if (pet(); as p) {
           <!-- Pet dashboard -->
           <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
             <!-- Pet display -->
@@ -165,7 +132,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
               <app-glow-card>
                 <div class="flex flex-col items-center text-center gap-4 py-4">
                   <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-                    <h2 class="text-2xl font-bold" [class]="speciesAccent()" data-testid="pet-name">{{ pet()!.name }}</h2>
+                    <h2 class="text-2xl font-bold" [class]="speciesAccent()" data-testid="pet-name">{{ p.name }}</h2>
                     <span class="text-xs text-text-secondary uppercase tracking-wider" data-testid="pet-stage">
                       {{ stageLabel() }} · {{ ageLabel() }}
                     </span>
@@ -174,20 +141,20 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
 
                   <div class="relative w-full flex items-center justify-center py-6">
                     <div class="text-8xl md:text-9xl select-none transition-transform duration-300"
-                         [class.animate-float]="!pet()!.dead && !pet()!.asleep"
+                         [class.animate-float]="!p.dead && !p.asleep"
                          [style.filter]="spriteFilter()"
                          aria-hidden="true"
                          data-testid="pet-sprite">
                       {{ sprite() }}
                     </div>
-                    @if (pet()!.asleep) {
+                    @if (p.asleep) {
                       <span class="absolute top-2 right-1/3 text-3xl animate-pulse" aria-hidden="true">💤</span>
                     }
                   </div>
 
                   <p class="text-sm min-h-5" [class]="moodColorClass()" data-testid="pet-mood">{{ moodMessage() }}</p>
 
-                  @if (pet()!.dead) {
+                  @if (p.dead) {
                     <button (click)="reset()"
                             data-testid="pet-reset-btn"
                             class="mt-2 px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all">
@@ -238,7 +205,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                       🍎 Feed
                     </button>
                     <button (click)="play()"
-                            [disabled]="!canAct() || pet()!.asleep"
+                            [disabled]="!canAct() || p.asleep"
                             data-testid="pet-play-btn"
                             class="care-btn care-btn-pink">
                       🎲 Play
@@ -250,13 +217,13 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                       🛁 Clean
                     </button>
                     <button (click)="toggleSleep()"
-                            [disabled]="pet()!.dead"
+                            [disabled]="p.dead"
                             data-testid="pet-sleep-btn"
                             class="care-btn care-btn-indigo">
-                      {{ pet()!.asleep ? '☀️ Wake' : '🌙 Sleep' }}
+                      {{ p.asleep ? '☀️ Wake' : '🌙 Sleep' }}
                     </button>
                     <button (click)="heal()"
-                            [disabled]="!canAct() || pet()!.health >= 100"
+                            [disabled]="!canAct() || p.health >= 100"
                             data-testid="pet-heal-btn"
                             class="care-btn care-btn-emerald col-span-2">
                       💊 Give Medicine
@@ -283,6 +250,39 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                   }
                 </ul>
               }
+            </app-glow-card>
+          </div>
+        } @else {
+          <!-- No pet yet: show egg hatching card -->
+          <div class="animate-fade-slide-up stagger-1">
+            <app-glow-card>
+              <div class="flex flex-col items-center text-center py-8 gap-6" data-testid="pet-hatch">
+                <div class="text-8xl md:text-9xl select-none" aria-hidden="true">🥚</div>
+                <div>
+                  <h2 class="text-xl font-semibold text-text-primary mb-2">A mysterious egg</h2>
+                  <p class="text-text-secondary text-sm max-w-md">
+                    You found an unidentified egg. Give it a name and hatch it to discover which creature lives inside —
+                    each hatch reveals a random species with its own personality.
+                  </p>
+                </div>
+                <div class="w-full max-w-sm flex flex-col gap-3">
+                  <label for="pet-name" class="text-xs text-text-secondary uppercase tracking-wider text-left">Name</label>
+                  <input id="pet-name"
+                         type="text"
+                         maxlength="16"
+                         [value]="nameInput()"
+                         (input)="onNameInput($event)"
+                         placeholder="Give your pet a name"
+                         data-testid="pet-name-input"
+                         class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent-primary transition-colors" />
+                  <button (click)="hatch()"
+                          [disabled]="!canHatch()"
+                          data-testid="pet-hatch-btn"
+                          class="px-8 py-3 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-semibold hover:bg-fuchsia-500/30 transition-all text-lg disabled:opacity-40 disabled:cursor-not-allowed">
+                    Hatch!
+                  </button>
+                </div>
+              </div>
             </app-glow-card>
           </div>
         }
@@ -645,11 +645,18 @@ export class PetPageComponent implements OnInit, OnDestroy {
       if (!parsed.speciesId || !SPECIES.some(s => s.id === parsed.speciesId)) return;
       // Sanitize
       const now = Date.now();
+      const persistedBornAt =
+        typeof parsed.bornAt === 'number' && Number.isFinite(parsed.bornAt) ? parsed.bornAt : now;
+      const persistedLastTick =
+        typeof parsed.lastTick === 'number' && Number.isFinite(parsed.lastTick) ? parsed.lastTick : now;
+      const lastTick = Math.min(persistedLastTick, now);
+      const bornAt = Math.min(persistedBornAt, lastTick);
+
       const pet: PetState = {
         speciesId: parsed.speciesId,
         name: typeof parsed.name === 'string' && parsed.name.trim() ? parsed.name : 'Pet',
-        bornAt: typeof parsed.bornAt === 'number' ? parsed.bornAt : now,
-        lastTick: typeof parsed.lastTick === 'number' ? parsed.lastTick : now,
+        bornAt,
+        lastTick,
         hunger:      clamp(asNumber(parsed.hunger, 80)),
         happiness:   clamp(asNumber(parsed.happiness, 80)),
         energy:      clamp(asNumber(parsed.energy, 80)),
