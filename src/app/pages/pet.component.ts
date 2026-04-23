@@ -349,7 +349,14 @@ export class PetPageComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadFromStorage();
     this.zone.runOutsideAngular(() => {
-      this.tickHandle = setInterval(() => this.zone.run(() => this.tick()), TICK_MS);
+      this.tickHandle = setInterval(() => {
+        const pet = this.pet();
+        if (!pet || pet.dead) {
+          return;
+        }
+
+        this.zone.run(() => this.tick());
+      }, TICK_MS);
     });
   }
 
