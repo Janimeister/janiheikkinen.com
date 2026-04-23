@@ -397,8 +397,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     const sp = this.species();
     if (!p || !sp) return '🥚';
     if (p.dead) return '👻';
-    const stage = this.lifeStage();
-    if (stage === 'egg' || stage === 'ghost') return '🥚';
+    const stage = this.lifeStage() as Exclude<LifeStage, 'egg' | 'ghost'>;
     return sp.sprites[stage];
   });
 
@@ -472,7 +471,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
 
   // ── Actions ──────────────────────────────────────────────────────
   protected hatch() {
-    const name = this.nameInput().trim();
+    const name = this.nameInput().trim().slice(0, 16);
     if (!name) return;
     const species = SPECIES[Math.floor(Math.random() * SPECIES.length)];
     const now = Date.now();
@@ -558,7 +557,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     if (!p || p.dead) return;
 
     const now = Date.now();
-    // If the system clock moved backwards, snap lastTick forward to now so
+    // If the system clock moved backwards, reset lastTick to now so
     // stat decay doesn't freeze until the clock catches up again.
     if (now < p.lastTick) {
       this.pet.update(s => s ? { ...s, lastTick: now, bornAt: Math.min(s.bornAt, now) } : s);
