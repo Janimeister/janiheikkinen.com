@@ -97,6 +97,7 @@ export class NavbarComponent implements AfterViewInit, OnDestroy {
     { label: 'GitHub', route: '/github' },
     { label: 'ASCII', route: '/ascii' },
     { label: 'Snake', route: '/snake' },
+    { label: 'Pet', route: '/pet' },
   ];
 
   private resizeObserver: ResizeObserver | undefined;
