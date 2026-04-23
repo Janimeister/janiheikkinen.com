@@ -380,7 +380,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     const p = this.pet();
     if (!p) return 'egg';
     if (p.dead) return 'ghost';
-    const ageMin = (Date.now() - p.bornAt) / 60_000;
+    const ageMin = Math.max(0, (Date.now() - p.bornAt) / 60_000);
     if (ageMin < 2) return 'baby';
     if (ageMin < 10) return 'child';
     if (ageMin < 30) return 'teen';
@@ -405,7 +405,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
   protected readonly ageLabel = computed(() => {
     const p = this.pet();
     if (!p) return '';
-    const seconds = Math.floor((Date.now() - p.bornAt) / 1000);
+    const seconds = Math.max(0, Math.floor((Date.now() - p.bornAt) / 1000));
     if (seconds < 60) return `${seconds}s old`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m old`;
@@ -558,7 +558,13 @@ export class PetPageComponent implements OnInit, OnDestroy {
     if (!p || p.dead) return;
 
     const now = Date.now();
-    const elapsedMs = Math.max(0, now - p.lastTick);
+    // If the system clock moved backwards, snap lastTick forward to now so
+    // stat decay doesn't freeze until the clock catches up again.
+    if (now < p.lastTick) {
+      this.pet.update(s => s ? { ...s, lastTick: now, bornAt: Math.min(s.bornAt, now) } : s);
+      return;
+    }
+    const elapsedMs = now - p.lastTick;
     if (elapsedMs < 500) return;
 
     const minutes = Math.min(elapsedMs / 60_000, MAX_OFFLINE_MINUTES);
@@ -654,7 +660,9 @@ export class PetPageComponent implements OnInit, OnDestroy {
 
       const pet: PetState = {
         speciesId: parsed.speciesId,
-        name: typeof parsed.name === 'string' && parsed.name.trim() ? parsed.name : 'Pet',
+        name: typeof parsed.name === 'string' && parsed.name.trim()
+          ? parsed.name.trim().slice(0, 16)
+          : 'Pet',
         bornAt,
         lastTick,
         hunger:      clamp(asNumber(parsed.hunger, 80)),
