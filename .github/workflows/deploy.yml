@@ -28,6 +28,7 @@ jobs:
           node-version: 22
           cache: npm
 
+      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
       - run: npm ci --legacy-peer-deps
 
       - name: Run unit tests
@@ -58,6 +59,7 @@ jobs:
           node-version: 22
           cache: npm
 
+      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
       - run: npm ci --legacy-peer-deps
 
       - run: npx ng build --base-href /
