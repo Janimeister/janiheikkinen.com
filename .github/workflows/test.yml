@@ -11,7 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +27,20 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+
+  e2e-tests:
+    name: E2E & Accessibility Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
+      - run: npm ci --legacy-peer-deps
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
