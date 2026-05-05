@@ -112,7 +112,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
                    class="flex-1 bg-white/[0.05] border border-border rounded-xl px-4 py-2 text-sm text-text-primary placeholder-text-secondary/50 outline-none focus:border-accent-primary/50 transition-colors" />
             <button (click)="searchLocation()"
                     [disabled]="searching()"
-                    class="px-4 py-2 text-sm font-medium rounded-xl bg-accent-primary/20 text-accent-primary hover:bg-accent-primary/30 border border-accent-primary/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-4 py-2 text-sm font-medium rounded-xl bg-accent-primary/20 text-indigo-300 hover:bg-accent-primary/30 border border-accent-primary/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               @if (searching()) { Searching... } @else { Search }
             </button>
           </div>
@@ -230,7 +230,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
                 <span class="text-xl">🕐</span>
                 <h2 class="text-lg font-semibold text-text-primary">24-Hour Forecast</h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4">
+              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" aria-label="24-hour forecast">
                 <div class="flex gap-3 min-w-max pb-2">
                   @for (hour of next24Hours(); track hour.time) {
                     <div class="flex flex-col items-center gap-1 min-w-[60px] p-2 rounded-xl transition-colors"

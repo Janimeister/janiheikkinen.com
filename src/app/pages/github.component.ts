@@ -104,7 +104,7 @@ const LANG_COLORS: Record<string, string> = {
                   <div class="flex-1 min-w-0">
                     <h2 class="text-2xl font-bold text-text-primary">{{ user.name || user.login }}</h2>
                     <a [href]="user.html_url" target="_blank" rel="noopener noreferrer"
-                       class="text-sm text-accent-primary hover:underline">{{"@"}}{{ user.login }}</a>
+                       class="text-sm text-indigo-400 hover:underline">{{"@"}}{{ user.login }}</a>
                     @if (user.bio) {
                       <p class="text-sm text-text-secondary mt-2">{{ user.bio }}</p>
                     }
@@ -240,7 +240,7 @@ const LANG_COLORS: Record<string, string> = {
                         <div class="text-sm text-text-primary">
                           <span class="font-medium">{{ event.action }}</span>
                           <span class="text-text-secondary"> in </span>
-                          <span class="text-accent-primary">{{ event.repo }}</span>
+                          <span class="text-indigo-400">{{ event.repo }}</span>
                         </div>
                         <div class="text-xs text-text-secondary mt-0.5">{{ relativeDate(event.date) }}</div>
                       </div>

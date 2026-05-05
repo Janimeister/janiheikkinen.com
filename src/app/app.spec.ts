@@ -32,12 +32,10 @@ describe('App', () => {
     expect(compiled.querySelector('app-cookie-notice')).toBeTruthy();
   });
 
-  it('should have host styles for full-height layout', () => {
+  it('should render router outlet inside main', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
-    const host = fixture.nativeElement as HTMLElement;
-    const styles = getComputedStyle(host);
-    expect(styles.display).toBe('flex');
-    expect(styles.flexDirection).toBe('column');
+    const main = fixture.nativeElement.querySelector('main');
+    expect(main.querySelector('router-outlet')).toBeTruthy();
   });
 });

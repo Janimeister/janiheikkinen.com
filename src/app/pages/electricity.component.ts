@@ -134,7 +134,7 @@ interface PriceResponse {
                   }
                 </div>
                 <!-- Scrollable chart -->
-                <div class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4" #chartScroller (click)="activeBarIdx.set(null)">
+                <div class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4" tabindex="0" role="region" aria-label="Price chart" #chartScroller (click)="activeBarIdx.set(null)">
                   <div [style.min-width.px]="chartBars().length * 10" class="pt-8">
                     <div class="flex items-end gap-0.5 h-48">
                       @for (bar of chartBars(); track bar.hour; let i = $index) {
@@ -182,7 +182,7 @@ interface PriceResponse {
                 <span class="text-xl">📋</span>
                 <h2 class="text-lg font-semibold text-text-primary">Hourly Prices</h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4">
+              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" aria-label="Hourly prices table">
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="text-text-secondary border-b border-white/5">
@@ -199,7 +199,7 @@ interface PriceResponse {
                         <td class="py-2 pr-4 font-mono text-text-primary">
                           {{ row.hour }}
                           @if (row.isCurrent) {
-                            <span class="ml-1 text-[10px] text-accent-primary font-sans">NOW</span>
+                            <span class="ml-1 text-[10px] text-indigo-400 font-sans">NOW</span>
                           }
                         </td>
                         <td class="py-2 pr-4 text-right font-mono font-semibold" [class]="priceColor(row.price)">

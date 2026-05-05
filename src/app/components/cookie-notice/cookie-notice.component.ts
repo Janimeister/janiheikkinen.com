@@ -14,12 +14,12 @@ import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
                 This site does not use tracking cookies or analytics.
                 We use <strong class="text-text-primary">localStorage</strong> solely to remember your cookie consent preference.
                 The weather page lets you search for locations — your search query is sent to
-                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-accent-primary hover:underline">Open-Meteo</a>
+                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline hover:no-underline">Open-Meteo</a>
                 for geocoding and forecasts. No personal data is collected or stored by us.
               </p>
             </div>
             <button (click)="accept()"
-                    class="shrink-0 px-5 py-2 text-sm font-medium rounded-xl bg-accent-primary text-white hover:bg-accent-primary/80 transition-colors cursor-pointer">
+                    class="shrink-0 px-5 py-2 text-sm font-medium rounded-xl bg-indigo-700 text-white hover:bg-indigo-600 transition-colors cursor-pointer">
               Got it
             </button>
           </div>
