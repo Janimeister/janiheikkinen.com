@@ -12,11 +12,11 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 }
 
 // Guard against re-initialization when setupFiles runs multiple times in the same worker
-try {
+let initialized = false;
+if (!initialized) {
+  initialized = true;
   getTestBed().initTestEnvironment(
     BrowserDynamicTestingModule,
     platformBrowserDynamicTesting()
   );
-} catch {
-  // Already initialized in this worker — safe to ignore
 }

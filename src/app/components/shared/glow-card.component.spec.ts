@@ -4,7 +4,6 @@ import { describe, it, expect } from 'vitest';
 import { GlowCardComponent } from './glow-card.component';
 
 @Component({
-  standalone: true,
   imports: [GlowCardComponent],
   template: `<app-glow-card><span class="projected-content">projected text</span></app-glow-card>`,
 })
