@@ -11,10 +11,9 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   } as unknown as typeof ResizeObserver;
 }
 
-// Guard against re-initialization when setupFiles runs multiple times in the same worker
-let initialized = false;
-if (!initialized) {
-  initialized = true;
+// Guard against re-initialization across module re-evaluations (watch mode, multiple workers)
+if (!(globalThis as Record<string, unknown>)['__vitestAngularTestEnvInitialized']) {
+  (globalThis as Record<string, unknown>)['__vitestAngularTestEnvInitialized'] = true;
   getTestBed().initTestEnvironment(
     BrowserDynamicTestingModule,
     platformBrowserDynamicTesting()
