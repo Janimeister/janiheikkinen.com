@@ -45,12 +45,12 @@ describe('NavbarComponent', () => {
   it('should set scrolled when onScroll is called', () => {
     const fixture = TestBed.createComponent(NavbarComponent);
     const component = fixture.componentInstance;
-    // Simulate scroll > 50
-    Object.defineProperty(window, 'scrollY', { value: 100, writable: true });
+    // Define once as configurable+writable so the value can be changed between assertions
+    Object.defineProperty(window, 'scrollY', { value: 100, writable: true, configurable: true });
     component.onScroll();
     expect(component.scrolled()).toBe(true);
 
-    Object.defineProperty(window, 'scrollY', { value: 10, writable: true });
+    (window as Window & { scrollY: number }).scrollY = 10;
     component.onScroll();
     expect(component.scrolled()).toBe(false);
   });
