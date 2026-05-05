@@ -1,11 +1,19 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, it, expect } from 'vitest';
 import { GlowCardComponent } from './glow-card.component';
 
+@Component({
+  standalone: true,
+  imports: [GlowCardComponent],
+  template: `<app-glow-card><span class="projected-content">projected text</span></app-glow-card>`,
+})
+class TestHostComponent {}
+
 describe('GlowCardComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GlowCardComponent],
+      imports: [GlowCardComponent, TestHostComponent],
     }).compileComponents();
   });
 
@@ -30,10 +38,10 @@ describe('GlowCardComponent', () => {
   });
 
   it('should project content via ng-content', () => {
-    const fixture = TestBed.createComponent(GlowCardComponent);
+    const fixture = TestBed.createComponent(TestHostComponent);
     fixture.detectChanges();
-    // Component uses ng-content so the div should exist
-    const card = fixture.nativeElement.querySelector('.glow-card');
-    expect(card).toBeTruthy();
+    const projected = fixture.nativeElement.querySelector('.projected-content');
+    expect(projected).toBeTruthy();
+    expect(projected.textContent).toBe('projected text');
   });
 });
