@@ -13,6 +13,7 @@ Personal portfolio and dashboard site built with Angular 21, Tailwind CSS 4, and
 | Routing | Angular Router with lazy-loaded page components |
 | Data fetching | Angular `resource()` API |
 | E2E testing | [Playwright](https://playwright.dev) |
+| Unit testing | [Vitest](https://vitest.dev) with `@analogjs/vite-plugin-angular` |
 
 ## Architecture
 
@@ -117,6 +118,20 @@ Build artifacts are written to the `dist/` directory.
 
 ```bash
 npm run watch
+```
+
+### Unit tests
+
+Unit tests use Vitest with the Angular plugin for component testing:
+
+```bash
+npm test
+```
+
+To run in watch mode during development:
+
+```bash
+npm run test:watch
 ```
 
 ### End-to-end tests
