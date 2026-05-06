@@ -11,6 +11,23 @@ permissions:
   contents: read
 
 jobs:
+  build:
+    name: Build & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
+      - run: npm ci --legacy-peer-deps
+
+      - name: Build (development)
+        run: npx ng build --configuration development
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest

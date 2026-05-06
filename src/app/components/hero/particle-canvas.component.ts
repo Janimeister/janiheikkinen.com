@@ -28,6 +28,9 @@ export class ParticleCanvasComponent {
       const ctx = canvasEl.getContext('2d');
       if (!ctx) return;
 
+      // Skip animation entirely for users who prefer reduced motion
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
       const resize = () => {
         canvasEl.width = canvasEl.offsetWidth;
         canvasEl.height = canvasEl.offsetHeight;

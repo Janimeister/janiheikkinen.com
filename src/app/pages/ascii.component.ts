@@ -137,6 +137,14 @@ export class AsciiArtPageComponent implements OnDestroy {
 
   private animateReveal(grid: string[][]): void {
     this.isAnimating.set(true);
+
+    // Skip animation for users who prefer reduced motion — show full grid immediately
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.displayText.set(grid.map(row => row.join('')).join('\n'));
+      this.isAnimating.set(false);
+      return;
+    }
+
     const centerR = ROWS / 2;
     const centerC = COLS / 2;
     const maxDist = Math.sqrt(centerR * centerR + (centerC * ASPECT_CORRECTION) ** 2);
