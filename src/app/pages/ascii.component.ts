@@ -139,7 +139,7 @@ export class AsciiArtPageComponent implements OnDestroy {
     this.isAnimating.set(true);
 
     // Skip animation for users who prefer reduced motion — show full grid immediately
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
       this.displayText.set(grid.map(row => row.join('')).join('\n'));
       this.isAnimating.set(false);
       return;

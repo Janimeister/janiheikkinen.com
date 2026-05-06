@@ -108,6 +108,9 @@ body::before {
     animation: none !important;
     transition: none !important;
   }
+  html {
+    scroll-behavior: auto;
+  }
   body::before {
     display: none;
   }
