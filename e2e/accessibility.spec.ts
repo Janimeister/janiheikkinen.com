@@ -19,6 +19,8 @@ const PAGES = [
 ] as const;
 
 test.describe('Accessibility', () => {
+  // Each test does: goto + optional API wait + AxeBuilder.analyze — give each 60s
+  test.describe.configure({ timeout: 60_000 });
   for (const { path, name, waitSection } of PAGES) {
     test(`${name} page (${path}) should have no axe violations`, async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' });

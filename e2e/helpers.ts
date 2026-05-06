@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
-export const API_TIMEOUT = 30_000;
+export const API_TIMEOUT = 15_000;
 
 /** Assert that a section heading OR a fallback error is visible (for API-driven pages) */
 export async function expectSectionOrError(page: Page, headingText: string) {
