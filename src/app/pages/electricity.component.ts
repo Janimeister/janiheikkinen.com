@@ -199,7 +199,7 @@ interface PriceResponse {
                         <td class="py-2 pr-4 font-mono text-text-primary">
                           {{ row.hour }}
                           @if (row.isCurrent) {
-                            <span class="ml-1 text-[10px] text-indigo-400 font-sans">NOW</span>
+                            <span class="ml-1 text-[10px] text-accent-light font-sans">NOW</span>
                           }
                         </td>
                         <td class="py-2 pr-4 text-right font-mono font-semibold" [class]="priceColor(row.price)">

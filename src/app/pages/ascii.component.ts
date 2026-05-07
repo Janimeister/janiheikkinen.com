@@ -51,7 +51,7 @@ const ASPECT_CORRECTION = 0.5;
                 <button
                   (click)="selectAlgorithm(algo.id)"
                   [class]="currentAlgorithm() === algo.id
-                    ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-indigo-300 border border-accent-primary/30'
+                    ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-light border border-accent-primary/30'
                     : 'px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 border border-white/5 transition-colors'"
                   [attr.aria-pressed]="currentAlgorithm() === algo.id">
                   {{ algo.icon }} {{ algo.label }}
@@ -60,7 +60,7 @@ const ASPECT_CORRECTION = 0.5;
               <button
                 (click)="generate()"
                 [disabled]="isAnimating()"
-                class="ml-auto px-4 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-indigo-300 border border-accent-primary/30 hover:bg-accent-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="ml-auto px-4 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-light border border-accent-primary/30 hover:bg-accent-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Generate new ASCII art">
                 🎲 Generate
               </button>
