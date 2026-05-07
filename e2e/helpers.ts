@@ -5,7 +5,7 @@ export const API_TIMEOUT = 15_000;
 /** Assert that a section heading OR a fallback error is visible (for API-driven pages) */
 export async function expectSectionOrError(page: Page, headingText: string) {
   const section = page.locator('h2', { hasText: headingText });
-  const error = page.locator('.text-red-400');
+  const error = page.locator('p.text-red-400', { hasText: 'Could not load' });
   await expect(section.or(error).first()).toBeVisible({ timeout: API_TIMEOUT });
 }
 
