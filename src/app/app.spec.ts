@@ -32,12 +32,26 @@ describe('App', () => {
     expect(compiled.querySelector('app-cookie-notice')).toBeTruthy();
   });
 
-  it('should have host styles for full-height layout', () => {
+  it('should render router outlet inside main', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const main = fixture.nativeElement.querySelector('main');
+    expect(main.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should have full-height flex column layout with footer pushed to bottom', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
-    const styles = getComputedStyle(host);
-    expect(styles.display).toBe('flex');
-    expect(styles.flexDirection).toBe('column');
+    const main = host.querySelector('main') as HTMLElement;
+    // Verify structural layout: navbar → main (flex-1) → footer as direct children
+    const children = Array.from(host.children).map(el => el.tagName.toLowerCase());
+    expect(children).toContain('app-navbar');
+    expect(children).toContain('main');
+    expect(children).toContain('app-footer');
+    expect(children.indexOf('app-navbar')).toBeLessThan(children.indexOf('main'));
+    expect(children.indexOf('main')).toBeLessThan(children.indexOf('app-footer'));
+    // main must carry flex-1 so it fills the flex container and pushes the footer down
+    expect(main.classList.contains('flex-1')).toBe(true);
   });
 });

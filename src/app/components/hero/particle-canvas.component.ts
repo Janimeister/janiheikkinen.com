@@ -13,13 +13,14 @@ interface Particle {
   selector: 'app-particle-canvas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<canvas #canvas class="absolute inset-0 w-full h-full"></canvas>`,
+  template: `<canvas #canvas aria-hidden="true" class="absolute inset-0 w-full h-full"></canvas>`,
 })
 export class ParticleCanvasComponent {
   canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private particles: Particle[] = [];
   private animationId = 0;
   private destroyed = signal(false);
+  private resizeController: AbortController | null = null;
 
   constructor() {
     afterRenderEffect(() => {
@@ -28,12 +29,16 @@ export class ParticleCanvasComponent {
       const ctx = canvasEl.getContext('2d');
       if (!ctx) return;
 
+      // Skip animation entirely for users who prefer reduced motion
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
+
       const resize = () => {
         canvasEl.width = canvasEl.offsetWidth;
         canvasEl.height = canvasEl.offsetHeight;
       };
       resize();
-      window.addEventListener('resize', resize);
+      this.resizeController = new AbortController();
+      window.addEventListener('resize', resize, { signal: this.resizeController.signal });
 
       const count = Math.min(80, Math.floor((canvasEl.width * canvasEl.height) / 15000));
       this.particles = Array.from({ length: count }, () => ({
@@ -87,5 +92,6 @@ export class ParticleCanvasComponent {
   ngOnDestroy() {
     this.destroyed.set(true);
     cancelAnimationFrame(this.animationId);
+    this.resizeController?.abort();
   }
 }

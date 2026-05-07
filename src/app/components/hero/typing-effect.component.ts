@@ -23,6 +23,10 @@ export class TypingEffectComponent implements OnDestroy {
   private timerId: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      this.displayText.set(this.roles[0]);
+      return;
+    }
     this.tick();
   }
 

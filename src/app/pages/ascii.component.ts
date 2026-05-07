@@ -51,7 +51,7 @@ const ASPECT_CORRECTION = 0.5;
                 <button
                   (click)="selectAlgorithm(algo.id)"
                   [class]="currentAlgorithm() === algo.id
-                    ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-primary border border-accent-primary/30'
+                    ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-indigo-300 border border-accent-primary/30'
                     : 'px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 border border-white/5 transition-colors'"
                   [attr.aria-pressed]="currentAlgorithm() === algo.id">
                   {{ algo.icon }} {{ algo.label }}
@@ -60,7 +60,7 @@ const ASPECT_CORRECTION = 0.5;
               <button
                 (click)="generate()"
                 [disabled]="isAnimating()"
-                class="ml-auto px-4 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-primary border border-accent-primary/30 hover:bg-accent-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="ml-auto px-4 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-indigo-300 border border-accent-primary/30 hover:bg-accent-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Generate new ASCII art">
                 🎲 Generate
               </button>
@@ -84,7 +84,7 @@ const ASPECT_CORRECTION = 0.5;
       font-family: 'JetBrains Mono', monospace;
       font-size: clamp(8px, 1.1vw, 14px);
       line-height: 1.2;
-      color: var(--color-accent-primary);
+      color: #818cf8;
       text-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
       white-space: pre;
       margin: 0;
@@ -137,6 +137,14 @@ export class AsciiArtPageComponent implements OnDestroy {
 
   private animateReveal(grid: string[][]): void {
     this.isAnimating.set(true);
+
+    // Skip animation for users who prefer reduced motion — show full grid immediately
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      this.displayText.set(grid.map(row => row.join('')).join('\n'));
+      this.isAnimating.set(false);
+      return;
+    }
+
     const centerR = ROWS / 2;
     const centerC = COLS / 2;
     const maxDist = Math.sqrt(centerR * centerR + (centerC * ASPECT_CORRECTION) ** 2);

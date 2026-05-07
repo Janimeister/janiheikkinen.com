@@ -1,8 +1,7 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { API_TIMEOUT, expectSectionOrError, expectBackLink, expectAttribution } from './helpers';
 
 // ── Helpers ──────────────────────────────────────────────────────────
-
-const API_TIMEOUT = 30_000;
 
 /** Nav link labels and their expected route / page heading */
 const NAV_ROUTES = [
@@ -20,23 +19,6 @@ const SOCIAL_LINKS = [
   { label: 'YouTube', href: 'https://youtube.com/@Janimeister' },
   { label: 'Twitch', href: 'https://twitch.tv/Janimeister' },
 ] as const;
-
-/** Assert that a section heading OR a fallback error is visible (for API-driven pages) */
-async function expectSectionOrError(page: Page, headingText: string) {
-  const section = page.locator('h2', { hasText: headingText });
-  const error = page.locator('.text-red-400');
-  await expect(section.or(error).first()).toBeVisible({ timeout: API_TIMEOUT });
-}
-
-/** Assert that a detail page has the standard "Back to Home" link */
-async function expectBackLink(page: Page) {
-  await expect(page.locator('a[href="/"]', { hasText: 'Back to Home' })).toBeVisible();
-}
-
-/** Assert that an attribution link is present */
-async function expectAttribution(page: Page, href: string) {
-  await expect(page.locator(`a[href="${href}"]`)).toBeVisible();
-}
 
 // ── Tests ────────────────────────────────────────────────────────────
 
