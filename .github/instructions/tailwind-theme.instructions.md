@@ -12,6 +12,8 @@ applyTo: "src/styles.css"
 - `--color-text-primary`: #e2e8f0 (headings, body)
 - `--color-text-secondary`: #94a3b8 (muted text)
 - `--color-accent-primary`: #6366f1 (indigo accent)
+- `--color-accent-light`: #818cf8 (lighter indigo — for text on dark backgrounds, inline accents)
+- `--color-accent-dark`: #4338ca (darker indigo — for high-contrast button backgrounds)
 - `--color-accent-secondary`: #8b5cf6 (purple accent)
 - `--color-border`: rgba(255,255,255,0.06)
 

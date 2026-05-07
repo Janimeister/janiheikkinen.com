@@ -8,6 +8,8 @@
   --color-text-primary: #e2e8f0;
   --color-text-secondary: #94a3b8;
   --color-accent-primary: #6366f1;
+  --color-accent-light: #818cf8;
+  --color-accent-dark: #4338ca;
   --color-accent-secondary: #8b5cf6;
   --color-border: rgba(255,255,255,0.06);
 }
@@ -101,6 +103,20 @@ body::before {
 .stagger-2 { animation-delay: 0.2s; }
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  body::before {
+    display: none;
+  }
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar {

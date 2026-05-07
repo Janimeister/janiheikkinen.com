@@ -13,6 +13,7 @@ Personal portfolio and dashboard site built with Angular 21, Tailwind CSS 4, and
 | Routing | Angular Router with lazy-loaded page components |
 | Data fetching | Angular `resource()` API |
 | E2E testing | [Playwright](https://playwright.dev) |
+| Accessibility testing | [axe-core/playwright](https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright) |
 | Unit testing | [Vitest](https://vitest.dev) with `@analogjs/vite-plugin-angular` |
 
 ## Architecture
@@ -143,3 +144,13 @@ npx playwright test
 ```
 
 Tests run against a local dev server that Playwright starts automatically. HTML reports are written to `playwright-report/`.
+
+### Accessibility tests
+
+Automated accessibility checks using axe-core scan every page against WCAG 2 AA standards:
+
+```bash
+npx playwright test e2e/accessibility.spec.ts
+```
+
+These tests run as part of the full Playwright suite and validate color contrast, keyboard accessibility, ARIA attributes, and more.
