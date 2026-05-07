@@ -84,7 +84,7 @@ const ASPECT_CORRECTION = 0.5;
       font-family: 'JetBrains Mono', monospace;
       font-size: clamp(8px, 1.1vw, 14px);
       line-height: 1.2;
-      color: #818cf8;
+      color: var(--color-accent-light);
       text-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
       white-space: pre;
       margin: 0;

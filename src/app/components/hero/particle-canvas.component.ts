@@ -37,6 +37,7 @@ export class ParticleCanvasComponent {
         canvasEl.height = canvasEl.offsetHeight;
       };
       resize();
+      this.resizeController?.abort();
       this.resizeController = new AbortController();
       window.addEventListener('resize', resize, { signal: this.resizeController.signal });
 
