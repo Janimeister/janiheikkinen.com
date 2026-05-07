@@ -30,9 +30,10 @@ test.describe('Accessibility', () => {
       await expect(page.locator('h1').first()).toBeVisible();
 
       // For API-backed pages, wait for a known section h2 OR error card to appear
-      // before running the axe scan — ensures the scan covers fully-loaded state
+      // before running the axe scan — ensures the scan covers fully-loaded state.
+      // Use a 30s timeout here since each accessibility test already has a 60s budget.
       if (waitSection) {
-        await expectSectionOrError(page, waitSection);
+        await expectSectionOrError(page, waitSection, 30_000);
       }
 
       const results = await new AxeBuilder({ page })

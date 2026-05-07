@@ -71,7 +71,7 @@ const ASPECT_CORRECTION = 0.5;
         <!-- ASCII Art Display -->
         <div class="animate-fade-slide-up stagger-2">
           <app-glow-card>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto" tabindex="0" role="region" aria-label="ASCII art output">
               <pre class="ascii-art" role="img" aria-label="Generated ASCII art">{{ displayText() }}</pre>
             </div>
           </app-glow-card>
