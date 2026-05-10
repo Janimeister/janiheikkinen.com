@@ -51,6 +51,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: test
+    env:
+      PORSSISAHKO_WORKER_URL: ${{ vars.PORSSISAHKO_WORKER_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -61,6 +63,10 @@ jobs:
 
       # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
       - run: npm ci --legacy-peer-deps
+
+      - name: Generate production environment file
+        run: |
+          echo "export const environment = { workerUrl: '${PORSSISAHKO_WORKER_URL}' };" > src/environments/environment.prod.ts
 
       - run: npx ng build --base-href /
 
