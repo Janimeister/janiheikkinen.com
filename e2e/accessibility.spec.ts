@@ -16,6 +16,7 @@ const PAGES = [
   { path: '/ascii', name: 'ASCII', waitSection: null },
   { path: '/snake', name: 'Snake', waitSection: null },
   { path: '/pet', name: 'Pet', waitSection: null },
+  { path: '/third-party-notices', name: 'Third-Party Notices', waitSection: null },
 ] as const;
 
 test.describe('Accessibility', () => {

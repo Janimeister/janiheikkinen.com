@@ -86,6 +86,12 @@ test.describe('Home Page', () => {
     await expect(footer).toContainText('Angular');
   });
 
+  test('footer has third-party notices link', async ({ page }) => {
+    const link = page.locator('app-footer a[href="/third-party-notices"]');
+    await expect(link).toBeVisible();
+    await expect(link).toContainText('Third-Party Notices');
+  });
+
   test('renders correctly on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await expect(page.locator('app-hero h1')).toBeVisible();
@@ -314,5 +320,39 @@ test.describe('Virtual Pet Page', () => {
 
   test('shows how-to-play instructions', async ({ page }) => {
     await expect(page.locator('h2', { hasText: 'How to play' })).toBeVisible();
+  });
+});
+
+test.describe('Third-Party Notices Page', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/third-party-notices');
+  });
+
+  test('has heading and back link', async ({ page }) => {
+    await expect(page.locator('h1')).toContainText('Third-Party Notices');
+    await expectBackLink(page);
+  });
+
+  test('loads and renders notices content', async ({ page }) => {
+    const content = page.locator('.notices-content');
+    const error = page.locator('p.text-red-400', { hasText: 'Could not load' });
+    await expect(content.or(error).first()).toBeVisible({ timeout: API_TIMEOUT });
+  });
+
+  test('displays section headings from the notices file', async ({ page }) => {
+    const content = page.locator('.notices-content');
+    const error = page.locator('p.text-red-400', { hasText: 'Could not load' });
+    await expect(content.or(error).first()).toBeVisible({ timeout: API_TIMEOUT });
+
+    // If content loaded, verify it has structured content
+    if (await content.isVisible()) {
+      await expect(content.locator('h2').first()).toBeVisible();
+      await expect(content.locator('h3').first()).toBeVisible();
+    }
+  });
+
+  test('footer links to this page', async ({ page }) => {
+    const footerLink = page.locator('app-footer a[href="/third-party-notices"]');
+    await expect(footerLink).toBeVisible();
   });
 });

@@ -8,5 +8,6 @@ export const routes: Routes = [
   { path: 'ascii', loadComponent: () => import('./pages/ascii.component').then(m => m.AsciiArtPageComponent) },
   { path: 'snake', loadComponent: () => import('./pages/snake.component').then(m => m.SnakePageComponent) },
   { path: 'pet', loadComponent: () => import('./pages/pet.component').then(m => m.PetPageComponent) },
+  { path: 'third-party-notices', loadComponent: () => import('./pages/third-party-notices.component').then(m => m.ThirdPartyNoticesComponent) },
   { path: '**', redirectTo: '' },
 ];

@@ -28,6 +28,7 @@ src/app/
 │   ├── ascii.component.ts       # Procedural ASCII art generator
 │   ├── snake.component.ts       # Classic Snake game
 │   └── pet.component.ts         # Virtual pet simulator
+│   └── third-party-notices.component.ts # Third-party license notices
 ├── components/
 │   ├── hero/                # Hero section with particle canvas and typing effect
 │   ├── navbar/              # Top navigation bar (scrollable on small screens)

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { describe, it, expect } from 'vitest';
 import { FooterComponent } from './footer.component';
 
@@ -6,6 +7,7 @@ describe('FooterComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FooterComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
@@ -34,5 +36,14 @@ describe('FooterComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Angular');
+  });
+
+  it('should have a Third-Party Notices link', () => {
+    const fixture = TestBed.createComponent(FooterComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const link = compiled.querySelector('a[href="/third-party-notices"]');
+    expect(link).toBeTruthy();
+    expect(link?.textContent).toContain('Third-Party Notices');
   });
 });

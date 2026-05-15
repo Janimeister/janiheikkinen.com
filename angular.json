@@ -47,6 +47,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "THIRD-PARTY-NOTICES.md",
+                "input": ".",
+                "output": "/"
               }
             ],
             "styles": [

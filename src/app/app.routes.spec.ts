@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { routes } from './app.routes';
 
-const EXPECTED_ROUTES = ['', 'weather', 'electricity', 'github', 'ascii', 'snake', 'pet'];
+const EXPECTED_ROUTES = ['', 'weather', 'electricity', 'github', 'ascii', 'snake', 'pet', 'third-party-notices'];
 
 describe('App Routes', () => {
   it('should have routes defined', () => {
