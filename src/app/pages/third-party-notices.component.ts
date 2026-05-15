@@ -1,11 +1,13 @@
-import { Component, resource, computed, ChangeDetectionStrategy, SecurityContext } from '@angular/core';
+import { Component, resource, computed, ChangeDetectionStrategy, SecurityContext, ViewEncapsulation } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-third-party-notices',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
   imports: [RouterLink],
   template: `
     <div class="min-h-screen pt-24 pb-16 px-6">
@@ -36,11 +38,11 @@ import { inject } from '@angular/core';
     </div>
   `,
   styles: `
-    :host {
+    app-third-party-notices {
       display: block;
     }
 
-    .notices-content :deep(h2) {
+    .notices-content h2 {
       font-size: 1.5rem;
       font-weight: 700;
       color: var(--color-text-primary);
@@ -50,7 +52,7 @@ import { inject } from '@angular/core';
       border-bottom: 1px solid var(--color-border);
     }
 
-    .notices-content :deep(h3) {
+    .notices-content h3 {
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--color-accent-light);
@@ -58,30 +60,30 @@ import { inject } from '@angular/core';
       margin-bottom: 0.75rem;
     }
 
-    .notices-content :deep(p) {
+    .notices-content p {
       color: var(--color-text-secondary);
       line-height: 1.75;
       margin-bottom: 0.75rem;
     }
 
-    .notices-content :deep(ul) {
+    .notices-content ul {
       list-style: disc;
       padding-left: 1.5rem;
       margin-bottom: 1rem;
     }
 
-    .notices-content :deep(li) {
+    .notices-content li {
       color: var(--color-text-secondary);
       line-height: 1.75;
       margin-bottom: 0.25rem;
     }
 
-    .notices-content :deep(strong) {
+    .notices-content strong {
       color: var(--color-text-primary);
       font-weight: 600;
     }
 
-    .notices-content :deep(code) {
+    .notices-content code {
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       font-size: 0.875em;
       background: rgba(255, 255, 255, 0.06);
@@ -90,7 +92,7 @@ import { inject } from '@angular/core';
       color: var(--color-accent-light);
     }
 
-    .notices-content :deep(pre) {
+    .notices-content pre {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--color-border);
       border-radius: 0.5rem;
@@ -103,37 +105,39 @@ import { inject } from '@angular/core';
       color: var(--color-text-secondary);
     }
 
-    .notices-content :deep(pre code) {
+    .notices-content pre code {
       background: none;
       padding: 0;
       font-size: inherit;
       color: inherit;
     }
 
-    .notices-content :deep(hr) {
+    .notices-content hr {
       border: none;
       border-top: 1px solid var(--color-border);
       margin: 2rem 0;
     }
 
-    .notices-content :deep(a) {
+    .notices-content a {
       color: var(--color-accent-light);
       text-decoration: underline;
       text-underline-offset: 2px;
       transition: color 0.2s;
     }
 
-    .notices-content :deep(a:hover) {
+    .notices-content a:hover {
       color: var(--color-accent-primary);
     }
   `,
 })
 export class ThirdPartyNoticesComponent {
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly document = inject(DOCUMENT);
 
   readonly noticesResource = resource({
     loader: async () => {
-      const res = await fetch('/THIRD-PARTY-NOTICES.md');
+      const url = new URL('THIRD-PARTY-NOTICES.md', this.document.baseURI).href;
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.text();
     },
