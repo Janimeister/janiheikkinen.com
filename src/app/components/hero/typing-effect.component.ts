@@ -26,6 +26,19 @@ export class TypingEffectComponent implements OnDestroy {
       effect(() => this.displayText.set(this.roles()[0]));
       return;
     }
+    effect(() => {
+      this.i18n.language(); // track language changes and restart animation
+      this.restartAnimation();
+    }, { allowSignalWrites: true });
+  }
+
+  private restartAnimation() {
+    if (this.timerId) clearTimeout(this.timerId);
+    this.timerId = null;
+    this.roleIndex = 0;
+    this.charIndex = 0;
+    this.isDeleting = false;
+    this.displayText.set('');
     this.tick();
   }
 

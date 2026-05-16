@@ -29,7 +29,7 @@ export const EN_TRANSLATIONS = {
   'cookie.title': '🍪 Cookie & Privacy Notice',
   'cookie.bodyStart': 'This site does not use tracking cookies or analytics. We use',
   'cookie.localStorage': 'localStorage',
-  'cookie.bodyMiddle': 'solely to remember your cookie consent and language preference. The weather page lets you search for locations - your search query is sent to',
+  'cookie.bodyMiddle': 'solely to remember your cookie consent, language preference, and virtual pet state. The weather page lets you search for locations - your search query is sent to',
   'cookie.bodyEnd': 'for geocoding and forecasts. No personal data is collected or stored by us.',
   'cookie.accept': 'Got it',
 
@@ -320,7 +320,7 @@ export const FI_TRANSLATIONS = {
   'cookie.title': '🍪 Eväste- ja tietosuojailmoitus',
   'cookie.bodyStart': 'Tämä sivusto ei käytä seurantaevästeitä tai analytiikkaa. Käytämme',
   'cookie.localStorage': 'localStoragea',
-  'cookie.bodyMiddle': 'evästeiden suostumuksesi ja kielivalintasi muistamiseen. Sääsivun sijaintihaku lähettää hakusi',
+  'cookie.bodyMiddle': 'evästeiden suostumuksesi, kielivalintasi ja virtuaalilemmikkisi tilan muistamiseen. Sääsivun sijaintihaku lähettää hakusi',
   'cookie.bodyEnd': '-palvelulle geokoodausta ja ennusteita varten. Emme kerää tai tallenna henkilötietoja.',
   'cookie.accept': 'Selvä',
 
