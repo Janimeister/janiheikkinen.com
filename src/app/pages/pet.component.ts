@@ -23,7 +23,7 @@ interface EventLogEntry {
   readonly params: Record<string, string | number>;
   /**
    * When set, `params.species` is resolved at render time by translating this key
-   * (and lower-casing the result) so language switching updates already-logged entries.
+   * so language switching updates already-logged entries.
    */
   readonly speciesNameKey?: TranslationKey;
 }
@@ -670,7 +670,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
 
   protected entryMessage(entry: EventLogEntry): string {
     const params = entry.speciesNameKey
-      ? { ...entry.params, species: this.i18n.t(entry.speciesNameKey).toLowerCase() }
+      ? { ...entry.params, species: this.i18n.t(entry.speciesNameKey) }
       : entry.params;
     return this.i18n.t(entry.key, params);
   }

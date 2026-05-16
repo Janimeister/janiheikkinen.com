@@ -15,8 +15,7 @@ import { LanguageService } from '../../i18n/language.service';
                 {{ i18n.t('cookie.bodyStart') }}
                 <strong class="text-text-primary">{{ i18n.t('cookie.localStorage') }}</strong>
                 {{ i18n.t('cookie.bodyMiddle') }}
-                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-accent-light underline hover:no-underline">Open-Meteo</a>
-                {{ i18n.t('cookie.bodyEnd') }}
+                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-accent-light underline hover:no-underline">Open-Meteo</a>{{ i18n.t('cookie.bodyEnd') }}
               </p>
             </div>
             <button (click)="accept()"
