@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LanguageService } from '../../i18n/language.service';
 
 @Component({
   selector: 'app-footer',
@@ -12,10 +13,10 @@ import { RouterLink } from '@angular/router';
         <div class="flex items-center gap-4">
           <a routerLink="/third-party-notices"
              class="hover:text-accent-light transition-colors">
-            Third-Party Notices
+            {{ i18n.t('footer.thirdPartyNotices') }}
           </a>
           <span class="flex items-center gap-1">
-            Built with &lt;3 &amp; GitHub Copilot &amp; Angular
+            {{ i18n.t('footer.builtWith') }}
           </span>
         </div>
       </div>
@@ -23,5 +24,6 @@ import { RouterLink } from '@angular/router';
   `,
 })
 export class FooterComponent {
+  protected readonly i18n = inject(LanguageService);
   year = new Date().getFullYear();
 }

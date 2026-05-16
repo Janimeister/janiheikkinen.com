@@ -1,4 +1,5 @@
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { LanguageService } from '../../i18n/language.service';
 
 @Component({
   selector: 'app-cookie-notice',
@@ -9,18 +10,17 @@ import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
         <div class="max-w-3xl mx-auto bg-bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-5 shadow-2xl">
           <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div class="flex-1">
-              <h3 class="text-sm font-semibold text-text-primary mb-1.5">🍪 Cookie & Privacy Notice</h3>
+              <h3 class="text-sm font-semibold text-text-primary mb-1.5">{{ i18n.t('cookie.title') }}</h3>
               <p class="text-xs text-text-secondary leading-relaxed">
-                This site does not use tracking cookies or analytics.
-                We use <strong class="text-text-primary">localStorage</strong> solely to remember your cookie consent preference.
-                The weather page lets you search for locations — your search query is sent to
-                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-accent-light underline hover:no-underline">Open-Meteo</a>
-                for geocoding and forecasts. No personal data is collected or stored by us.
+                {{ i18n.t('cookie.bodyStart') }}
+                <strong class="text-text-primary">{{ i18n.t('cookie.localStorage') }}</strong>
+                {{ i18n.t('cookie.bodyMiddle') }}
+                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-accent-light underline hover:no-underline">Open-Meteo</a>{{ i18n.t('cookie.bodyEnd') }}
               </p>
             </div>
             <button (click)="accept()"
                     class="shrink-0 px-5 py-2 text-sm font-medium rounded-xl bg-accent-dark text-white hover:bg-accent-dark/80 transition-colors cursor-pointer">
-              Got it
+              {{ i18n.t('cookie.accept') }}
             </button>
           </div>
         </div>
@@ -29,6 +29,7 @@ import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
   `,
 })
 export class CookieNoticeComponent {
+  protected readonly i18n = inject(LanguageService);
   visible = signal(!this.hasConsented());
 
   accept() {

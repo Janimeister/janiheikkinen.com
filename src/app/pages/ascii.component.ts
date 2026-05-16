@@ -1,13 +1,15 @@
-import { Component, signal, ChangeDetectionStrategy, afterNextRender, OnDestroy } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, afterNextRender, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { LanguageService } from '../i18n/language.service';
+import type { TranslationKey } from '../i18n/translations';
 
 type AlgorithmId = 'plasma' | 'mandelbrot' | 'waves' | 'spiral' | 'terrain' | 'coral' | 'windlines' | 'island';
 
 interface ArtAlgorithm {
   id: AlgorithmId;
-  label: string;
+  labelKey: TranslationKey;
   icon: string;
 }
 
@@ -34,19 +36,19 @@ const ASPECT_CORRECTION = 0.5;
         <div class="mb-8 animate-fade-slide-up">
           <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            Back to Home
+            {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-slate-200 via-indigo-300 to-purple-400 bg-clip-text text-transparent">ASCII Art</span>
+            <span class="bg-gradient-to-r from-slate-200 via-indigo-300 to-purple-400 bg-clip-text text-transparent">{{ i18n.t('ascii.title') }}</span>
           </h1>
-          <p class="text-text-secondary mt-2">Procedurally generated ASCII art</p>
+          <p class="text-text-secondary mt-2">{{ i18n.t('ascii.subtitle') }}</p>
         </div>
 
         <!-- Controls -->
         <div class="mb-6 animate-fade-slide-up stagger-1">
           <app-glow-card>
             <div class="flex flex-wrap items-center gap-3">
-              <span class="text-sm text-text-secondary mr-1">Algorithm:</span>
+              <span class="text-sm text-text-secondary mr-1">{{ i18n.t('ascii.algorithm') }}</span>
               @for (algo of algorithms; track algo.id) {
                 <button
                   (click)="selectAlgorithm(algo.id)"
@@ -54,15 +56,15 @@ const ASPECT_CORRECTION = 0.5;
                     ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-light border border-accent-primary/30'
                     : 'px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 border border-white/5 transition-colors'"
                   [attr.aria-pressed]="currentAlgorithm() === algo.id">
-                  {{ algo.icon }} {{ algo.label }}
+                  {{ algo.icon }} {{ i18n.t(algo.labelKey) }}
                 </button>
               }
               <button
                 (click)="generate()"
                 [disabled]="isAnimating()"
                 class="ml-auto px-4 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-light border border-accent-primary/30 hover:bg-accent-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Generate new ASCII art">
-                🎲 Generate
+                [attr.aria-label]="i18n.t('ascii.generateAria')">
+                🎲 {{ i18n.t('ascii.generate') }}
               </button>
             </div>
           </app-glow-card>
@@ -71,8 +73,8 @@ const ASPECT_CORRECTION = 0.5;
         <!-- ASCII Art Display -->
         <div class="animate-fade-slide-up stagger-2">
           <app-glow-card>
-            <div class="overflow-x-auto" tabindex="0" role="region" aria-label="ASCII art output">
-              <pre class="ascii-art" role="img" aria-label="Generated ASCII art">{{ displayText() }}</pre>
+            <div class="overflow-x-auto" tabindex="0" role="region" [attr.aria-label]="i18n.t('ascii.outputRegion')">
+              <pre class="ascii-art" role="img" [attr.aria-label]="i18n.t('ascii.generatedArt')">{{ displayText() }}</pre>
             </div>
           </app-glow-card>
         </div>
@@ -93,15 +95,16 @@ const ASPECT_CORRECTION = 0.5;
   `,
 })
 export class AsciiArtPageComponent implements OnDestroy {
+  protected readonly i18n = inject(LanguageService);
   readonly algorithms: ArtAlgorithm[] = [
-    { id: 'plasma', label: 'Plasma', icon: '🌊' },
-    { id: 'mandelbrot', label: 'Mandelbrot', icon: '🔬' },
-    { id: 'waves', label: 'Waves', icon: '🌀' },
-    { id: 'spiral', label: 'Galaxy', icon: '🌌' },
-    { id: 'terrain', label: 'Terrain', icon: '⛰️' },
-    { id: 'coral', label: 'Coral Bloom', icon: '🪸' },
-    { id: 'windlines', label: 'Wind Lines', icon: '💨' },
-    { id: 'island', label: 'Island Contours', icon: '🗺️' },
+    { id: 'plasma', labelKey: 'ascii.plasma', icon: '🌊' },
+    { id: 'mandelbrot', labelKey: 'ascii.mandelbrot', icon: '🔬' },
+    { id: 'waves', labelKey: 'ascii.waves', icon: '🌀' },
+    { id: 'spiral', labelKey: 'ascii.spiral', icon: '🌌' },
+    { id: 'terrain', labelKey: 'ascii.terrain', icon: '⛰️' },
+    { id: 'coral', labelKey: 'ascii.coral', icon: '🪸' },
+    { id: 'windlines', labelKey: 'ascii.windlines', icon: '💨' },
+    { id: 'island', labelKey: 'ascii.island', icon: '🗺️' },
   ];
 
   readonly currentAlgorithm = signal<AlgorithmId>('plasma');

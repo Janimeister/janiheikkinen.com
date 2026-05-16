@@ -32,14 +32,22 @@ src/app/
 ├── components/
 │   ├── hero/                # Hero section with particle canvas and typing effect
 │   ├── navbar/              # Top navigation bar (scrollable on small screens)
+│   ├── language-toggle/     # EN/FI language switcher
 │   ├── footer/              # Site footer
 │   ├── shared/              # GlowCardComponent, FloatingOrbComponent
 │   └── cookie-notice/       # Cookie consent banner
+├── i18n/                    # Signal-based runtime translations
 ├── app.routes.ts            # Route definitions
 └── app.config.ts            # Application configuration
 ```
 
 Theme tokens and animation keyframes are centralized in `src/styles.css`.
+
+## Language Support
+
+The app supports English and Finnish through a small runtime i18n layer in `src/app/i18n/`. Users can switch language from the navbar using the EN/FI segmented control. The selected language is stored in `localStorage` under `app-language`, updates the document `<html lang>` attribute, and is applied immediately without changing routes or requiring a separate build.
+
+Static UI copy is translated in the app. External content such as GitHub repository descriptions, cat facts, and third-party notice file contents is shown as returned by its source.
 
 ## External APIs
 

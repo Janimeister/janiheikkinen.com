@@ -1,10 +1,12 @@
-import { Component, signal, ChangeDetectionStrategy, ElementRef, viewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, ElementRef, viewChild, AfterViewInit, OnDestroy, inject, effect } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { LanguageService } from '../../i18n/language.service';
+import { LanguageToggleComponent } from '../language-toggle/language-toggle.component';
 
 @Component({
   selector: 'app-navbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, LanguageToggleComponent],
   host: {
     '(window:scroll)': 'onScroll()',
     '(window:resize)': 'checkOverflow()',
@@ -16,28 +18,31 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         <a routerLink="/" class="text-lg font-semibold text-text-primary tracking-tight hover:text-accent-primary transition-colors shrink-0">
           JH<span class="text-accent-primary">.</span>
         </a>
-        <div class="relative min-w-0 flex-1 flex justify-end">
-          <!-- Left fade hint -->
-          @if (canScrollLeft()) {
-            <div class="nav-fade nav-fade-left" aria-hidden="true"></div>
-          }
-          <div #navScroll
-               class="flex items-center gap-6 overflow-x-auto scrollbar-hide scroll-smooth"
-               (scroll)="checkOverflow()">
-            @for (link of navLinks; track link.route) {
-              <a [routerLink]="link.route"
-                 routerLinkActive="text-accent-primary!"
-                 [routerLinkActiveOptions]="{ exact: link.route === '/' }"
-                 class="text-sm text-text-secondary hover:text-accent-primary transition-colors relative group whitespace-nowrap shrink-0">
-                {{ link.label }}
-                <span class="absolute -bottom-1 left-0 w-0 h-px bg-accent-primary transition-all duration-300 group-hover:w-full animate-breathing-border"></span>
-              </a>
+        <app-language-toggle class="shrink-0" />
+        <div class="relative min-w-0 flex-1 flex items-center justify-end gap-3">
+          <div class="relative min-w-0">
+            <!-- Left fade hint -->
+            @if (canScrollLeft()) {
+              <div class="nav-fade nav-fade-left" aria-hidden="true"></div>
+            }
+            <div #navScroll
+                 class="flex items-center gap-6 overflow-x-auto scrollbar-hide scroll-smooth"
+                 (scroll)="checkOverflow()">
+              @for (link of navLinks; track link.route) {
+                <a [routerLink]="link.route"
+                   routerLinkActive="text-accent-primary!"
+                   [routerLinkActiveOptions]="{ exact: link.route === '/' }"
+                   class="text-sm text-text-secondary hover:text-accent-primary transition-colors relative group whitespace-nowrap shrink-0">
+                  {{ i18n.t(link.labelKey) }}
+                  <span class="absolute -bottom-1 left-0 w-0 h-px bg-accent-primary transition-all duration-300 group-hover:w-full animate-breathing-border"></span>
+                </a>
+              }
+            </div>
+            <!-- Right fade hint -->
+            @if (canScrollRight()) {
+              <div class="nav-fade nav-fade-right" aria-hidden="true"></div>
             }
           </div>
-          <!-- Right fade hint -->
-          @if (canScrollRight()) {
-            <div class="nav-fade nav-fade-right" aria-hidden="true"></div>
-          }
         </div>
       </div>
     </nav>
@@ -84,6 +89,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   `
 })
 export class NavbarComponent implements AfterViewInit, OnDestroy {
+  protected readonly i18n = inject(LanguageService);
   private readonly navScrollRef = viewChild<ElementRef<HTMLElement>>('navScroll');
 
   scrolled = signal(false);
@@ -91,16 +97,23 @@ export class NavbarComponent implements AfterViewInit, OnDestroy {
   canScrollRight = signal(false);
 
   navLinks = [
-    { label: 'Home', route: '/' },
-    { label: 'Weather', route: '/weather' },
-    { label: 'Electricity', route: '/electricity' },
-    { label: 'GitHub', route: '/github' },
-    { label: 'ASCII', route: '/ascii' },
-    { label: 'Snake', route: '/snake' },
-    { label: 'Pet', route: '/pet' },
-  ];
+    { labelKey: 'nav.home', route: '/' },
+    { labelKey: 'nav.weather', route: '/weather' },
+    { labelKey: 'nav.electricity', route: '/electricity' },
+    { labelKey: 'nav.github', route: '/github' },
+    { labelKey: 'nav.ascii', route: '/ascii' },
+    { labelKey: 'nav.snake', route: '/snake' },
+    { labelKey: 'nav.pet', route: '/pet' },
+  ] as const;
 
   private resizeObserver: ResizeObserver | undefined;
+
+  constructor() {
+    effect(() => {
+      this.i18n.language(); // track language changes
+      queueMicrotask(() => this.checkOverflow());
+    });
+  }
 
   ngAfterViewInit() {
     this.checkOverflow();

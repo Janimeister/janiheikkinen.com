@@ -2,9 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ThirdPartyNoticesComponent } from './third-party-notices.component';
+import { LanguageService } from '../i18n/language.service';
 
 describe('ThirdPartyNoticesComponent', () => {
   beforeEach(async () => {
+    localStorage.clear();
     // Default: keep fetch pending so component stays in loading state;
     // individual tests override this spy as needed.
     vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise(() => {}));
@@ -39,6 +41,18 @@ describe('ThirdPartyNoticesComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const h1 = compiled.querySelector('h1');
     expect(h1?.textContent).toContain('Third-Party Notices');
+  });
+
+  it('should translate heading and back link when language changes', () => {
+    const fixture = TestBed.createComponent(ThirdPartyNoticesComponent);
+    const language = TestBed.inject(LanguageService);
+
+    language.setLanguage('fi');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('a[href="/"]')?.textContent).toContain('Takaisin etusivulle');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Kolmansien osapuolten ilmoitukset');
   });
 
   it('should show loading state initially', () => {
