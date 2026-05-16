@@ -1,4 +1,5 @@
-import { Component, signal, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, OnDestroy, effect, inject } from '@angular/core';
+import { LanguageService } from '../../i18n/language.service';
 
 @Component({
   selector: 'app-typing-effect',
@@ -11,10 +12,8 @@ import { Component, signal, ChangeDetectionStrategy, OnDestroy } from '@angular/
   `,
 })
 export class TypingEffectComponent implements OnDestroy {
-  private roles = [
-    'Voi pojat',
-    'Parasta ikinä',
-  ];
+  private readonly i18n = inject(LanguageService);
+  private readonly prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
   displayText = signal('');
   private roleIndex = 0;
@@ -23,21 +22,29 @@ export class TypingEffectComponent implements OnDestroy {
   private timerId: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
-      this.displayText.set(this.roles[0]);
+    if (this.prefersReducedMotion) {
+      effect(() => this.displayText.set(this.roles()[0]));
       return;
     }
     this.tick();
   }
 
+  private roles(): string[] {
+    return [
+      this.i18n.t('hero.role1'),
+      this.i18n.t('hero.role2'),
+    ];
+  }
+
   private tick() {
-    const currentRole = this.roles[this.roleIndex];
+    const roles = this.roles();
+    const currentRole = roles[this.roleIndex] ?? roles[0];
 
     if (this.isDeleting) {
-      this.charIndex--;
+      this.charIndex = Math.max(0, this.charIndex - 1);
       this.displayText.set(currentRole.substring(0, this.charIndex));
     } else {
-      this.charIndex++;
+      this.charIndex = Math.min(currentRole.length, this.charIndex + 1);
       this.displayText.set(currentRole.substring(0, this.charIndex));
     }
 
@@ -48,7 +55,7 @@ export class TypingEffectComponent implements OnDestroy {
       this.isDeleting = true;
     } else if (this.isDeleting && this.charIndex === 0) {
       this.isDeleting = false;
-      this.roleIndex = (this.roleIndex + 1) % this.roles.length;
+      this.roleIndex = (this.roleIndex + 1) % roles.length;
       delay = 500;
     }
 

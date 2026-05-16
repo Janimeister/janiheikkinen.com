@@ -2,9 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect } from 'vitest';
 import { FooterComponent } from './footer.component';
+import { LanguageService } from '../../i18n/language.service';
 
 describe('FooterComponent', () => {
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [FooterComponent],
       providers: [provideRouter([])],
@@ -45,5 +47,15 @@ describe('FooterComponent', () => {
     const link = compiled.querySelector('a[href="/third-party-notices"]');
     expect(link).toBeTruthy();
     expect(link?.textContent).toContain('Third-Party Notices');
+  });
+
+  it('should translate footer links when language changes', () => {
+    const fixture = TestBed.createComponent(FooterComponent);
+    const language = TestBed.inject(LanguageService);
+
+    language.setLanguage('fi');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Kolmansien osapuolten ilmoitukset');
   });
 });

@@ -1,7 +1,9 @@
-import { Component, resource, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, resource, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { LanguageService } from '../i18n/language.service';
+import type { TranslationKey } from '../i18n/translations';
 
 interface GitHubUser {
   login: string;
@@ -70,12 +72,12 @@ const LANG_COLORS: Record<string, string> = {
         <div class="mb-8 animate-fade-slide-up">
           <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            Back to Home
+            {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-slate-200 via-indigo-300 to-purple-400 bg-clip-text text-transparent">GitHub Profile</span>
+            <span class="bg-gradient-to-r from-slate-200 via-indigo-300 to-purple-400 bg-clip-text text-transparent">{{ i18n.t('github.title') }}</span>
           </h1>
-          <p class="text-text-secondary mt-2">Public repositories & activity</p>
+          <p class="text-text-secondary mt-2">{{ i18n.t('github.subtitle') }}</p>
         </div>
 
         @if (profile.isLoading()) {
@@ -91,7 +93,7 @@ const LANG_COLORS: Record<string, string> = {
           </div>
         } @else if (profile.error()) {
           <app-glow-card>
-            <p class="text-red-400">Could not load GitHub data. The API may be rate-limited — try again later.</p>
+            <p class="text-red-400">{{ i18n.t('github.loadError') }}</p>
           </app-glow-card>
         } @else if (profile.value(); as user) {
           <!-- Profile Hero -->
@@ -118,7 +120,7 @@ const LANG_COLORS: Record<string, string> = {
                           🔗 {{ user.blog }}
                         </a>
                       }
-                      <span class="flex items-center gap-1">📅 Member since {{ memberYear(user.created_at) }}</span>
+                      <span class="flex items-center gap-1">📅 {{ i18n.t('github.memberSince', { year: memberYear(user.created_at) }) }}</span>
                     </div>
                   </div>
                 </div>
@@ -126,23 +128,23 @@ const LANG_COLORS: Record<string, string> = {
             </div>
             <div>
               <app-glow-card>
-                <h3 class="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">Stats</h3>
+                <h3 class="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">{{ i18n.t('github.stats') }}</h3>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="bg-white/[0.03] rounded-xl p-3 text-center">
                     <div class="text-2xl font-bold text-accent-primary font-[JetBrains_Mono,monospace]">{{ user.public_repos }}</div>
-                    <div class="text-xs text-text-secondary">Repositories</div>
+                    <div class="text-xs text-text-secondary">{{ i18n.t('github.repositoriesCount') }}</div>
                   </div>
                   <div class="bg-white/[0.03] rounded-xl p-3 text-center">
                     <div class="text-2xl font-bold text-accent-secondary font-[JetBrains_Mono,monospace]">{{ user.followers }}</div>
-                    <div class="text-xs text-text-secondary">Followers</div>
+                    <div class="text-xs text-text-secondary">{{ i18n.t('github.followers') }}</div>
                   </div>
                   <div class="bg-white/[0.03] rounded-xl p-3 text-center">
                     <div class="text-2xl font-bold text-emerald-400 font-[JetBrains_Mono,monospace]">{{ user.following }}</div>
-                    <div class="text-xs text-text-secondary">Following</div>
+                    <div class="text-xs text-text-secondary">{{ i18n.t('github.following') }}</div>
                   </div>
                   <div class="bg-white/[0.03] rounded-xl p-3 text-center">
                     <div class="text-2xl font-bold text-amber-400 font-[JetBrains_Mono,monospace]">{{ user.public_gists }}</div>
-                    <div class="text-xs text-text-secondary">Gists</div>
+                    <div class="text-xs text-text-secondary">{{ i18n.t('github.gists') }}</div>
                   </div>
                 </div>
               </app-glow-card>
@@ -155,14 +157,14 @@ const LANG_COLORS: Record<string, string> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">🎨</span>
-                  <h2 class="text-lg font-semibold text-text-primary">Languages</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.languages') }}</h2>
                 </div>
                 <!-- Language bar -->
                 <div class="flex h-4 rounded-full overflow-hidden mb-4">
                   @for (lang of languages(); track lang.name) {
                     <div [class]="langColor(lang.name)"
                          [style.width.%]="lang.pct"
-                         [title]="lang.name + ': ' + lang.count + ' repos'"
+                         [title]="lang.name + ': ' + i18n.t('github.repoCount', { count: lang.count })"
                          class="transition-all hover:opacity-80">
                     </div>
                   }
@@ -186,7 +188,7 @@ const LANG_COLORS: Record<string, string> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">📦</span>
-                  <h2 class="text-lg font-semibold text-text-primary">Repositories</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.repositories') }}</h2>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   @for (repo of repoList; track repo.name) {
@@ -215,7 +217,7 @@ const LANG_COLORS: Record<string, string> = {
                             {{ repo.language }}
                           </span>
                         }
-                        <span>Updated {{ relativeDate(repo.updated_at) }}</span>
+                        <span>{{ i18n.t('github.updated', { date: relativeDate(repo.updated_at) }) }}</span>
                       </div>
                     </a>
                   }
@@ -230,7 +232,7 @@ const LANG_COLORS: Record<string, string> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">📡</span>
-                  <h2 class="text-lg font-semibold text-text-primary">Recent Activity</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.recentActivity') }}</h2>
                 </div>
                 <div class="space-y-3">
                   @for (event of recentActivity(); track $index) {
@@ -239,7 +241,7 @@ const LANG_COLORS: Record<string, string> = {
                       <div class="min-w-0 flex-1">
                         <div class="text-sm text-text-primary">
                           <span class="font-medium">{{ event.action }}</span>
-                          <span class="text-text-secondary"> in </span>
+                          <span class="text-text-secondary"> {{ i18n.t('github.in') }} </span>
                           <span class="text-accent-light">{{ event.repo }}</span>
                         </div>
                         <div class="text-xs text-text-secondary mt-0.5">{{ relativeDate(event.date) }}</div>
@@ -256,6 +258,7 @@ const LANG_COLORS: Record<string, string> = {
   `,
 })
 export class GithubPageComponent {
+  protected readonly i18n = inject(LanguageService);
   private readonly username = 'Janimeister';
 
   profile = resource({
@@ -302,24 +305,24 @@ export class GithubPageComponent {
     const eventList = this.events.value();
     if (!eventList?.length) return [];
 
-    const eventMap: Record<string, { icon: string; action: string }> = {
-      PushEvent: { icon: '🚀', action: 'Pushed to' },
-      CreateEvent: { icon: '🌱', action: 'Created branch/tag in' },
-      DeleteEvent: { icon: '🗑️', action: 'Deleted branch/tag in' },
-      IssuesEvent: { icon: '📝', action: 'Issue activity in' },
-      IssueCommentEvent: { icon: '💬', action: 'Commented on issue in' },
-      PullRequestEvent: { icon: '🔀', action: 'PR activity in' },
-      PullRequestReviewEvent: { icon: '👀', action: 'Reviewed PR in' },
-      WatchEvent: { icon: '⭐', action: 'Starred' },
-      ForkEvent: { icon: '🍴', action: 'Forked' },
-      ReleaseEvent: { icon: '🏷️', action: 'Released in' },
+    const eventMap: Record<string, { icon: string; actionKey: TranslationKey }> = {
+      PushEvent: { icon: '🚀', actionKey: 'github.eventPush' },
+      CreateEvent: { icon: '🌱', actionKey: 'github.eventCreate' },
+      DeleteEvent: { icon: '🗑️', actionKey: 'github.eventDelete' },
+      IssuesEvent: { icon: '📝', actionKey: 'github.eventIssues' },
+      IssueCommentEvent: { icon: '💬', actionKey: 'github.eventIssueComment' },
+      PullRequestEvent: { icon: '🔀', actionKey: 'github.eventPullRequest' },
+      PullRequestReviewEvent: { icon: '👀', actionKey: 'github.eventPullRequestReview' },
+      WatchEvent: { icon: '⭐', actionKey: 'github.eventWatch' },
+      ForkEvent: { icon: '🍴', actionKey: 'github.eventFork' },
+      ReleaseEvent: { icon: '🏷️', actionKey: 'github.eventRelease' },
     };
 
     return eventList.slice(0, 10).map(e => {
-      const info = eventMap[e.type] ?? { icon: '📌', action: e.type.replace('Event', '') + ' in' };
+      const info = eventMap[e.type];
       return {
-        icon: info.icon,
-        action: info.action,
+        icon: info?.icon ?? '📌',
+        action: info ? this.i18n.t(info.actionKey) : `${e.type.replace('Event', '')}`,
         repo: e.repo.name.split('/')[1] || e.repo.name,
         date: e.created_at,
       };
@@ -341,11 +344,11 @@ export class GithubPageComponent {
   relativeDate(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime();
     const days = Math.floor(diff / 86400000);
-    if (days === 0) return 'today';
-    if (days === 1) return 'yesterday';
-    if (days < 30) return `${days} days ago`;
+    if (days === 0) return this.i18n.t('github.today');
+    if (days === 1) return this.i18n.t('github.yesterday');
+    if (days < 30) return this.i18n.t('github.daysAgo', { count: days });
     const months = Math.floor(days / 30);
-    if (months < 12) return `${months}mo ago`;
-    return `${Math.floor(months / 12)}y ago`;
+    if (months < 12) return this.i18n.t('github.monthsAgo', { count: months });
+    return this.i18n.t('github.yearsAgo', { count: Math.floor(months / 12) });
   }
 }

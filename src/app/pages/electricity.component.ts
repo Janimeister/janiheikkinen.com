@@ -3,6 +3,7 @@ import { environment } from '../../environments/environment';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { LanguageService } from '../i18n/language.service';
 
 interface PriceEntry {
   price: number;
@@ -31,12 +32,12 @@ interface PriceResponse {
         <div class="mb-8 animate-fade-slide-up">
           <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            Back to Home
+            {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-500 bg-clip-text text-transparent">Electricity Prices</span>
+            <span class="bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-500 bg-clip-text text-transparent">{{ i18n.t('electricity.title') }}</span>
           </h1>
-          <p class="text-text-secondary mt-2">Finland Nord Pool spot prices • Data from Porssisähkö</p>
+          <p class="text-text-secondary mt-2">{{ i18n.t('electricity.subtitle') }}</p>
         </div>
 
         @if (priceData.isLoading()) {
@@ -52,7 +53,7 @@ interface PriceResponse {
           </div>
         } @else if (priceData.error()) {
           <app-glow-card>
-            <p class="text-red-400">Could not load electricity price data. Please try again later.</p>
+            <p class="text-red-400">{{ i18n.t('electricity.loadError') }}</p>
           </app-glow-card>
         } @else {
           <!-- Current Price Hero -->
@@ -61,7 +62,7 @@ interface PriceResponse {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">⚡</span>
-                  <h2 class="text-lg font-semibold text-text-primary">Current Price</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.currentPrice') }}</h2>
                 </div>
                 @if (currentPrice() !== null) {
                   <div class="flex items-baseline gap-3 mb-2">
@@ -72,14 +73,14 @@ interface PriceResponse {
                     <span class="text-2xl text-text-secondary">c/kWh</span>
                   </div>
                   <div class="text-sm text-text-secondary mb-4">
-                    Spot price including VAT 25.5% • Valid {{ currentTimeRange() }}
+                    {{ i18n.t('electricity.vatNotice', { range: currentTimeRange() }) }}
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full animate-glow-pulse" [class]="priceDotColor(currentPrice()!)"></span>
                     <span class="text-sm" [class]="priceColor(currentPrice()!)">{{ priceLevel(currentPrice()!) }}</span>
                   </div>
                 } @else {
-                  <p class="text-text-secondary">No current price available</p>
+                  <p class="text-text-secondary">{{ i18n.t('electricity.noCurrentPrice') }}</p>
                 }
               </app-glow-card>
             </div>
@@ -87,34 +88,34 @@ interface PriceResponse {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">📊</span>
-                  <h2 class="text-lg font-semibold text-text-primary">Today Stats</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.todayStats') }}</h2>
                 </div>
                 @if (todayStats(); as stats) {
                   <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Average</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.average') }}</span>
                       <span class="text-sm font-semibold" [class]="priceColor(stats.avg)">{{ stats.avg.toFixed(2) }} c/kWh</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Lowest</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.lowest') }}</span>
                       <span class="text-sm font-semibold text-emerald-400">{{ stats.min.toFixed(2) }} c/kWh</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Highest</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.highest') }}</span>
                       <span class="text-sm font-semibold text-red-400">{{ stats.max.toFixed(2) }} c/kWh</span>
                     </div>
                     <hr class="border-white/5" />
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Cheapest Hour</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.cheapestHour') }}</span>
                       <span class="text-sm font-medium text-emerald-400">{{ stats.cheapestHour }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Priciest Hour</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.priciestHour') }}</span>
                       <span class="text-sm font-medium text-red-400">{{ stats.priciestHour }}</span>
                     </div>
                   </div>
                 } @else {
-                  <p class="text-sm text-text-secondary">No data for today</p>
+                  <p class="text-sm text-text-secondary">{{ i18n.t('electricity.noDataToday') }}</p>
                 }
               </app-glow-card>
             </div>
@@ -125,7 +126,7 @@ interface PriceResponse {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">📈</span>
-                <h2 class="text-lg font-semibold text-text-primary">Price Chart (Today + Tomorrow)</h2>
+                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.priceChart') }}</h2>
               </div>
               <div class="flex">
                 <!-- Y-axis (outside scroll container) -->
@@ -135,7 +136,7 @@ interface PriceResponse {
                   }
                 </div>
                 <!-- Scrollable chart -->
-                <div class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4" tabindex="0" role="region" aria-label="Price chart" #chartScroller (click)="activeBarIdx.set(null)">
+                <div class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.priceChartRegion')" #chartScroller (click)="activeBarIdx.set(null)">
                   <div [style.min-width.px]="chartBars().length * 10" class="pt-8">
                     <div class="flex items-end gap-0.5 h-48">
                       @for (bar of chartBars(); track bar.hour; let i = $index) {
@@ -171,7 +172,7 @@ interface PriceResponse {
                 <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-emerald-500/60"></span> &lt; 5 c/kWh</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-amber-500/60"></span> 5–10 c/kWh</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-red-500/60"></span> &gt; 10 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-accent-primary"></span> Current</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-accent-primary"></span> {{ i18n.t('electricity.currentLegend') }}</span>
               </div>
             </app-glow-card>
           </div>
@@ -181,16 +182,16 @@ interface PriceResponse {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">📋</span>
-                <h2 class="text-lg font-semibold text-text-primary">Hourly Prices</h2>
+                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.hourlyPrices') }}</h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" aria-label="Hourly prices table">
+              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.hourlyPricesRegion')">
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="text-text-secondary border-b border-white/5">
-                      <th class="text-left py-2 pr-4">Time</th>
-                      <th class="text-right py-2 pr-4">Price</th>
-                      <th class="text-left py-2 hidden md:table-cell">Level</th>
-                      <th class="text-left py-2">Bar</th>
+                      <th class="text-left py-2 pr-4">{{ i18n.t('electricity.time') }}</th>
+                      <th class="text-right py-2 pr-4">{{ i18n.t('electricity.price') }}</th>
+                      <th class="text-left py-2 hidden md:table-cell">{{ i18n.t('electricity.level') }}</th>
+                      <th class="text-left py-2">{{ i18n.t('electricity.bar') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -200,7 +201,7 @@ interface PriceResponse {
                         <td class="py-2 pr-4 font-mono text-text-primary">
                           {{ row.hour }}
                           @if (row.isCurrent) {
-                            <span class="ml-1 text-[10px] text-accent-light font-sans">NOW</span>
+                            <span class="ml-1 text-[10px] text-accent-light font-sans">{{ i18n.t('electricity.now') }}</span>
                           }
                         </td>
                         <td class="py-2 pr-4 text-right font-mono font-semibold" [class]="priceColor(row.price)">
@@ -226,7 +227,7 @@ interface PriceResponse {
           <div class="mt-6 text-center">
             <a href="https://porssisahko.net" target="_blank" rel="noopener noreferrer"
                class="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors">
-              Data from porssisahko.net • Nord Pool spot prices
+              {{ i18n.t('electricity.attribution') }}
             </a>
           </div>
         }
@@ -237,6 +238,7 @@ interface PriceResponse {
 export class ElectricityPageComponent {
   private el = inject(ElementRef);
   private injector = inject(Injector);
+  protected readonly i18n = inject(LanguageService);
   activeBarIdx = signal<number | null>(null);
 
   constructor() {
@@ -294,7 +296,7 @@ export class ElectricityPageComponent {
     if (idx < 0 || !prices[idx]) return '';
     const start = new Date(prices[idx].startDate);
     const end = new Date(prices[idx].endDate);
-    const fmt = (d: Date) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const fmt = (d: Date) => d.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
     return `${fmt(start)} – ${fmt(end)}`;
   });
 
@@ -314,7 +316,7 @@ export class ElectricityPageComponent {
     const fmtHour = (p: PriceEntry) => {
       const s = new Date(p.startDate);
       const e = new Date(p.endDate);
-      return `${s.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}–${e.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+      return `${s.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}–${e.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}`;
     };
 
     return { avg, min: minVal, max: maxVal, cheapestHour: fmtHour(cheapest), priciestHour: fmtHour(priciest) };
@@ -341,7 +343,7 @@ export class ElectricityPageComponent {
     const maxP = this.chartMax();
 
     return prices.map((p, i) => ({
-      hour: new Date(p.startDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      hour: new Date(p.startDate).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' }),
       price: p.price,
       heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
       isCurrent: i === curIdx,
@@ -356,7 +358,7 @@ export class ElectricityPageComponent {
     const maxP = Math.max(...prices.map(p => Math.abs(p.price)), 1);
 
     return prices.map((p, i) => ({
-      hour: `${new Date(p.startDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}–${new Date(p.endDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`,
+      hour: `${new Date(p.startDate).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}–${new Date(p.endDate).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}`,
       price: p.price,
       isCurrent: i === curIdx,
       barPct: Math.max(3, (Math.max(0, p.price) / maxP) * 100),
@@ -387,10 +389,10 @@ export class ElectricityPageComponent {
   }
 
   priceLevel(price: number): string {
-    if (price < 2) return 'Very cheap';
-    if (price < 5) return 'Cheap';
-    if (price < 10) return 'Moderate';
-    if (price < 15) return 'Expensive';
-    return 'Very expensive';
+    if (price < 2) return this.i18n.t('electricity.veryCheap');
+    if (price < 5) return this.i18n.t('electricity.cheap');
+    if (price < 10) return this.i18n.t('electricity.moderate');
+    if (price < 15) return this.i18n.t('electricity.expensive');
+    return this.i18n.t('electricity.veryExpensive');
   }
 }

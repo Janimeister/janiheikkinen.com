@@ -1,8 +1,10 @@
-import { Component, resource, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, resource, computed, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { LanguageService } from '../i18n/language.service';
+import type { TranslationKey } from '../i18n/translations';
 
 interface WeatherCurrent {
   temperature_2m: number;
@@ -51,31 +53,31 @@ interface WeatherResponse {
   daily: WeatherDaily;
 }
 
-const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
-  0: { label: 'Clear sky', icon: '☀️' },
-  1: { label: 'Mainly clear', icon: '🌤️' },
-  2: { label: 'Partly cloudy', icon: '⛅' },
-  3: { label: 'Overcast', icon: '☁️' },
-  45: { label: 'Foggy', icon: '🌫️' },
-  48: { label: 'Rime fog', icon: '🌫️' },
-  51: { label: 'Light drizzle', icon: '🌦️' },
-  53: { label: 'Drizzle', icon: '🌦️' },
-  55: { label: 'Dense drizzle', icon: '🌧️' },
-  61: { label: 'Slight rain', icon: '🌧️' },
-  63: { label: 'Moderate rain', icon: '🌧️' },
-  65: { label: 'Heavy rain', icon: '🌧️' },
-  71: { label: 'Slight snow', icon: '🌨️' },
-  73: { label: 'Moderate snow', icon: '❄️' },
-  75: { label: 'Heavy snow', icon: '❄️' },
-  77: { label: 'Snow grains', icon: '🌨️' },
-  80: { label: 'Rain showers', icon: '🌦️' },
-  81: { label: 'Moderate showers', icon: '🌧️' },
-  82: { label: 'Violent showers', icon: '⛈️' },
-  85: { label: 'Snow showers', icon: '🌨️' },
-  86: { label: 'Heavy snow showers', icon: '❄️' },
-  95: { label: 'Thunderstorm', icon: '⛈️' },
-  96: { label: 'Thunderstorm w/ hail', icon: '⛈️' },
-  99: { label: 'Thunderstorm w/ heavy hail', icon: '⛈️' },
+const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> = {
+  0: { labelKey: 'weather.clearSky', icon: '☀️' },
+  1: { labelKey: 'weather.mainlyClear', icon: '🌤️' },
+  2: { labelKey: 'weather.partlyCloudy', icon: '⛅' },
+  3: { labelKey: 'weather.overcast', icon: '☁️' },
+  45: { labelKey: 'weather.foggy', icon: '🌫️' },
+  48: { labelKey: 'weather.rimeFog', icon: '🌫️' },
+  51: { labelKey: 'weather.lightDrizzle', icon: '🌦️' },
+  53: { labelKey: 'weather.drizzle', icon: '🌦️' },
+  55: { labelKey: 'weather.denseDrizzle', icon: '🌧️' },
+  61: { labelKey: 'weather.slightRain', icon: '🌧️' },
+  63: { labelKey: 'weather.moderateRain', icon: '🌧️' },
+  65: { labelKey: 'weather.heavyRain', icon: '🌧️' },
+  71: { labelKey: 'weather.slightSnow', icon: '🌨️' },
+  73: { labelKey: 'weather.moderateSnow', icon: '❄️' },
+  75: { labelKey: 'weather.heavySnow', icon: '❄️' },
+  77: { labelKey: 'weather.snowGrains', icon: '🌨️' },
+  80: { labelKey: 'weather.rainShowers', icon: '🌦️' },
+  81: { labelKey: 'weather.moderateShowers', icon: '🌧️' },
+  82: { labelKey: 'weather.violentShowers', icon: '⛈️' },
+  85: { labelKey: 'weather.snowShowers', icon: '🌨️' },
+  86: { labelKey: 'weather.heavySnowShowers', icon: '❄️' },
+  95: { labelKey: 'weather.thunderstorm', icon: '⛈️' },
+  96: { labelKey: 'weather.thunderstormHail', icon: '⛈️' },
+  99: { labelKey: 'weather.thunderstormHeavyHail', icon: '⛈️' },
 };
 
 @Component({
@@ -95,25 +97,25 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
         <div class="mb-8 animate-fade-slide-up">
           <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            Back to Home
+            {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-sky-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">Weather Conditions</span>
+            <span class="bg-gradient-to-r from-sky-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">{{ i18n.t('weather.title') }}</span>
           </h1>
-          <p class="text-text-secondary mt-2">Detailed forecast from Open-Meteo • Updated every 15 minutes</p>
+          <p class="text-text-secondary mt-2">{{ i18n.t('weather.subtitle') }}</p>
           <!-- Location search -->
           <div class="mt-4 flex gap-2 max-w-sm">
             <input type="text"
                    [(ngModel)]="searchQuery"
                    (keydown.enter)="searchLocation()"
-                   placeholder="Search location..."
+                   [attr.placeholder]="i18n.t('weather.searchPlaceholder')"
                    maxlength="100"
                    autocomplete="off"
                    class="flex-1 bg-white/[0.05] border border-border rounded-xl px-4 py-2 text-sm text-text-primary placeholder-text-secondary/50 outline-none focus:border-accent-primary/50 transition-colors" />
             <button (click)="searchLocation()"
                     [disabled]="searching()"
                     class="px-4 py-2 text-sm font-medium rounded-xl bg-accent-primary/20 text-accent-light hover:bg-accent-primary/30 border border-accent-primary/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-              @if (searching()) { Searching... } @else { Search }
+              @if (searching()) { {{ i18n.t('weather.searching') }} } @else { {{ i18n.t('weather.search') }} }
             </button>
           </div>
           @if (searchError()) {
@@ -134,7 +136,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
           </div>
         } @else if (weather.error()) {
           <app-glow-card>
-            <p class="text-red-400">Could not load weather data. Please try again later.</p>
+            <p class="text-red-400">{{ i18n.t('weather.loadError') }}</p>
           </app-glow-card>
         } @else if (weather.value(); as data) {
           <!-- Current Conditions Hero -->
@@ -143,7 +145,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">📍</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ locationName() }} Weather</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.currentLocation', { location: locationName() }) }}</h2>
                 </div>
                 <div class="flex items-center gap-6 mb-6">
                   <span class="text-7xl md:text-8xl">{{ weatherInfo(data.current.weather_code).icon }}</span>
@@ -155,26 +157,26 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
                       {{ weatherInfo(data.current.weather_code).label }}
                     </div>
                     <div class="text-sm text-text-secondary">
-                      Feels like {{ data.current.apparent_temperature }}°C
+                      {{ i18n.t('weather.feelsLike', { temperature: data.current.apparent_temperature }) }}
                     </div>
                   </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">💨 Wind</div>
+                    <div class="text-xs text-text-secondary mb-1">💨 {{ i18n.t('weather.wind') }}</div>
                     <div class="text-lg font-semibold text-text-primary">{{ data.current.wind_speed_10m }} km/h</div>
                     <div class="text-xs text-text-secondary">{{ windDirection(data.current.wind_direction_10m) }}</div>
                   </div>
                   <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">🌊 Gusts</div>
+                    <div class="text-xs text-text-secondary mb-1">🌊 {{ i18n.t('weather.gusts') }}</div>
                     <div class="text-lg font-semibold text-text-primary">{{ data.current.wind_gusts_10m }} km/h</div>
                   </div>
                   <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">💧 Humidity</div>
+                    <div class="text-xs text-text-secondary mb-1">💧 {{ i18n.t('weather.humidity') }}</div>
                     <div class="text-lg font-semibold text-text-primary">{{ data.current.relative_humidity_2m }}%</div>
                   </div>
                   <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">☁️ Cloud Cover</div>
+                    <div class="text-xs text-text-secondary mb-1">☁️ {{ i18n.t('weather.cloudCover') }}</div>
                     <div class="text-lg font-semibold text-text-primary">{{ data.current.cloud_cover }}%</div>
                   </div>
                 </div>
@@ -184,37 +186,37 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">🌅</span>
-                  <h2 class="text-lg font-semibold text-text-primary">Today</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('common.today') }}</h2>
                 </div>
                 @if (todayDaily(); as today) {
                   <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Sunrise</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunrise') }}</span>
                       <span class="text-sm font-medium text-amber-300">{{ formatTime(today.sunrise) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Sunset</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunset') }}</span>
                       <span class="text-sm font-medium text-orange-400">{{ formatTime(today.sunset) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Sunshine</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunshine') }}</span>
                       <span class="text-sm font-medium text-text-primary">{{ formatDuration(today.sunshineDuration) }}</span>
                     </div>
                     <hr class="border-white/5" />
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">UV Index</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.uvIndex') }}</span>
                       <span class="text-sm font-semibold" [class]="uvColor(today.uvIndex)">{{ today.uvIndex.toFixed(1) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Precipitation</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.precipitation') }}</span>
                       <span class="text-sm font-medium text-text-primary">{{ today.precipSum }} mm</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Precip. Chance</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.precipChance') }}</span>
                       <span class="text-sm font-medium text-text-primary">{{ today.precipProb }}%</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">Pressure</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.pressure') }}</span>
                       <span class="text-sm font-medium text-text-primary">{{ data.current.surface_pressure.toFixed(0) }} hPa</span>
                     </div>
                   </div>
@@ -228,9 +230,9 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">🕐</span>
-                <h2 class="text-lg font-semibold text-text-primary">24-Hour Forecast</h2>
+                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.hourlyForecast') }}</h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" aria-label="24-hour forecast">
+              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('weather.hourlyForecastRegion')">
                 <div class="flex gap-3 min-w-max pb-2">
                   @for (hour of next24Hours(); track hour.time) {
                     <div class="flex flex-col items-center gap-1 min-w-[60px] p-2 rounded-xl transition-colors"
@@ -255,7 +257,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">📈</span>
-                <h2 class="text-lg font-semibold text-text-primary">Temperature Trend (24h)</h2>
+                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.temperatureTrend') }}</h2>
               </div>
               <div class="relative h-32 flex">
                 <!-- Y-axis labels -->
@@ -289,7 +291,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
                 </div>
               </div>
               <div class="flex justify-between text-[10px] text-text-secondary mt-1 pl-8">
-                <span>Now</span>
+                <span>{{ i18n.t('common.now') }}</span>
                 <span>+6h</span>
                 <span>+12h</span>
                 <span>+18h</span>
@@ -303,7 +305,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">📅</span>
-                <h2 class="text-lg font-semibold text-text-primary">7-Day Forecast</h2>
+                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.dailyForecast') }}</h2>
               </div>
               <div class="space-y-3">
                 @for (day of dailyForecast(); track day.date) {
@@ -323,10 +325,10 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
                       <span class="text-sm text-orange-300 w-10">{{ day.max }}°</span>
                     </div>
                     <div class="hidden md:flex items-center gap-4 text-xs text-text-secondary">
-                      <span title="Precipitation">💧 {{ day.precip }} mm</span>
-                      <span title="Precipitation probability">☔ {{ day.precipProb }}%</span>
-                      <span title="Wind">💨 {{ day.wind }} km/h</span>
-                      <span title="UV Index" [class]="uvColor(day.uv)">UV {{ day.uv.toFixed(0) }}</span>
+                      <span [title]="i18n.t('weather.precipitationTitle')">💧 {{ day.precip }} mm</span>
+                      <span [title]="i18n.t('weather.precipitationProbabilityTitle')">☔ {{ day.precipProb }}%</span>
+                      <span [title]="i18n.t('weather.windTitle')">💨 {{ day.wind }} km/h</span>
+                      <span [title]="i18n.t('weather.uvIndex')" [class]="uvColor(day.uv)">UV {{ day.uv.toFixed(0) }}</span>
                     </div>
                   </div>
                 }
@@ -338,7 +340,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
           <div class="mt-6 text-center">
             <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer"
                class="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors">
-              Weather data provided by Open-Meteo.com (CC BY 4.0)
+              {{ i18n.t('weather.attribution') }}
             </a>
           </div>
         }
@@ -347,6 +349,7 @@ const WEATHER_ICONS: Record<number, { label: string; icon: string }> = {
   `,
 })
 export class WeatherPageComponent {
+  protected readonly i18n = inject(LanguageService);
   private coords = signal<{ lat: number; lon: number }>({ lat: 60.17, lon: 24.94 });
   locationName = signal('Helsinki');
   searchQuery = '';
@@ -360,7 +363,7 @@ export class WeatherPageComponent {
     // Sanitize: allow only letters, spaces, hyphens, apostrophes, periods, and digits
     const sanitized = raw.replace(/[^\p{L}\p{N}\s.'-]/gu, '').substring(0, 100);
     if (!sanitized) {
-      this.searchError.set('Please enter a valid location name.');
+      this.searchError.set(this.i18n.t('weather.searchInvalid'));
       return;
     }
 
@@ -369,13 +372,13 @@ export class WeatherPageComponent {
 
     try {
       const res = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(sanitized)}&count=1&language=en&format=json`
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(sanitized)}&count=1&language=${this.i18n.language()}&format=json`
       );
       if (!res.ok) throw new Error('Geocoding request failed');
       const data = await res.json();
 
       if (!data.results?.length) {
-        this.searchError.set(`No results found for "${sanitized}".`);
+        this.searchError.set(this.i18n.t('weather.noResults', { location: sanitized }));
         return;
       }
 
@@ -385,7 +388,7 @@ export class WeatherPageComponent {
       this.searchQuery = '';
       this.weather.reload();
     } catch {
-      this.searchError.set('Search failed. Please try again.');
+      this.searchError.set(this.i18n.t('weather.searchFailed'));
     } finally {
       this.searching.set(false);
     }
@@ -410,7 +413,8 @@ export class WeatherPageComponent {
   });
 
   weatherInfo(code: number) {
-    return WEATHER_ICONS[code] ?? { label: 'Unknown', icon: '🌍' };
+    const weather = WEATHER_ICONS[code] ?? { labelKey: 'common.unknown' as const, icon: '🌍' };
+    return { label: this.i18n.t(weather.labelKey), icon: weather.icon };
   }
 
   windDirection(deg: number): string {
@@ -419,13 +423,13 @@ export class WeatherPageComponent {
   }
 
   formatTime(isoString: string): string {
-    return new Date(isoString).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return new Date(isoString).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
   }
 
   formatDuration(seconds: number): string {
     const h = Math.floor(seconds / 3600);
     const m = Math.round((seconds % 3600) / 60);
-    return `${h}h ${m}m`;
+    return this.i18n.language() === 'fi' ? `${h} t ${m} min` : `${h}h ${m}m`;
   }
 
   uvColor(uv: number): string {
@@ -465,7 +469,7 @@ export class WeatherPageComponent {
 
     return slice.map((i, idx) => ({
       time: data.hourly.time[i],
-      timeLabel: idx === 0 ? 'Now' : new Date(data.hourly.time[i]).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      timeLabel: idx === 0 ? this.i18n.t('common.now') : new Date(data.hourly.time[i]).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' }),
       temp: Math.round(data.hourly.temperature_2m[i]),
       tempPct: Math.max(8, ((data.hourly.temperature_2m[i] - minTemp) / range) * 85 + 15),
       weatherCode: data.hourly.weather_code[i],
@@ -495,7 +499,7 @@ export class WeatherPageComponent {
 
     return data.daily.time.map((date, i) => ({
       date,
-      dayLabel: date === today ? 'Today' : new Date(date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' }),
+      dayLabel: date === today ? this.i18n.t('common.today') : new Date(date + 'T00:00').toLocaleDateString(this.i18n.locale(), { weekday: 'short', day: 'numeric' }),
       isToday: date === today,
       weatherCode: data.daily.weather_code[i],
       min: Math.round(data.daily.temperature_2m_min[i]),

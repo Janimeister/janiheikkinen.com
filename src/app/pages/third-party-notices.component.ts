@@ -2,6 +2,7 @@ import { Component, resource, computed, ChangeDetectionStrategy, SecurityContext
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
+import { LanguageService } from '../i18n/language.service';
 
 @Component({
   selector: 'app-third-party-notices',
@@ -12,11 +13,11 @@ import { DOCUMENT } from '@angular/common';
     <div class="min-h-screen pt-24 pb-16 px-6">
       <div class="max-w-4xl mx-auto">
         <a routerLink="/" class="inline-flex items-center gap-1 text-sm text-accent-light hover:text-accent-primary transition-colors mb-8">
-          ← Back to Home
+          ← {{ i18n.t('common.backToHome') }}
         </a>
 
         <h1 class="text-3xl md:text-4xl font-bold text-text-primary mb-4 animate-fade-slide-up">
-          Third-Party Notices
+          {{ i18n.t('thirdParty.title') }}
         </h1>
 
         @if (noticesResource.isLoading()) {
@@ -27,7 +28,7 @@ import { DOCUMENT } from '@angular/common';
             <div class="h-64 bg-white/5 rounded"></div>
           </div>
         } @else if (noticesResource.error()) {
-          <p class="text-red-400">Could not load third-party notices.</p>
+          <p class="text-red-400">{{ i18n.t('thirdParty.loadError') }}</p>
         } @else {
           <div class="notices-content animate-fade-slide-up stagger-1"
                [innerHTML]="renderedHtml()">
@@ -132,6 +133,7 @@ import { DOCUMENT } from '@angular/common';
 export class ThirdPartyNoticesComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly document = inject(DOCUMENT);
+  protected readonly i18n = inject(LanguageService);
 
   readonly noticesResource = resource({
     loader: async () => {

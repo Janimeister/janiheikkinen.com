@@ -12,6 +12,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { LanguageService } from '../i18n/language.service';
 
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
@@ -39,31 +40,31 @@ interface Point {
         <div class="mb-8 animate-fade-slide-up">
           <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            Back to Home
+            {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-emerald-300 via-green-400 to-teal-400 bg-clip-text text-transparent">Snake Game</span>
+            <span class="bg-gradient-to-r from-emerald-300 via-green-400 to-teal-400 bg-clip-text text-transparent">{{ i18n.t('snake.title') }}</span>
           </h1>
-          <p class="text-text-secondary mt-2">Classic snake — use keyboard or swipe to play</p>
+          <p class="text-text-secondary mt-2">{{ i18n.t('snake.subtitle') }}</p>
         </div>
 
         <!-- Score & Controls -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6 animate-fade-slide-up stagger-1">
           <app-glow-card>
             <div class="text-center">
-              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">Score</div>
+              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">{{ i18n.t('snake.score') }}</div>
               <div class="text-3xl font-bold text-emerald-400 font-[JetBrains_Mono,monospace]" data-testid="snake-score">{{ score() }}</div>
             </div>
           </app-glow-card>
           <app-glow-card>
             <div class="text-center">
-              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">High Score</div>
+              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">{{ i18n.t('snake.highScore') }}</div>
               <div class="text-3xl font-bold text-accent-primary font-[JetBrains_Mono,monospace]" data-testid="snake-highscore">{{ highScore() }}</div>
             </div>
           </app-glow-card>
           <app-glow-card>
             <div class="text-center">
-              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">Speed</div>
+              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">{{ i18n.t('snake.speed') }}</div>
               <div class="text-3xl font-bold text-amber-400 font-[JetBrains_Mono,monospace]">{{ speed() }}</div>
             </div>
           </app-glow-card>
@@ -90,39 +91,39 @@ interface Point {
                   <button (click)="startGame()"
                           data-testid="snake-start-btn"
                           class="px-8 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-all text-lg">
-                    Start Game
+                    {{ i18n.t('snake.startGame') }}
                   </button>
-                  <p class="text-text-secondary text-sm mt-3">Use arrow keys or WASD · Swipe on mobile</p>
+                  <p class="text-text-secondary text-sm mt-3">{{ i18n.t('snake.controlHint') }}</p>
                 </div>
               }
               @if (gameState() === 'over') {
                 <div class="mt-6 text-center">
-                  <p class="text-red-400 text-lg font-semibold mb-2" data-testid="snake-game-over">Game Over!</p>
-                  <p class="text-text-secondary text-sm mb-4">Final score: {{ score() }}</p>
+                  <p class="text-red-400 text-lg font-semibold mb-2" data-testid="snake-game-over">{{ i18n.t('snake.gameOver') }}</p>
+                  <p class="text-text-secondary text-sm mb-4">{{ i18n.t('snake.finalScore', { score: score() }) }}</p>
                   <button (click)="startGame()"
                           data-testid="snake-restart-btn"
                           class="px-8 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-all text-lg">
-                    Play Again
+                    {{ i18n.t('snake.playAgain') }}
                   </button>
                 </div>
               }
               @if (gameState() === 'won') {
                 <div class="mt-6 text-center">
-                  <p class="text-emerald-400 text-lg font-semibold mb-2" data-testid="snake-game-won">🎉 You Win!</p>
-                  <p class="text-text-secondary text-sm mb-4">Perfect score: {{ score() }}</p>
+                  <p class="text-emerald-400 text-lg font-semibold mb-2" data-testid="snake-game-won">{{ i18n.t('snake.youWin') }}</p>
+                  <p class="text-text-secondary text-sm mb-4">{{ i18n.t('snake.perfectScore', { score: score() }) }}</p>
                   <button (click)="startGame()"
                           data-testid="snake-restart-btn"
                           class="px-8 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-all text-lg">
-                    Play Again
+                    {{ i18n.t('snake.playAgain') }}
                   </button>
                 </div>
               }
               @if (gameState() === 'paused') {
                 <div class="mt-6 text-center">
-                  <p class="text-amber-400 text-lg font-semibold mb-2">Paused</p>
+                  <p class="text-amber-400 text-lg font-semibold mb-2">{{ i18n.t('snake.paused') }}</p>
                   <button (click)="resumeGame()"
                           class="px-8 py-3 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 font-semibold hover:bg-amber-500/30 transition-all text-lg">
-                    Resume
+                    {{ i18n.t('snake.resume') }}
                   </button>
                 </div>
               }
@@ -133,28 +134,28 @@ interface Point {
         <!-- Mobile D-Pad Controls -->
         <div class="mt-6 animate-fade-slide-up stagger-3 md:hidden">
           <app-glow-card>
-            <div class="flex flex-col items-center gap-2" role="group" aria-label="Directional controls">
-              <button (click)="setDirection('UP')" class="dpad-btn w-16 h-16 rounded-xl" aria-label="Move up">
+            <div class="flex flex-col items-center gap-2" role="group" [attr.aria-label]="i18n.t('snake.directionalControls')">
+              <button (click)="setDirection('UP')" class="dpad-btn w-16 h-16 rounded-xl" [attr.aria-label]="i18n.t('snake.moveUp')">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
               </button>
               <div class="flex gap-2">
-                <button (click)="setDirection('LEFT')" class="dpad-btn w-16 h-16 rounded-xl" aria-label="Move left">
+                <button (click)="setDirection('LEFT')" class="dpad-btn w-16 h-16 rounded-xl" [attr.aria-label]="i18n.t('snake.moveLeft')">
                   <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
                 </button>
                 <button (click)="handlePausePlay()"
                         class="dpad-btn w-16 h-16 rounded-xl"
-                        [attr.aria-label]="gameState() === 'playing' ? 'Pause game' : 'Start game'">
+                        [attr.aria-label]="gameState() === 'playing' ? i18n.t('snake.pauseGame') : i18n.t('snake.startGame')">
                   @if (gameState() === 'playing') {
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6"/></svg>
                   } @else {
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>
                   }
                 </button>
-                <button (click)="setDirection('RIGHT')" class="dpad-btn w-16 h-16 rounded-xl" aria-label="Move right">
+                <button (click)="setDirection('RIGHT')" class="dpad-btn w-16 h-16 rounded-xl" [attr.aria-label]="i18n.t('snake.moveRight')">
                   <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
               </div>
-              <button (click)="setDirection('DOWN')" class="dpad-btn w-16 h-16 rounded-xl" aria-label="Move down">
+              <button (click)="setDirection('DOWN')" class="dpad-btn w-16 h-16 rounded-xl" [attr.aria-label]="i18n.t('snake.moveDown')">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
               </button>
             </div>
@@ -164,22 +165,22 @@ interface Point {
         <!-- Instructions -->
         <div class="mt-6 animate-fade-slide-up stagger-4">
           <app-glow-card>
-            <h2 class="text-lg font-semibold text-text-primary mb-3">How to Play</h2>
+            <h2 class="text-lg font-semibold text-text-primary mb-3">{{ i18n.t('snake.howToPlay') }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-text-secondary">
               <div>
-                <h3 class="text-text-primary font-medium mb-1">🖥️ Desktop</h3>
+                <h3 class="text-text-primary font-medium mb-1">{{ i18n.t('snake.desktop') }}</h3>
                 <ul class="space-y-1 list-disc list-inside">
-                  <li>Arrow keys or WASD to move</li>
-                  <li>Space or P to pause/resume</li>
-                  <li>Enter to start/restart</li>
+                  <li>{{ i18n.t('snake.desktopMove') }}</li>
+                  <li>{{ i18n.t('snake.desktopPause') }}</li>
+                  <li>{{ i18n.t('snake.desktopStart') }}</li>
                 </ul>
               </div>
               <div>
-                <h3 class="text-text-primary font-medium mb-1">📱 Mobile</h3>
+                <h3 class="text-text-primary font-medium mb-1">{{ i18n.t('snake.mobile') }}</h3>
                 <ul class="space-y-1 list-disc list-inside">
-                  <li>Swipe on the game area to change direction</li>
-                  <li>Use the D-pad buttons below the game</li>
-                  <li>Tap center button to pause/start</li>
+                  <li>{{ i18n.t('snake.mobileSwipe') }}</li>
+                  <li>{{ i18n.t('snake.mobileDpad') }}</li>
+                  <li>{{ i18n.t('snake.mobileCenter') }}</li>
                 </ul>
               </div>
             </div>
@@ -212,6 +213,7 @@ interface Point {
 })
 export class SnakePageComponent implements OnDestroy {
   private readonly zone = inject(NgZone);
+  protected readonly i18n = inject(LanguageService);
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('gameCanvas');
 
   // Grid dimensions

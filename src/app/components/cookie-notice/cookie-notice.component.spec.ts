@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CookieNoticeComponent } from './cookie-notice.component';
+import { LanguageService } from '../../i18n/language.service';
 
 describe('CookieNoticeComponent', () => {
   beforeEach(async () => {
@@ -43,5 +44,16 @@ describe('CookieNoticeComponent', () => {
     const button = fixture.nativeElement.querySelector('button');
     expect(button).toBeTruthy();
     expect(button.textContent.trim()).toBe('Got it');
+  });
+
+  it('should translate notice text when language changes', () => {
+    const fixture = TestBed.createComponent(CookieNoticeComponent);
+    const language = TestBed.inject(LanguageService);
+
+    language.setLanguage('fi');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Eväste- ja tietosuojailmoitus');
+    expect(fixture.nativeElement.querySelector('button').textContent.trim()).toBe('Selvä');
   });
 });

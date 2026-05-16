@@ -2,9 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect } from 'vitest';
 import { NavbarComponent } from './navbar.component';
+import { LanguageService } from '../../i18n/language.service';
 
 describe('NavbarComponent', () => {
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [NavbarComponent],
       providers: [provideRouter([])],
@@ -20,13 +22,13 @@ describe('NavbarComponent', () => {
     const fixture = TestBed.createComponent(NavbarComponent);
     const component = fixture.componentInstance;
     expect(component.navLinks).toHaveLength(7);
-    expect(component.navLinks[0]).toEqual({ label: 'Home', route: '/' });
-    expect(component.navLinks[1]).toEqual({ label: 'Weather', route: '/weather' });
-    expect(component.navLinks[2]).toEqual({ label: 'Electricity', route: '/electricity' });
-    expect(component.navLinks[3]).toEqual({ label: 'GitHub', route: '/github' });
-    expect(component.navLinks[4]).toEqual({ label: 'ASCII', route: '/ascii' });
-    expect(component.navLinks[5]).toEqual({ label: 'Snake', route: '/snake' });
-    expect(component.navLinks[6]).toEqual({ label: 'Pet', route: '/pet' });
+    expect(component.navLinks[0]).toEqual({ labelKey: 'nav.home', route: '/' });
+    expect(component.navLinks[1]).toEqual({ labelKey: 'nav.weather', route: '/weather' });
+    expect(component.navLinks[2]).toEqual({ labelKey: 'nav.electricity', route: '/electricity' });
+    expect(component.navLinks[3]).toEqual({ labelKey: 'nav.github', route: '/github' });
+    expect(component.navLinks[4]).toEqual({ labelKey: 'nav.ascii', route: '/ascii' });
+    expect(component.navLinks[5]).toEqual({ labelKey: 'nav.snake', route: '/snake' });
+    expect(component.navLinks[6]).toEqual({ labelKey: 'nav.pet', route: '/pet' });
   });
 
   it('should render all nav links in template', () => {
@@ -35,6 +37,31 @@ describe('NavbarComponent', () => {
     const links = fixture.nativeElement.querySelectorAll('a');
     // logo + 7 nav links = 8
     expect(links.length).toBe(8);
+  });
+
+  it('should place the language toggle next to the logo before nav links', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    fixture.detectChanges();
+
+    const container = fixture.nativeElement.querySelector('nav > div') as HTMLElement;
+    const children = Array.from(container.children).map(child => child.tagName.toLowerCase());
+
+    expect(children[0]).toBe('a');
+    expect(children[1]).toBe('app-language-toggle');
+  });
+
+  it('should render translated nav labels when language changes', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    const language = TestBed.inject(LanguageService);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Weather');
+
+    language.setLanguage('fi');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Sää');
+    expect(fixture.nativeElement.textContent).toContain('Sähkö');
   });
 
   it('should start with scrolled=false', () => {
