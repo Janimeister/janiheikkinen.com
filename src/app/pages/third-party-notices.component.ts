@@ -236,7 +236,7 @@ export class ThirdPartyNoticesComponent {
         }
         let content = line.slice(2);
         // Collect continuation lines (indented)
-        while (i + 1 < lines.length && lines[i + 1].startsWith('  ') && !lines[i + 1].startsWith('- ')) {
+        while (i + 1 < lines.length && lines[i + 1].startsWith('  ') && !lines[i + 1].trimStart().startsWith('- ')) {
           i++;
           content += ' ' + lines[i].trim();
         }
