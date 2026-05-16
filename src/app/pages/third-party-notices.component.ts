@@ -1,7 +1,6 @@
-import { Component, resource, computed, ChangeDetectionStrategy, SecurityContext, ViewEncapsulation } from '@angular/core';
+import { Component, resource, computed, ChangeDetectionStrategy, SecurityContext, ViewEncapsulation, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
 @Component({

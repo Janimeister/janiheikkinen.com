@@ -5,6 +5,10 @@ import { ThirdPartyNoticesComponent } from './third-party-notices.component';
 
 describe('ThirdPartyNoticesComponent', () => {
   beforeEach(async () => {
+    // Default: keep fetch pending so component stays in loading state;
+    // individual tests override this spy as needed.
+    vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise(() => {}));
+
     await TestBed.configureTestingModule({
       imports: [ThirdPartyNoticesComponent],
       providers: [provideRouter([])],
