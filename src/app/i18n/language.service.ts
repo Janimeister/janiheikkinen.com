@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import {
   SUPPORTED_LANGUAGES,
   TRANSLATIONS,
@@ -19,13 +19,18 @@ export class LanguageService {
   readonly locale = computed(() => (this.language() === 'fi' ? 'fi-FI' : 'en-GB'));
 
   constructor() {
-    this.syncLanguage(this.language());
-    effect(() => this.syncLanguage(this.language()));
+    // Set the initial <html lang> attribute without writing to localStorage.
+    this.document.documentElement.lang = this.language();
   }
 
   setLanguage(language: Language): void {
     this.selectedLanguage.set(language);
-    this.syncLanguage(language);
+    this.document.documentElement.lang = language;
+    try {
+      localStorage.setItem(STORAGE_KEY, language);
+    } catch {
+      // Storage can be unavailable in privacy modes or tests.
+    }
   }
 
   isLanguage(language: Language): boolean {
@@ -48,14 +53,5 @@ export class LanguageService {
     }
 
     return 'en';
-  }
-
-  private syncLanguage(language: Language): void {
-    this.document.documentElement.lang = language;
-    try {
-      localStorage.setItem(STORAGE_KEY, language);
-    } catch {
-      // Storage can be unavailable in privacy modes or tests.
-    }
   }
 }

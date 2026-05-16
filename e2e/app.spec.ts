@@ -73,6 +73,12 @@ test.describe('Language Settings', () => {
     await expect(page.locator('app-navbar')).toContainText('Sähkö');
     await expect(page.locator('app-footer')).toContainText('Kolmansien osapuolten ilmoitukset');
 
+    // Verify Finnish copy on a detail page
+    await page.goto('/weather');
+    await expect(page.locator('h1')).toContainText('Sääolosuhteet');
+
+    await page.goto('/');
+
     await page.reload();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'fi');

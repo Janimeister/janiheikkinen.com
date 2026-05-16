@@ -118,8 +118,8 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
               @if (searching()) { {{ i18n.t('weather.searching') }} } @else { {{ i18n.t('weather.search') }} }
             </button>
           </div>
-          @if (searchError()) {
-            <p class="text-xs text-red-400 mt-2">{{ searchError() }}</p>
+          @if (searchError(); as err) {
+            <p class="text-xs text-red-400 mt-2">{{ i18n.t(err.key, err.params) }}</p>
           }
         </div>
 
@@ -354,7 +354,7 @@ export class WeatherPageComponent {
   locationName = signal('Helsinki');
   searchQuery = '';
   searching = signal(false);
-  searchError = signal('');
+  searchError = signal<{ key: TranslationKey; params?: Record<string, string | number> } | null>(null);
 
   async searchLocation() {
     const raw = this.searchQuery.trim();
@@ -363,12 +363,12 @@ export class WeatherPageComponent {
     // Sanitize: allow only letters, spaces, hyphens, apostrophes, periods, and digits
     const sanitized = raw.replace(/[^\p{L}\p{N}\s.'-]/gu, '').substring(0, 100);
     if (!sanitized) {
-      this.searchError.set(this.i18n.t('weather.searchInvalid'));
+      this.searchError.set({ key: 'weather.searchInvalid' });
       return;
     }
 
     this.searching.set(true);
-    this.searchError.set('');
+    this.searchError.set(null);
 
     try {
       const res = await fetch(
@@ -378,7 +378,7 @@ export class WeatherPageComponent {
       const data = await res.json();
 
       if (!data.results?.length) {
-        this.searchError.set(this.i18n.t('weather.noResults', { location: sanitized }));
+        this.searchError.set({ key: 'weather.noResults', params: { location: sanitized } });
         return;
       }
 
@@ -388,7 +388,7 @@ export class WeatherPageComponent {
       this.searchQuery = '';
       this.weather.reload();
     } catch {
-      this.searchError.set(this.i18n.t('weather.searchFailed'));
+      this.searchError.set({ key: 'weather.searchFailed' });
     } finally {
       this.searching.set(false);
     }
@@ -418,8 +418,11 @@ export class WeatherPageComponent {
   }
 
   windDirection(deg: number): string {
-    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    return dirs[Math.round(deg / 45) % 8];
+    const dirKeys: TranslationKey[] = [
+      'weather.windN', 'weather.windNE', 'weather.windE', 'weather.windSE',
+      'weather.windS', 'weather.windSW', 'weather.windW', 'weather.windNW',
+    ];
+    return this.i18n.t(dirKeys[Math.round(deg / 45) % 8]);
   }
 
   formatTime(isoString: string): string {

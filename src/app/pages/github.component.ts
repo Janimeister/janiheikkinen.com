@@ -241,8 +241,7 @@ const LANG_COLORS: Record<string, string> = {
                       <div class="min-w-0 flex-1">
                         <div class="text-sm text-text-primary">
                           <span class="font-medium">{{ event.action }}</span>
-                          <span class="text-text-secondary"> {{ i18n.t('github.in') }} </span>
-                          <span class="text-accent-light">{{ event.repo }}</span>
+                          <span class="text-accent-light"> {{ event.repo }}</span>
                         </div>
                         <div class="text-xs text-text-secondary mt-0.5">{{ relativeDate(event.date) }}</div>
                       </div>
