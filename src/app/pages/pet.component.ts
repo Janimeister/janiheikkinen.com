@@ -21,7 +21,10 @@ interface EventLogEntry {
   readonly timestamp: number;
   readonly key: TranslationKey;
   readonly params: Record<string, string | number>;
-  /** When set, `params.species` is derived by translating this key at render time. */
+  /**
+   * When set, `params.species` is resolved at render time by translating this key
+   * (and lower-casing the result) so language switching updates already-logged entries.
+   */
   readonly speciesNameKey?: TranslationKey;
 }
 
