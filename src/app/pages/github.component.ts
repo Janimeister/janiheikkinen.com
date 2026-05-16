@@ -164,7 +164,7 @@ const LANG_COLORS: Record<string, string> = {
                   @for (lang of languages(); track lang.name) {
                     <div [class]="langColor(lang.name)"
                          [style.width.%]="lang.pct"
-                         [title]="lang.name + ': ' + i18n.t('github.repoCount', { count: lang.count })"
+                         [title]="lang.name + ': ' + (lang.count === 1 ? i18n.t('github.repoCountOne') : i18n.t('github.repoCount', { count: lang.count }))"
                          class="transition-all hover:opacity-80">
                     </div>
                   }
@@ -321,7 +321,7 @@ export class GithubPageComponent {
       const info = eventMap[e.type];
       return {
         icon: info?.icon ?? '📌',
-        action: info ? this.i18n.t(info.actionKey) : `${e.type.replace('Event', '')}`,
+        action: info ? this.i18n.t(info.actionKey) : this.i18n.t('github.eventUnknown'),
         repo: e.repo.name.split('/')[1] || e.repo.name,
         date: e.created_at,
       };

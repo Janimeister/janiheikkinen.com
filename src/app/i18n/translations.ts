@@ -7,8 +7,6 @@ export type Language = (typeof SUPPORTED_LANGUAGES)[number]['code'];
 
 export const EN_TRANSLATIONS = {
   'language.label': 'Language',
-  'language.english': 'Switch language to English',
-  'language.finnish': 'Switch language to Finnish',
 
   'nav.home': 'Home',
   'nav.weather': 'Weather',
@@ -143,10 +141,10 @@ export const EN_TRANSLATIONS = {
   'github.gists': 'Gists',
   'github.languages': 'Languages',
   'github.repoCount': '{count} repos',
+  'github.repoCountOne': '1 repo',
   'github.repositories': 'Repositories',
   'github.updated': 'Updated {date}',
   'github.recentActivity': 'Recent Activity',
-  'github.in': 'in',
   'github.today': 'today',
   'github.yesterday': 'yesterday',
   'github.daysAgo': '{count} days ago',
@@ -162,6 +160,7 @@ export const EN_TRANSLATIONS = {
   'github.eventWatch': 'Starred',
   'github.eventFork': 'Forked',
   'github.eventRelease': 'Released in',
+  'github.eventUnknown': 'Activity in',
 
   'ascii.title': 'ASCII Art',
   'ascii.subtitle': 'Procedurally generated ASCII art',
@@ -299,8 +298,6 @@ export type TranslationKey = keyof typeof EN_TRANSLATIONS;
 
 export const FI_TRANSLATIONS = {
   'language.label': 'Kieli',
-  'language.english': 'Vaihda kieleksi englanti',
-  'language.finnish': 'Vaihda kieleksi suomi',
 
   'nav.home': 'Etusivu',
   'nav.weather': 'Sää',
@@ -434,10 +431,10 @@ export const FI_TRANSLATIONS = {
   'github.gists': 'Gistit',
   'github.languages': 'Kielet',
   'github.repoCount': '{count} repositoriota',
+  'github.repoCountOne': '1 repositorio',
   'github.repositories': 'Repot',
   'github.updated': 'Päivitetty {date}',
   'github.recentActivity': 'Viimeaikainen aktiivisuus',
-  'github.in': 'kohteessa',
   'github.today': 'tänään',
   'github.yesterday': 'eilen',
   'github.daysAgo': '{count} päivää sitten',
@@ -453,6 +450,7 @@ export const FI_TRANSLATIONS = {
   'github.eventWatch': 'Tähtimerkitsi',
   'github.eventFork': 'Forkkasi',
   'github.eventRelease': 'Julkaisi release-version kohteessa',
+  'github.eventUnknown': 'Aktiivisuutta kohteessa',
 
   'ascii.title': 'ASCII-taide',
   'ascii.subtitle': 'Proseduraalisesti luotua ASCII-taidetta',

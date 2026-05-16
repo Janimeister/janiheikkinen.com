@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectionStrategy, ElementRef, viewChild, AfterViewInit, OnDestroy, inject } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, ElementRef, viewChild, AfterViewInit, OnDestroy, inject, effect } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LanguageService } from '../../i18n/language.service';
 import { LanguageToggleComponent } from '../language-toggle/language-toggle.component';
@@ -107,6 +107,13 @@ export class NavbarComponent implements AfterViewInit, OnDestroy {
   ] as const;
 
   private resizeObserver: ResizeObserver | undefined;
+
+  constructor() {
+    effect(() => {
+      this.i18n.language(); // track language changes
+      queueMicrotask(() => this.checkOverflow());
+    });
+  }
 
   ngAfterViewInit() {
     this.checkOverflow();

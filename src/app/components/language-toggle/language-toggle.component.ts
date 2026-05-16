@@ -12,7 +12,7 @@ import type { Language } from '../../i18n/translations';
           type="button"
           (click)="setLanguage(language.code)"
           [class.active]="i18n.isLanguage(language.code)"
-          [attr.aria-label]="i18n.t(language.code === 'en' ? 'language.english' : 'language.finnish')"
+          [attr.aria-label]="language.nativeName"
           [attr.aria-pressed]="i18n.isLanguage(language.code)"
           [attr.title]="language.nativeName"
           [attr.data-testid]="'language-' + language.code">

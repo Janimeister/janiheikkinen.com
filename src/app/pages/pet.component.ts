@@ -16,6 +16,15 @@ import type { TranslationKey } from '../i18n/translations';
 
 type LifeStage = 'egg' | 'baby' | 'child' | 'teen' | 'adult' | 'ghost';
 
+interface EventLogEntry {
+  readonly id: number;
+  readonly timestamp: number;
+  readonly key: TranslationKey;
+  readonly params: Record<string, string | number>;
+  /** When set, `params.species` is derived by translating this key at render time. */
+  readonly speciesNameKey?: TranslationKey;
+}
+
 interface Species {
   readonly id: string;
   readonly nameKey: TranslationKey;
@@ -246,8 +255,8 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                 <ul class="flex flex-col gap-1 text-sm" data-testid="pet-log">
                   @for (entry of eventLog(); track entry.id) {
                     <li class="text-text-secondary">
-                      <span class="text-text-primary/70 font-[JetBrains_Mono,monospace] text-xs mr-2">{{ entry.time }}</span>
-                      {{ entry.message }}
+                      <span class="text-text-primary/70 font-[JetBrains_Mono,monospace] text-xs mr-2">{{ formatEventTime(entry.timestamp) }}</span>
+                      {{ entryMessage(entry) }}
                     </li>
                   }
                 </ul>
@@ -342,7 +351,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
   // ── State ─────────────────────────────────────────────────────────
   protected readonly pet = signal<PetState | null>(null);
   protected readonly nameInput = signal('');
-  protected readonly eventLog = signal<readonly { id: number; time: string; message: string }[]>([]);
+  protected readonly eventLog = signal<readonly EventLogEntry[]>([]);
 
   private tickHandle: ReturnType<typeof setInterval> | null = null;
   private logSeq = 0;
@@ -510,7 +519,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     };
     this.pet.set(pet);
     this.eventLog.set([]);
-    this.logEvent(this.i18n.t('pet.hatchedEvent', { species: this.i18n.t(species.nameKey).toLowerCase(), name }));
+    this.logEvent('pet.hatchedEvent', { name }, species.nameKey);
     this.persist();
   }
 
@@ -524,7 +533,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     if (!p || p.dead) return;
     const next = { ...p, asleep: !p.asleep };
     this.pet.set(next);
-    this.logEvent(next.asleep ? this.i18n.t('pet.sleepEvent', { name: p.name }) : this.i18n.t('pet.wakeEvent', { name: p.name }));
+    this.logEvent(next.asleep ? 'pet.sleepEvent' : 'pet.wakeEvent', { name: p.name });
     this.persist();
   }
 
@@ -538,25 +547,25 @@ export class PetPageComponent implements OnInit, OnDestroy {
         next.hunger = clamp(next.hunger + 25);
         next.happiness = clamp(next.happiness + 3);
         next.cleanliness = clamp(next.cleanliness - 4);
-        this.logEvent(this.i18n.t('pet.feedEvent', { name: p.name }));
+        this.logEvent('pet.feedEvent', { name: p.name });
         break;
       case 'play':
         if (next.asleep) return;
         next.happiness = clamp(next.happiness + 20);
         next.energy = clamp(next.energy - 12);
         next.hunger = clamp(next.hunger - 5);
-        this.logEvent(this.i18n.t('pet.playEvent', { name: p.name }));
+        this.logEvent('pet.playEvent', { name: p.name });
         break;
       case 'clean':
         next.cleanliness = clamp(next.cleanliness + 30);
         next.happiness = clamp(next.happiness - 2);
-        this.logEvent(this.i18n.t('pet.cleanEvent', { name: p.name }));
+        this.logEvent('pet.cleanEvent', { name: p.name });
         break;
       case 'heal':
         if (next.health >= 100) return;
         next.health = clamp(next.health + 30);
         next.happiness = clamp(next.happiness - 3);
-        this.logEvent(this.i18n.t('pet.healEvent', { name: p.name }));
+        this.logEvent('pet.healEvent', { name: p.name });
         break;
     }
 
@@ -613,7 +622,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
       next.health = 0;
       next.dead = true;
       this.pet.set(next);
-      this.logEvent(this.i18n.t('pet.deathEvent', { name: p.name }));
+      this.logEvent('pet.deathEvent', { name: p.name });
       this.persist();
       return;
     }
@@ -643,14 +652,24 @@ export class PetPageComponent implements OnInit, OnDestroy {
     ];
     const ev = events[Math.floor(Math.random() * events.length)];
     ev.apply(pet);
-    this.logEvent(this.i18n.t(ev.messageKey, { name: pet.name }));
+    this.logEvent(ev.messageKey, { name: pet.name });
   }
 
   // ── Event log ────────────────────────────────────────────────────
-  private logEvent(message: string) {
-    const time = new Date().toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
-    const entry = { id: ++this.logSeq, time, message };
+  private logEvent(key: TranslationKey, params: Record<string, string | number> = {}, speciesNameKey?: TranslationKey) {
+    const entry: EventLogEntry = { id: ++this.logSeq, timestamp: Date.now(), key, params, speciesNameKey };
     this.eventLog.update(list => [entry, ...list].slice(0, 8));
+  }
+
+  protected formatEventTime(timestamp: number): string {
+    return new Date(timestamp).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
+  }
+
+  protected entryMessage(entry: EventLogEntry): string {
+    const params = entry.speciesNameKey
+      ? { ...entry.params, species: this.i18n.t(entry.speciesNameKey).toLowerCase() }
+      : entry.params;
+    return this.i18n.t(entry.key, params);
   }
 
   // ── Persistence ──────────────────────────────────────────────────
