@@ -16,6 +16,8 @@ jobs:
   tests:
     name: Tests
     uses: ./.github/workflows/test.yml
+    with:
+      called-from-deploy: true
     permissions:
       contents: read
 
