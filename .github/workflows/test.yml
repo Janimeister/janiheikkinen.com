@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: tests-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_call' }}
 
 jobs:
   build:
@@ -25,7 +25,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package-lock.json
 
       # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
       - run: npm ci --legacy-peer-deps
@@ -44,7 +43,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package-lock.json
 
       # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
       - run: npm ci --legacy-peer-deps
@@ -63,7 +61,6 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package-lock.json
 
       # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
       - run: npm ci --legacy-peer-deps
