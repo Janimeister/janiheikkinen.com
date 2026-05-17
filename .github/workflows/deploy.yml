@@ -63,7 +63,7 @@ jobs:
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v5
         with:
