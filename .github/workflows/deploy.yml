@@ -1,9 +1,7 @@
 name: Deploy to GitHub Pages
 
 on:
-  workflow_run:
-    workflows: ['Tests']
-    types: [completed]
+  push:
     branches: [main]
   workflow_dispatch:
 
@@ -15,33 +13,55 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  tests:
+    name: Tests
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+
   build:
     name: Build
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    needs: tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       PORSSISAHKO_WORKER_URL: ${{ vars.PORSSISAHKO_WORKER_URL }}
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: package-lock.json
 
       # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
       - run: npm ci --legacy-peer-deps
 
       - name: Generate production environment file
+        shell: bash
         run: |
-          echo "export const environment = { workerUrl: '${PORSSISAHKO_WORKER_URL}' };" > src/environments/environment.prod.ts
+          node <<'EOF'
+          const { writeFileSync } = require('node:fs');
 
-      - run: npx ng build --base-href /
+          const workerUrl = process.env.PORSSISAHKO_WORKER_URL;
+          if (!workerUrl) {
+            throw new Error('PORSSISAHKO_WORKER_URL repository variable is required.');
+          }
+
+          writeFileSync(
+            'src/environments/environment.prod.ts',
+            `export const environment = {\n  workerUrl: ${JSON.stringify(workerUrl)}\n};\n`
+          );
+          EOF
+
+      - name: Build
+        run: npm run build -- --base-href /
 
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
+
+      - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -54,6 +74,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write
