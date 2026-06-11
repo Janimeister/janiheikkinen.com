@@ -25,36 +25,35 @@ const ASPECT_CORRECTION = 0.5;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
-    <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
-      <!-- Background -->
-      <div class="absolute inset-0 bg-gradient-to-br from-[#0a0a1e] via-[#0a0a0f] to-[#1a0a1e] animate-gradient-shift opacity-40"></div>
-      <app-floating-orb class="absolute top-[12%] right-[12%] z-[1]" delay="0s" [size]="65" />
-      <app-floating-orb class="absolute bottom-[25%] left-[8%] z-[1]" delay="3s" [size]="55" />
+    <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">
+      <app-floating-orb class="hidden md:block absolute top-[12%] right-[12%] z-[1]" delay="0s" [size]="65" shape="triangle" color="lime" rotate="8deg" />
+      <app-floating-orb class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]" delay="3s" [size]="55" shape="square" color="orange" rotate="-5deg" />
+      <app-floating-orb class="hidden lg:block absolute top-[48%] left-[4%] z-[1]" delay="1.5s" [size]="42" shape="circle" color="sky" rotate="3deg" />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
+          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             {{ i18n.t('common.backToHome') }}
           </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-slate-200 via-indigo-300 to-purple-400 bg-clip-text text-transparent">{{ i18n.t('ascii.title') }}</span>
+          <h1 class="text-4xl md:text-5xl font-bold mt-3 leading-tight">
+            <span class="marker marker-lime">{{ i18n.t('ascii.title') }}</span>
           </h1>
-          <p class="text-text-secondary mt-2">{{ i18n.t('ascii.subtitle') }}</p>
+          <p class="text-text-secondary mt-3 text-lg">{{ i18n.t('ascii.subtitle') }}</p>
         </div>
 
         <!-- Controls -->
         <div class="mb-6 animate-fade-slide-up stagger-1">
           <app-glow-card>
             <div class="flex flex-wrap items-center gap-3">
-              <span class="text-sm text-text-secondary mr-1">{{ i18n.t('ascii.algorithm') }}</span>
+              <span class="text-sm font-semibold text-text-secondary mr-1 uppercase tracking-wider">{{ i18n.t('ascii.algorithm') }}</span>
               @for (algo of algorithms; track algo.id) {
                 <button
                   (click)="selectAlgorithm(algo.id)"
                   [class]="currentAlgorithm() === algo.id
-                    ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-light border border-accent-primary/30'
-                    : 'px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 border border-white/5 transition-colors'"
+                    ? 'px-3 py-1.5 text-sm font-semibold bg-pop-yellow text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform'
+                    : 'px-3 py-1.5 text-sm font-semibold bg-bg-card text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform'"
                   [attr.aria-pressed]="currentAlgorithm() === algo.id">
                   {{ algo.icon }} {{ i18n.t(algo.labelKey) }}
                 </button>
@@ -62,7 +61,7 @@ const ASPECT_CORRECTION = 0.5;
               <button
                 (click)="generate()"
                 [disabled]="isAnimating()"
-                class="ml-auto px-4 py-1.5 rounded-lg text-sm font-medium bg-accent-primary/20 text-accent-light border border-accent-primary/30 hover:bg-accent-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="sm:ml-auto px-4 py-1.5 text-sm font-semibold bg-pop-pink text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                 [attr.aria-label]="i18n.t('ascii.generateAria')">
                 🎲 {{ i18n.t('ascii.generate') }}
               </button>
@@ -86,8 +85,11 @@ const ASPECT_CORRECTION = 0.5;
       font-family: 'JetBrains Mono', monospace;
       font-size: clamp(8px, 1.1vw, 14px);
       line-height: 1.2;
-      color: var(--color-accent-light);
-      text-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+      color: var(--color-ink);
+      background: var(--color-bg-card);
+      border: 2px solid var(--color-ink);
+      box-shadow: 5px 5px 0 0 var(--color-ink);
+      padding: 1rem;
       white-space: pre;
       margin: 0;
       min-height: 420px;

@@ -12,20 +12,20 @@ import { LanguageService } from '../i18n/language.service';
   template: `
     <div class="min-h-screen pt-24 pb-16 px-6">
       <div class="max-w-4xl mx-auto">
-        <a routerLink="/" class="inline-flex items-center gap-1 text-sm text-accent-light hover:text-accent-primary transition-colors mb-8">
+        <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
           ← {{ i18n.t('common.backToHome') }}
         </a>
 
         <h1 class="text-3xl md:text-4xl font-bold text-text-primary mb-4 animate-fade-slide-up">
-          {{ i18n.t('thirdParty.title') }}
+          <span class="marker">{{ i18n.t('thirdParty.title') }}</span>
         </h1>
 
         @if (noticesResource.isLoading()) {
           <div class="space-y-4 animate-pulse">
-            <div class="h-4 bg-white/5 rounded w-3/4"></div>
-            <div class="h-4 bg-white/5 rounded w-1/2"></div>
-            <div class="h-4 bg-white/5 rounded w-2/3"></div>
-            <div class="h-64 bg-white/5 rounded"></div>
+            <div class="h-4 bg-ink/10 w-3/4"></div>
+            <div class="h-4 bg-ink/10 w-1/2"></div>
+            <div class="h-4 bg-ink/10 w-2/3"></div>
+            <div class="h-64 bg-ink/10"></div>
           </div>
         } @else if (noticesResource.error()) {
           <p class="text-red-400">{{ i18n.t('thirdParty.loadError') }}</p>
@@ -42,20 +42,32 @@ import { LanguageService } from '../i18n/language.service';
       display: block;
     }
 
+    .notices-content {
+      background: var(--color-bg-card);
+      border: 2px solid var(--color-ink);
+      box-shadow: 5px 5px 0 var(--color-ink);
+      color: var(--color-text-primary);
+      padding: 1.5rem;
+    }
+
     .notices-content h2 {
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--color-text-primary);
+      color: var(--color-ink);
       margin-top: 2.5rem;
       margin-bottom: 1rem;
       padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--color-border);
+      border-bottom: 2px solid var(--color-ink);
+    }
+
+    .notices-content h2:first-child {
+      margin-top: 0;
     }
 
     .notices-content h3 {
       font-size: 1.125rem;
       font-weight: 600;
-      color: var(--color-accent-light);
+      color: var(--color-ink);
       margin-top: 2rem;
       margin-bottom: 0.75rem;
     }
@@ -86,16 +98,16 @@ import { LanguageService } from '../i18n/language.service';
     .notices-content code {
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       font-size: 0.875em;
-      background: rgba(255, 255, 255, 0.06);
+      background: var(--color-pop-yellow);
+      border: 2px solid var(--color-ink);
       padding: 0.125rem 0.375rem;
-      border-radius: 0.25rem;
-      color: var(--color-accent-light);
+      color: var(--color-ink);
     }
 
     .notices-content pre {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--color-border);
-      border-radius: 0.5rem;
+      background: var(--color-bg-card-hover);
+      border: 2px solid var(--color-ink);
+      box-shadow: 3px 3px 0 var(--color-ink);
       padding: 1rem 1.25rem;
       overflow-x: auto;
       margin-bottom: 1.5rem;
@@ -107,6 +119,7 @@ import { LanguageService } from '../i18n/language.service';
 
     .notices-content pre code {
       background: none;
+      border: 0;
       padding: 0;
       font-size: inherit;
       color: inherit;
@@ -114,7 +127,7 @@ import { LanguageService } from '../i18n/language.service';
 
     .notices-content hr {
       border: none;
-      border-top: 1px solid var(--color-border);
+      border-top: 2px solid var(--color-ink);
       margin: 2rem 0;
     }
 

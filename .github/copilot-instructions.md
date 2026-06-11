@@ -10,7 +10,7 @@ This is **janiheikkinen.com** — a personal portfolio/dashboard site built with
 - **Root shell** (`app.ts`): Navbar + `<router-outlet>` + Footer. Uses inline template/styles.
 - **Pages** (`src/app/pages/`): Routed page components — `home`, `weather`, `electricity`, `github`.
 - **Shared components** (`src/app/components/shared/`): `GlowCardComponent`, `FloatingOrbComponent`.
-- **Hero components** (`src/app/components/hero/`): `HeroComponent`, `ParticleCanvasComponent`, `TypingEffectComponent`.
+- **Hero components** (`src/app/components/hero/`): `HeroComponent`, `TypingEffectComponent`.
 - **Layout components**: `NavbarComponent`, `FooterComponent`.
 
 ### Routing
@@ -20,6 +20,7 @@ Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electrici
 ### Styling
 
 - Tailwind CSS 4 via `@tailwindcss/postcss` (configured in `.postcssrc.json`)
+- **Design system: neo-brutalist "Paper & Ink"** — see `docs/design-system.md` (the canonical UI reference: cream background, 2px ink borders, hard offset shadows, flat pop-color fills, Archivo Black/Space Grotesk/JetBrains Mono; no gradients, glows, blur, or rounded corners)
 - Theme tokens defined in `src/styles.css` under `@theme`
 - Animation keyframes and utility classes in `src/styles.css`
 - Components use inline `styles` — no separate CSS files

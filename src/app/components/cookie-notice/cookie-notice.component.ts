@@ -7,19 +7,19 @@ import { LanguageService } from '../../i18n/language.service';
   template: `
     @if (visible()) {
       <div class="fixed bottom-0 inset-x-0 z-50 p-4 md:p-6">
-        <div class="max-w-3xl mx-auto bg-bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-5 shadow-2xl">
+        <div class="max-w-3xl mx-auto bg-bg-card border-2 border-ink p-5 shadow-[5px_5px_0_0_#131310]">
           <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div class="flex-1">
-              <h3 class="text-sm font-semibold text-text-primary mb-1.5">{{ i18n.t('cookie.title') }}</h3>
+              <h3 class="text-sm font-bold text-text-primary mb-1.5">{{ i18n.t('cookie.title') }}</h3>
               <p class="text-xs text-text-secondary leading-relaxed">
                 {{ i18n.t('cookie.bodyStart') }}
                 <strong class="text-text-primary">{{ i18n.t('cookie.localStorage') }}</strong>
                 {{ i18n.t('cookie.bodyMiddle') }}
-                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-accent-light underline hover:no-underline">Open-Meteo</a>{{ i18n.t('cookie.bodyEnd') }}
+                <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" class="text-accent-light font-semibold underline hover:no-underline">Open-Meteo</a>{{ i18n.t('cookie.bodyEnd') }}
               </p>
             </div>
             <button (click)="accept()"
-                    class="shrink-0 px-5 py-2 text-sm font-medium rounded-xl bg-accent-dark text-white hover:bg-accent-dark/80 transition-colors cursor-pointer">
+                    class="shrink-0 px-5 py-2 text-sm font-bold border-2 border-ink bg-pop-lime text-ink shadow-[3px_3px_0_0_#131310] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#131310] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer">
               {{ i18n.t('cookie.accept') }}
             </button>
           </div>

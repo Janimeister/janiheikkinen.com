@@ -25,33 +25,37 @@ import type { Language } from '../../i18n/translations';
     .language-toggle {
       display: inline-flex;
       align-items: center;
-      gap: 0.125rem;
-      padding: 0.125rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.5rem;
-      background: rgba(255, 255, 255, 0.035);
-      backdrop-filter: blur(10px);
+      gap: 0;
+      border: 2px solid var(--color-ink);
+      background: var(--color-bg-card);
+      box-shadow: var(--shadow-brutal-sm);
     }
 
     button {
       min-width: 2rem;
       height: 1.75rem;
       border: 0;
-      border-radius: 0.375rem;
-      color: var(--color-text-secondary);
+      color: var(--color-text-primary);
       background: transparent;
+      font-family: var(--font-mono);
       font-size: 0.6875rem;
       font-weight: 700;
       letter-spacing: 0;
       line-height: 1;
       cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease;
+      transition: background 0.15s ease;
     }
 
-    button:hover,
+    button + button {
+      border-left: 2px solid var(--color-ink);
+    }
+
+    button:hover {
+      background: var(--color-pop-yellow);
+    }
+
     button.active {
-      color: var(--color-accent-light);
-      background: rgba(99, 102, 241, 0.18);
+      background: var(--color-pop-pink);
     }
   `,
 })

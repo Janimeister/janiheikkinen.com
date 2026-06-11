@@ -33,6 +33,7 @@ export const EN_TRANSLATIONS = {
   'cookie.bodyEnd': ' for geocoding and forecasts. No personal data is collected or stored by us.',
   'cookie.accept': 'Got it',
 
+  'hero.sticker': 'Hello there!',
   'hero.role1': 'Oh boy',
   'hero.role2': 'Best ever',
 
@@ -324,6 +325,7 @@ export const FI_TRANSLATIONS = {
   'cookie.bodyEnd': '-palvelulle geokoodausta ja ennusteita varten. Emme kerää tai tallenna henkilötietoja.',
   'cookie.accept': 'Selvä',
 
+  'hero.sticker': 'Moikka!',
   'hero.role1': 'Voi pojat',
   'hero.role2': 'Parasta ikinä',
 

@@ -22,20 +22,19 @@ interface PriceResponse {
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
-      <!-- Background -->
-      <div class="absolute inset-0 bg-gradient-to-br from-[#1a0a0a] via-[#0a0a0f] to-[#0a1a0a] animate-gradient-shift opacity-40"></div>
-      <app-floating-orb class="absolute top-[10%] left-[15%] z-[1]" delay="1s" [size]="70" />
-      <app-floating-orb class="absolute bottom-[30%] right-[8%] z-[1]" delay="4s" [size]="50" />
+      <!-- Decorative shapes -->
+      <app-floating-orb class="hidden md:block absolute top-[10%] left-[15%] z-[1]" delay="1s" [size]="70" shape="triangle" color="orange" rotate="-8deg" />
+      <app-floating-orb class="hidden md:block absolute bottom-[30%] right-[8%] z-[1]" delay="4s" [size]="50" shape="square" color="pink" rotate="5deg" />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
+          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-500 bg-clip-text text-transparent">{{ i18n.t('electricity.title') }}</span>
+            <span class="marker marker-orange">{{ i18n.t('electricity.title') }}</span>
           </h1>
           <p class="text-text-secondary mt-2">{{ i18n.t('electricity.subtitle') }}</p>
         </div>
@@ -45,8 +44,8 @@ interface PriceResponse {
             @for (i of [1,2,3]; track i) {
               <app-glow-card>
                 <div class="animate-pulse space-y-3">
-                  <div class="h-6 bg-white/5 rounded w-1/2"></div>
-                  <div class="h-20 bg-white/5 rounded"></div>
+                  <div class="h-6 bg-ink/10 w-1/2"></div>
+                  <div class="h-20 bg-ink/10"></div>
                 </div>
               </app-glow-card>
             }
@@ -76,7 +75,7 @@ interface PriceResponse {
                     {{ i18n.t('electricity.vatNotice', { range: currentTimeRange() }) }}
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full animate-glow-pulse" [class]="priceDotColor(currentPrice()!)"></span>
+                    <span class="w-3 h-3 border-2 border-ink shadow-brutal-sm" [class]="priceDotColor(currentPrice()!)"></span>
                     <span class="text-sm" [class]="priceColor(currentPrice()!)">{{ priceLevel(currentPrice()!) }}</span>
                   </div>
                 } @else {
@@ -98,16 +97,16 @@ interface PriceResponse {
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.lowest') }}</span>
-                      <span class="text-sm font-semibold text-emerald-400">{{ stats.min.toFixed(2) }} c/kWh</span>
+                      <span class="text-sm font-semibold text-[#287234]">{{ stats.min.toFixed(2) }} c/kWh</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.highest') }}</span>
                       <span class="text-sm font-semibold text-red-400">{{ stats.max.toFixed(2) }} c/kWh</span>
                     </div>
-                    <hr class="border-white/5" />
+                    <hr class="border-t-2 border-ink" />
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.cheapestHour') }}</span>
-                      <span class="text-sm font-medium text-emerald-400">{{ stats.cheapestHour }}</span>
+                      <span class="text-sm font-medium text-[#287234]">{{ stats.cheapestHour }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.priciestHour') }}</span>
@@ -143,12 +142,12 @@ interface PriceResponse {
                         <div class="flex-1 flex flex-col items-center justify-end h-full group relative"
                              (click)="onBarClick($event, i)"
                              [attr.data-current]="bar.isCurrent || null">
-                          <div class="absolute bottom-full mb-1 bg-bg-card border border-border rounded px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100"
+                          <div class="absolute bottom-full mb-1 bg-bg-card border-2 border-ink shadow-brutal-sm px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100"
                                [style.opacity]="activeBarIdx() === i ? 1 : null">
                             {{ bar.hour }}: {{ bar.price.toFixed(2) }} c/kWh
                           </div>
-                          <div class="w-full rounded-t-sm transition-all duration-300 cursor-pointer"
-                               [class]="bar.isCurrent ? 'bg-accent-primary shadow-[0_0_10px_rgba(99,102,241,0.4)]' : bar.colorClass"
+                          <div class="w-full transition-all duration-300 cursor-pointer"
+                               [class]="bar.isCurrent ? 'bg-accent-primary border-2 border-ink' : bar.colorClass"
                                [style.height.%]="bar.heightPct">
                           </div>
                         </div>
@@ -169,10 +168,10 @@ interface PriceResponse {
               </div>
               <!-- Legend -->
               <div class="flex items-center gap-4 mt-4 text-xs text-text-secondary">
-                <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-emerald-500/60"></span> &lt; 5 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-amber-500/60"></span> 5–10 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-red-500/60"></span> &gt; 10 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 rounded-sm bg-accent-primary"></span> {{ i18n.t('electricity.currentLegend') }}</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-lime"></span> &lt; 5 c/kWh</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-yellow"></span> 5–10 c/kWh</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-[#c92a2a]"></span> &gt; 10 c/kWh</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-accent-primary"></span> {{ i18n.t('electricity.currentLegend') }}</span>
               </div>
             </app-glow-card>
           </div>
@@ -187,7 +186,7 @@ interface PriceResponse {
               <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.hourlyPricesRegion')">
                 <table class="w-full text-sm">
                   <thead>
-                    <tr class="text-text-secondary border-b border-white/5">
+                    <tr class="text-text-secondary border-b-2 border-ink">
                       <th class="text-left py-2 pr-4">{{ i18n.t('electricity.time') }}</th>
                       <th class="text-right py-2 pr-4">{{ i18n.t('electricity.price') }}</th>
                       <th class="text-left py-2 hidden md:table-cell">{{ i18n.t('electricity.level') }}</th>
@@ -196,8 +195,8 @@ interface PriceResponse {
                   </thead>
                   <tbody>
                     @for (row of priceTable(); track row.hour) {
-                      <tr class="border-b border-white/[0.03] transition-colors"
-                          [class]="row.isCurrent ? 'bg-accent-primary/5' : 'hover:bg-white/[0.02]'">
+                      <tr class="border-b-2 border-ink transition-colors"
+                          [class]="row.isCurrent ? 'bg-bg-card-hover' : 'hover:bg-bg-card-hover'">
                         <td class="py-2 pr-4 font-mono text-text-primary">
                           {{ row.hour }}
                           @if (row.isCurrent) {
@@ -209,8 +208,8 @@ interface PriceResponse {
                         </td>
                         <td class="py-2 hidden md:table-cell text-text-secondary">{{ priceLevel(row.price) }}</td>
                         <td class="py-2">
-                          <div class="w-full h-3 bg-white/5 rounded-full overflow-hidden">
-                            <div class="h-full rounded-full transition-all" [class]="priceBarColor(row.price)"
+                          <div class="w-full h-3 bg-bg-card border-2 border-ink overflow-hidden">
+                            <div class="h-full transition-all" [class]="priceBarColor(row.price)"
                                  [style.width.%]="row.barPct">
                             </div>
                           </div>
@@ -226,7 +225,7 @@ interface PriceResponse {
           <!-- Attribution -->
           <div class="mt-6 text-center">
             <a href="https://porssisahko.net" target="_blank" rel="noopener noreferrer"
-               class="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors">
+               class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
               {{ i18n.t('electricity.attribution') }}
             </a>
           </div>
@@ -347,7 +346,7 @@ export class ElectricityPageComponent {
       price: p.price,
       heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
       isCurrent: i === curIdx,
-      colorClass: p.price < 5 ? 'bg-emerald-500/60' : p.price < 10 ? 'bg-amber-500/60' : 'bg-red-500/60',
+      colorClass: p.price < 5 ? 'bg-pop-lime' : p.price < 10 ? 'bg-pop-yellow' : 'bg-[#c92a2a]',
     }));
   });
 
@@ -366,21 +365,21 @@ export class ElectricityPageComponent {
   });
 
   priceColor(price: number): string {
-    if (price < 5) return 'text-emerald-400';
-    if (price < 10) return 'text-amber-400';
+    if (price < 5) return 'text-[#287234]';
+    if (price < 10) return 'text-[#a85100]';
     return 'text-red-400';
   }
 
   priceBarColor(price: number): string {
-    if (price < 5) return 'bg-emerald-500';
-    if (price < 10) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (price < 5) return 'bg-pop-lime';
+    if (price < 10) return 'bg-pop-yellow';
+    return 'bg-[#c92a2a]';
   }
 
   priceDotColor(price: number): string {
-    if (price < 5) return 'bg-emerald-400';
-    if (price < 10) return 'bg-amber-400';
-    return 'bg-red-400';
+    if (price < 5) return 'bg-pop-lime';
+    if (price < 10) return 'bg-pop-yellow';
+    return 'bg-[#c92a2a]';
   }
 
   onBarClick(event: Event, i: number) {

@@ -1,21 +1,42 @@
 import { Component, input } from '@angular/core';
 
+/** Flat geometric decoration shape (square, circle or triangle) in a pop color. */
 @Component({
   selector: 'app-floating-orb',
   standalone: true,
-  template: `<div class="orb" [style.animation-delay]="delay()" [style.width.px]="size()" [style.height.px]="size()"></div>`,
+  template: `
+    <div class="deco animate-bob"
+         [class.deco-circle]="shape() === 'circle'"
+         [class.deco-triangle]="shape() === 'triangle'"
+         [style.animation-delay]="delay()"
+         [style.--bob-rotate]="rotate()"
+         [style.width.px]="size()"
+         [style.height.px]="size()"
+         [style.background]="'var(--color-pop-' + color() + ')'"
+         aria-hidden="true"></div>
+  `,
   styles: `
-    .orb {
+    .deco {
       position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
-      animation: float 8s ease-in-out infinite;
+      border: 2px solid var(--color-ink);
+      box-shadow: var(--shadow-brutal-sm);
       pointer-events: none;
-      filter: blur(1px);
+      opacity: 0.9;
+    }
+    .deco-circle {
+      border-radius: 50%;
+    }
+    .deco-triangle {
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      border: 0;
+      box-shadow: none;
     }
   `
 })
 export class FloatingOrbComponent {
   delay = input('0s');
   size = input(60);
+  shape = input<'square' | 'circle' | 'triangle'>('square');
+  color = input<'yellow' | 'pink' | 'lime' | 'sky' | 'orange'>('yellow');
+  rotate = input('-3deg');
 }

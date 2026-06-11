@@ -11,18 +11,18 @@ import { Component, input } from '@angular/core';
   styles: `
     .glow-card {
       background: var(--color-bg-card);
-      border: 1px solid var(--color-border);
-      border-radius: 1rem;
+      border: 2px solid var(--color-ink);
+      border-radius: 0;
       padding: 1.5rem;
-      animation: glow-pulse 4s ease-in-out infinite;
-      transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+      box-shadow: var(--shadow-brutal);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
       position: relative;
       overflow: hidden;
     }
     .glow-card:hover {
-      transform: translateY(-4px);
+      transform: translate(-2px, -2px);
       background: var(--color-bg-card-hover);
-      box-shadow: 0 0 30px rgba(99,102,241,0.2);
+      box-shadow: var(--shadow-brutal-lg);
     }
   `
 })

@@ -18,7 +18,7 @@ Create a new routed detail page for this Angular portfolio site.
    - Show loading shimmer (`animate-pulse` divs) while data loads
    - Show error state with `text-red-400` class when API fails
    - Wrap data sections in `<app-glow-card>` with `animate-fade-slide-up stagger-N` classes
-   - Use Tailwind CSS classes matching the existing dark theme
+   - Follow the neo-brutalist design system in `docs/design-system.md` (marker-highlighted `h1`, 2px ink borders, hard shadows, pop fills with ink text; see §9 "Adding a new page")
 
 2. **Add the route** in `src/app/app.routes.ts` — add before the wildcard redirect
 
@@ -40,6 +40,6 @@ Create a new routed detail page for this Angular portfolio site.
 Header: back link + h1 title
 Loading state: shimmer placeholders
 Error state: red error message
-Data sections: glow cards with staggered animations
+Data sections: brutalist cards with staggered animations
 Attribution: link to data source
 ```

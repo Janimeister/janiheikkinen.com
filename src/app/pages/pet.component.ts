@@ -56,56 +56,56 @@ const SPECIES: readonly Species[] = [
     id: 'cat',
     nameKey: 'pet.species.cat.name',
     sprites: { baby: '🐱', child: '🐈', teen: '🐈', adult: '🐈‍⬛' },
-    accent: 'text-amber-300',
+    accent: 'text-accent-light',
     traitKey: 'pet.species.cat.trait',
   },
   {
     id: 'dog',
     nameKey: 'pet.species.dog.name',
     sprites: { baby: '🐶', child: '🐕', teen: '🐕', adult: '🐕‍🦺' },
-    accent: 'text-orange-300',
+    accent: 'text-accent-light',
     traitKey: 'pet.species.dog.trait',
   },
   {
     id: 'dragon',
     nameKey: 'pet.species.dragon.name',
     sprites: { baby: '🦎', child: '🐲', teen: '🐉', adult: '🐲' },
-    accent: 'text-emerald-300',
+    accent: 'text-ink',
     traitKey: 'pet.species.dragon.trait',
   },
   {
     id: 'alien',
     nameKey: 'pet.species.alien.name',
     sprites: { baby: '👾', child: '👽', teen: '🛸', adult: '👽' },
-    accent: 'text-fuchsia-300',
+    accent: 'text-accent-secondary',
     traitKey: 'pet.species.alien.trait',
   },
   {
     id: 'fox',
     nameKey: 'pet.species.fox.name',
     sprites: { baby: '🦊', child: '🦊', teen: '🦊', adult: '🦊' },
-    accent: 'text-rose-300',
+    accent: 'text-accent-light',
     traitKey: 'pet.species.fox.trait',
   },
   {
     id: 'bunny',
     nameKey: 'pet.species.bunny.name',
     sprites: { baby: '🐰', child: '🐇', teen: '🐇', adult: '🐇' },
-    accent: 'text-pink-300',
+    accent: 'text-accent-secondary',
     traitKey: 'pet.species.bunny.trait',
   },
   {
     id: 'chick',
     nameKey: 'pet.species.chick.name',
     sprites: { baby: '🐥', child: '🐤', teen: '🐔', adult: '🦅' },
-    accent: 'text-yellow-300',
+    accent: 'text-ink',
     traitKey: 'pet.species.chick.trait',
   },
   {
     id: 'axolotl',
     nameKey: 'pet.species.axolotl.name',
     sprites: { baby: '🐣', child: '🐸', teen: '🐲', adult: '🐊' },
-    accent: 'text-teal-300',
+    accent: 'text-accent-secondary',
     traitKey: 'pet.species.axolotl.trait',
   },
 ];
@@ -121,19 +121,18 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
-      <div class="absolute inset-0 bg-gradient-to-br from-[#1a0a2e] via-[#0a0a0f] to-[#0a1a2e] animate-gradient-shift opacity-40"></div>
-      <app-floating-orb class="absolute top-[10%] right-[10%] z-[1]" delay="0s" [size]="70" />
-      <app-floating-orb class="absolute bottom-[20%] left-[12%] z-[1]" delay="2s" [size]="60" />
+      <app-floating-orb class="hidden md:block absolute top-[10%] right-[10%] z-[1]" delay="0s" [size]="70" shape="circle" color="orange" rotate="4deg" />
+      <app-floating-orb class="hidden md:block absolute bottom-[20%] left-[12%] z-[1]" delay="2s" [size]="60" shape="square" color="pink" rotate="-7deg" />
 
       <div class="relative z-10 max-w-5xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
+          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-pink-300 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">{{ i18n.t('pet.title') }}</span>
+            <span class="marker marker-orange">{{ i18n.t('pet.title') }}</span>
           </h1>
           <p class="text-text-secondary mt-2">{{ i18n.t('pet.subtitle') }}</p>
         </div>
@@ -155,7 +154,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
 
                   <div class="relative w-full flex items-center justify-center py-6">
                     <div class="text-8xl md:text-9xl select-none transition-transform duration-300"
-                         [class.animate-float]="!p.dead && !p.asleep"
+                         [class.animate-bob]="!p.dead && !p.asleep"
                          [style.filter]="spriteFilter()"
                          aria-hidden="true"
                          data-testid="pet-sprite">
@@ -171,13 +170,13 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                   @if (p.dead) {
                     <button (click)="reset()"
                             data-testid="pet-reset-btn"
-                            class="mt-2 px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-text-secondary hover:bg-white/10 hover:text-text-primary transition-all">
+                            class="mt-2 px-6 py-2 bg-pop-sky border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all disabled:opacity-50">
                       {{ i18n.t('pet.findNewEgg') }}
                     </button>
                   } @else {
                     <button (click)="reset()"
                             data-testid="pet-reset-btn"
-                            class="mt-2 text-xs text-text-secondary/60 hover:text-text-secondary transition-colors underline underline-offset-2">
+                            class="mt-2 px-4 py-2 bg-pop-orange border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold text-xs transition-all disabled:opacity-50">
                       {{ i18n.t('pet.release') }}
                     </button>
                   }
@@ -195,10 +194,10 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                       <div>
                         <div class="flex justify-between text-xs mb-1">
                           <span class="text-text-secondary">{{ stat.icon }} {{ stat.label }}</span>
-                          <span class="text-text-primary font-[JetBrains_Mono,monospace]">{{ stat.value }}</span>
+                          <span class="text-text-primary font-mono">{{ stat.value }}</span>
                         </div>
-                        <div class="h-2 rounded-full bg-white/5 overflow-hidden">
-                          <div class="h-full rounded-full transition-all duration-300"
+                        <div class="h-3 bg-ink/10 border-2 border-ink overflow-hidden">
+                          <div class="h-full transition-all duration-300"
                                [class]="stat.barClass"
                                [style.width.%]="stat.value"></div>
                         </div>
@@ -258,7 +257,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                 <ul class="flex flex-col gap-1 text-sm" data-testid="pet-log">
                   @for (entry of eventLog(); track entry.id) {
                     <li class="text-text-secondary">
-                      <span class="text-text-primary/70 font-[JetBrains_Mono,monospace] text-xs mr-2">{{ formatEventTime(entry.timestamp) }}</span>
+                      <span class="text-text-primary/70 font-mono text-xs mr-2">{{ formatEventTime(entry.timestamp) }}</span>
                       {{ entryMessage(entry) }}
                     </li>
                   }
@@ -287,11 +286,11 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                          (input)="onNameInput($event)"
                          [attr.placeholder]="i18n.t('pet.namePlaceholder')"
                          data-testid="pet-name-input"
-                         class="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-accent-primary transition-colors" />
+                         class="w-full px-4 py-2.5 bg-bg-card border-2 border-ink text-ink placeholder:text-text-secondary focus:outline-none focus:shadow-brutal-sm transition-all" />
                   <button (click)="hatch()"
                           [disabled]="!canHatch()"
                           data-testid="pet-hatch-btn"
-                          class="px-8 py-3 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-semibold hover:bg-fuchsia-500/30 transition-all text-lg disabled:opacity-40 disabled:cursor-not-allowed">
+                          class="px-8 py-3 bg-pop-pink border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     {{ i18n.t('pet.hatch') }}
                   </button>
                 </div>
@@ -328,23 +327,28 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
       justify-content: center;
       gap: 0.375rem;
       padding: 0.625rem 0.75rem;
-      border-radius: 0.75rem;
       font-weight: 600;
       font-size: 0.875rem;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      color: var(--color-text-secondary);
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+      border: 2px solid var(--color-ink);
+      color: var(--color-ink);
+      box-shadow: 3px 3px 0 var(--color-ink);
+      transition: all 0.15s ease;
       cursor: pointer;
     }
-    .care-btn:hover:not(:disabled) { transform: translateY(-1px); }
-    .care-btn:active:not(:disabled) { transform: translateY(0); }
-    .care-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .care-btn-amber:hover:not(:disabled)   { background: rgba(245,158,11,0.15);  border-color: rgba(245,158,11,0.35);  color: #fbbf24; }
-    .care-btn-pink:hover:not(:disabled)    { background: rgba(236,72,153,0.15);  border-color: rgba(236,72,153,0.35);  color: #f472b6; }
-    .care-btn-sky:hover:not(:disabled)     { background: rgba(14,165,233,0.15);  border-color: rgba(14,165,233,0.35);  color: #38bdf8; }
-    .care-btn-indigo:hover:not(:disabled)  { background: rgba(99,102,241,0.15);  border-color: rgba(99,102,241,0.35);  color: #818cf8; }
-    .care-btn-emerald:hover:not(:disabled) { background: rgba(16,185,129,0.15);  border-color: rgba(16,185,129,0.35);  color: #34d399; }
+    .care-btn:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 var(--color-ink);
+    }
+    .care-btn:active:not(:disabled) {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 var(--color-ink);
+    }
+    .care-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .care-btn-amber   { background: var(--color-pop-orange); }
+    .care-btn-pink    { background: var(--color-pop-pink); }
+    .care-btn-sky     { background: var(--color-pop-sky); }
+    .care-btn-indigo  { background: var(--color-pop-yellow); }
+    .care-btn-emerald { background: var(--color-pop-lime); }
   `,
 })
 export class PetPageComponent implements OnInit, OnDestroy {
@@ -481,18 +485,23 @@ export class PetPageComponent implements OnInit, OnDestroy {
     const p = this.pet();
     if (!p) return [];
     return [
-      { key: 'hunger',      label: this.i18n.t('pet.statHunger'),      icon: '🍽️', value: Math.round(p.hunger),      barClass: this.barClass(p.hunger) },
-      { key: 'happiness',   label: this.i18n.t('pet.statHappiness'),   icon: '😊', value: Math.round(p.happiness),   barClass: this.barClass(p.happiness) },
-      { key: 'energy',      label: this.i18n.t('pet.statEnergy'),      icon: '⚡',  value: Math.round(p.energy),      barClass: this.barClass(p.energy) },
-      { key: 'cleanliness', label: this.i18n.t('pet.statCleanliness'), icon: '🫧', value: Math.round(p.cleanliness), barClass: this.barClass(p.cleanliness) },
-      { key: 'health',      label: this.i18n.t('pet.statHealth'),      icon: '❤️', value: Math.round(p.health),      barClass: this.barClass(p.health) },
+      { key: 'hunger',      label: this.i18n.t('pet.statHunger'),      icon: '🍽️', value: Math.round(p.hunger),      barClass: this.barClass('hunger') },
+      { key: 'happiness',   label: this.i18n.t('pet.statHappiness'),   icon: '😊', value: Math.round(p.happiness),   barClass: this.barClass('happiness') },
+      { key: 'energy',      label: this.i18n.t('pet.statEnergy'),      icon: '⚡',  value: Math.round(p.energy),      barClass: this.barClass('energy') },
+      { key: 'cleanliness', label: this.i18n.t('pet.statCleanliness'), icon: '🫧', value: Math.round(p.cleanliness), barClass: this.barClass('cleanliness') },
+      { key: 'health',      label: this.i18n.t('pet.statHealth'),      icon: '❤️', value: Math.round(p.health),      barClass: this.barClass('health') },
     ];
   });
 
-  private barClass(value: number): string {
-    if (value >= 60) return 'bg-emerald-400';
-    if (value >= 30) return 'bg-amber-400';
-    return 'bg-red-400';
+  private barClass(stat: 'hunger' | 'happiness' | 'energy' | 'cleanliness' | 'health'): string {
+    const classes: Record<typeof stat, string> = {
+      hunger: 'bg-pop-orange',
+      happiness: 'bg-pop-pink',
+      energy: 'bg-pop-yellow',
+      cleanliness: 'bg-pop-sky',
+      health: 'bg-pop-lime',
+    };
+    return classes[stat];
   }
 
   // ── Input handlers ───────────────────────────────────────────────

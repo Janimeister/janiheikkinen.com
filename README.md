@@ -9,7 +9,7 @@ Personal portfolio and dashboard site built with Angular 21, Tailwind CSS 4, and
 | Framework | [Angular 21](https://angular.dev) (standalone components, signals) |
 | Language | [TypeScript 5.9](https://www.typescriptlang.org) |
 | Build tool | [Vite](https://vite.dev) via `@angular/build` |
-| Styling | [Tailwind CSS 4](https://tailwindcss.com) via `@tailwindcss/postcss` |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com) via `@tailwindcss/postcss` — neo-brutalist design system, see [docs/design-system.md](docs/design-system.md) |
 | Routing | Angular Router with lazy-loaded page components |
 | Data fetching | Angular `resource()` API |
 | E2E testing | [Playwright](https://playwright.dev) |
@@ -30,7 +30,7 @@ src/app/
 │   ├── pet.component.ts         # Virtual pet simulator
 │   └── third-party-notices.component.ts # Third-party license notices
 ├── components/
-│   ├── hero/                # Hero section with particle canvas and typing effect
+│   ├── hero/                # Hero section with typing effect and deco shapes
 │   ├── navbar/              # Top navigation bar (scrollable on small screens)
 │   ├── language-toggle/     # EN/FI language switcher
 │   ├── footer/              # Site footer
@@ -41,7 +41,7 @@ src/app/
 └── app.config.ts            # Application configuration
 ```
 
-Theme tokens and animation keyframes are centralized in `src/styles.css`.
+Theme tokens and animation keyframes are centralized in `src/styles.css`. The visual language ("Paper & Ink" neo-brutalism — cream background, 2px ink borders, hard offset shadows, flat pop-color fills) is documented in [docs/design-system.md](docs/design-system.md).
 
 ## Language Support
 
