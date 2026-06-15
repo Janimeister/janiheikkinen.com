@@ -16,7 +16,7 @@ import { LanguageToggleComponent } from '../language-toggle/language-toggle.comp
          [class.nav-scrolled]="scrolled()">
       <div class="max-w-6xl mx-auto px-6 md:px-12 lg:px-20 h-16 flex items-center justify-between gap-4">
         <a routerLink="/" class="logo shrink-0" aria-label="Home">
-          JH<span class="text-accent-primary">.</span>
+          JH<span class="text-ink">.</span>
         </a>
         <app-language-toggle class="shrink-0" />
         <div class="relative min-w-0 flex-1 flex items-center justify-end gap-3">

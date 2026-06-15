@@ -28,8 +28,6 @@ import { Component, input } from '@angular/core';
     }
     .deco-triangle {
       clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-      border: 0;
-      box-shadow: none;
     }
   `
 })

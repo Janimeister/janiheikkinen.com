@@ -170,7 +170,7 @@ interface PriceResponse {
               <div class="flex items-center gap-4 mt-4 text-xs text-text-secondary">
                 <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-lime"></span> &lt; 5 c/kWh</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-yellow"></span> 5–10 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-[#c92a2a]"></span> &gt; 10 c/kWh</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-red-400"></span> &gt; 10 c/kWh</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-accent-primary"></span> {{ i18n.t('electricity.currentLegend') }}</span>
               </div>
             </app-glow-card>
