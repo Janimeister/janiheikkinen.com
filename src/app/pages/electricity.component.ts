@@ -346,7 +346,7 @@ export class ElectricityPageComponent {
       price: p.price,
       heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
       isCurrent: i === curIdx,
-      colorClass: p.price < 5 ? 'bg-pop-lime' : p.price < 10 ? 'bg-pop-yellow' : 'bg-[#c92a2a]',
+      colorClass: p.price < 5 ? 'bg-pop-lime' : p.price < 10 ? 'bg-pop-yellow' : 'bg-red-400',
     }));
   });
 
@@ -373,13 +373,13 @@ export class ElectricityPageComponent {
   priceBarColor(price: number): string {
     if (price < 5) return 'bg-pop-lime';
     if (price < 10) return 'bg-pop-yellow';
-    return 'bg-[#c92a2a]';
+    return 'bg-red-400';
   }
 
   priceDotColor(price: number): string {
     if (price < 5) return 'bg-pop-lime';
     if (price < 10) return 'bg-pop-yellow';
-    return 'bg-[#c92a2a]';
+    return 'bg-red-400';
   }
 
   onBarClick(event: Event, i: number) {
