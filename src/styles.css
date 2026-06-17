@@ -186,10 +186,10 @@ h1, h2, h3 {
   html {
     scroll-behavior: auto;
   }
-  .brutal-hover:hover {
+  .brutal-hover:hover:not(:disabled) {
     transform: none !important;
   }
-  .brutal-press:active {
+  .brutal-press:active:not(:disabled) {
     transform: none !important;
   }
 }
