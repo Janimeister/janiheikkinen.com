@@ -87,12 +87,12 @@ h1, h2, h3 {
 .brutal-hover {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.brutal-hover:hover {
+.brutal-hover:hover:not(:disabled) {
   transform: translate(-2px, -2px);
   box-shadow: var(--shadow-brutal-lg);
 }
 
-.brutal-press:active {
+.brutal-press:active:not(:disabled) {
   transform: translate(2px, 2px);
   box-shadow: none;
 }
@@ -101,6 +101,7 @@ h1, h2, h3 {
 .marker {
   position: relative;
   display: inline-block;
+  isolation: isolate;
 }
 .marker::before {
   content: '';
@@ -184,6 +185,12 @@ h1, h2, h3 {
   }
   html {
     scroll-behavior: auto;
+  }
+  .brutal-hover:hover {
+    transform: none !important;
+  }
+  .brutal-press:active {
+    transform: none !important;
   }
 }
 

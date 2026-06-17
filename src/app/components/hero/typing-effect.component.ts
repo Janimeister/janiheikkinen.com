@@ -7,7 +7,7 @@ import { LanguageService } from '../../i18n/language.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="text-text-primary text-lg md:text-xl font-mono font-medium">
-      {{ displayText() }}<span class="animate-cursor-blink text-accent-primary font-bold">█</span>
+      {{ displayText() }}<span class="animate-cursor-blink text-accent-primary font-bold" aria-hidden="true">█</span>
     </span>
   `,
 })
