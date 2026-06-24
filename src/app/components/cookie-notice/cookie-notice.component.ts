@@ -7,7 +7,7 @@ import { LanguageService } from '../../i18n/language.service';
   template: `
     @if (visible()) {
       <div class="fixed bottom-0 inset-x-0 z-50 p-4 md:p-6">
-        <div class="max-w-3xl mx-auto bg-bg-card border-2 border-ink p-5 shadow-[5px_5px_0_0_#131310]">
+        <div class="max-w-3xl mx-auto bg-bg-card border-2 border-ink p-5 shadow-brutal">
           <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div class="flex-1">
               <h3 class="text-sm font-bold text-text-primary mb-1.5">{{ i18n.t('cookie.title') }}</h3>
@@ -19,7 +19,7 @@ import { LanguageService } from '../../i18n/language.service';
               </p>
             </div>
             <button (click)="accept()"
-                    class="shrink-0 px-5 py-2 text-sm font-bold border-2 border-ink bg-pop-lime text-ink shadow-[3px_3px_0_0_#131310] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#131310] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer">
+                    class="shrink-0 px-5 py-2 text-sm font-bold border-2 border-ink bg-pop-lime text-ink shadow-brutal-sm brutal-hover brutal-press cursor-pointer">
               {{ i18n.t('cookie.accept') }}
             </button>
           </div>

@@ -25,7 +25,7 @@ interface CatFact { fact: string }
           <span class="marker">Jani Heikkinen</span>
         </h1>
 
-        <div class="mb-10 inline-block min-w-48 border-2 border-ink bg-bg-card px-5 py-2 shadow-[3px_3px_0_0_#131310]">
+        <div class="mb-10 inline-block min-w-48 border-2 border-ink bg-bg-card px-5 py-2 shadow-brutal-sm">
           <app-typing-effect />
         </div>
 

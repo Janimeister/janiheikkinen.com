@@ -186,10 +186,12 @@ h1, h2, h3 {
   html {
     scroll-behavior: auto;
   }
-  .brutal-hover:hover:not(:disabled) {
-    transform: none !important;
-  }
-  .brutal-press:active:not(:disabled) {
+  /* Disable all hover/active interaction transforms */
+  .brutal-hover:hover:not(:disabled),
+  .brutal-press:active:not(:disabled),
+  .glow-card:hover,
+  a:hover, a:active,
+  button:hover, button:active {
     transform: none !important;
   }
 }
