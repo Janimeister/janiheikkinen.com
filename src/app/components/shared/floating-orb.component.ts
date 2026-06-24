@@ -3,7 +3,6 @@ import { Component, input } from '@angular/core';
 /** Flat geometric decoration shape (square, circle or triangle) in a pop color. */
 @Component({
   selector: 'app-floating-orb',
-  standalone: true,
   template: `
     <div class="deco animate-bob"
          [class.deco-circle]="shape() === 'circle'"

@@ -7,7 +7,6 @@ interface CatFact { fact: string }
 
 @Component({
   selector: 'app-hero',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TypingEffectComponent, FloatingOrbComponent],
   template: `
