@@ -45,7 +45,7 @@ import { LanguageService } from '../i18n/language.service';
     .notices-content {
       background: var(--color-bg-card);
       border: 2px solid var(--color-ink);
-      box-shadow: 5px 5px 0 var(--color-ink);
+      box-shadow: var(--shadow-brutal);
       color: var(--color-text-primary);
       padding: 1.5rem;
     }
@@ -107,7 +107,7 @@ import { LanguageService } from '../i18n/language.service';
     .notices-content pre {
       background: var(--color-bg-card-hover);
       border: 2px solid var(--color-ink);
-      box-shadow: 3px 3px 0 var(--color-ink);
+      box-shadow: var(--shadow-brutal-sm);
       padding: 1rem 1.25rem;
       overflow-x: auto;
       margin-bottom: 1.5rem;

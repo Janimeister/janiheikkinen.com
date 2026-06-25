@@ -3,7 +3,6 @@ import { LanguageService } from '../../i18n/language.service';
 
 @Component({
   selector: 'app-typing-effect',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="text-text-primary text-lg md:text-xl font-mono font-medium">

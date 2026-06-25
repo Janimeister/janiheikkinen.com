@@ -2,7 +2,6 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-glow-card',
-  standalone: true,
   template: `
     <div class="glow-card" [class]="extraClass()">
       <ng-content />
