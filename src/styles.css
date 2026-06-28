@@ -20,6 +20,11 @@
   --color-ink: #131310;
   /* Keep p.text-red-400 selector working with AA contrast on cream */
   --color-red-400: #c92a2a;
+  /* Semantic data colors — AA-safe on all surfaces (verified ≥4.5:1) */
+  --color-data-green: #287234;
+  --color-data-orange: #a85100;
+  --color-data-orange-deep: #9c4a00;
+  --color-data-blue: #1864ab;
 
   --font-display: "Archivo Black", "Space Grotesk", system-ui, sans-serif;
   --font-sans: "Space Grotesk", system-ui, sans-serif;

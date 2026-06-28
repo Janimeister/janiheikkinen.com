@@ -47,7 +47,17 @@ Defined in `src/styles.css` `@theme`. Use via Tailwind classes (`bg-bg-card`, `t
 Rule: a pop fill always pairs with ink text/icons and (when a standalone element) a 2px ink border.
 
 ### Semantic data colors (AA-safe on cream)
-For "good / warn / bad" values (prices, temperatures, UV): `#287234` (green), `#a85100` (orange), `#9c4a00` (deep orange), `text-red-400` (red). Verified ≥4.5:1 on all three surfaces — check new shades with a contrast calculator before adding any.
+For "good / warn / bad" values (prices, temperatures, UV) — use the token-backed Tailwind utilities:
+
+| Token | Value | Class | Use |
+|---|---|---|---|
+| `--color-data-green` | `#287234` | `text-data-green` | Good / low / cheap |
+| `--color-data-orange` | `#a85100` | `text-data-orange` | Moderate / mild warning |
+| `--color-data-orange-deep` | `#9c4a00` | `text-data-orange-deep` | High / hot / strong warning |
+| `--color-red-400` (override) | `#c92a2a` | `text-red-400` | Bad / max / error |
+| `--color-data-blue` | `#1864ab` | `text-data-blue` | Cold / precipitation |
+
+All verified ≥4.5:1 on cream, card, and card-hover surfaces. Check new shades with a contrast calculator before adding any.
 
 ## 3. Typography
 

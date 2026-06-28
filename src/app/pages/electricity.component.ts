@@ -17,7 +17,6 @@ interface PriceResponse {
 
 @Component({
   selector: 'app-electricity-page',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
@@ -97,7 +96,7 @@ interface PriceResponse {
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.lowest') }}</span>
-                      <span class="text-sm font-semibold text-[#287234]">{{ stats.min.toFixed(2) }} c/kWh</span>
+                      <span class="text-sm font-semibold text-data-green">{{ stats.min.toFixed(2) }} c/kWh</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.highest') }}</span>
@@ -106,7 +105,7 @@ interface PriceResponse {
                     <hr class="border-t-2 border-ink" />
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.cheapestHour') }}</span>
-                      <span class="text-sm font-medium text-[#287234]">{{ stats.cheapestHour }}</span>
+                      <span class="text-sm font-medium text-data-green">{{ stats.cheapestHour }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('electricity.priciestHour') }}</span>
@@ -365,8 +364,8 @@ export class ElectricityPageComponent {
   });
 
   priceColor(price: number): string {
-    if (price < 5) return 'text-[#287234]';
-    if (price < 10) return 'text-[#a85100]';
+    if (price < 5) return 'text-data-green';
+    if (price < 10) return 'text-data-orange';
     return 'text-red-400';
   }
 

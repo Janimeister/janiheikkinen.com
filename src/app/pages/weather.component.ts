@@ -82,7 +82,6 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
 
 @Component({
   selector: 'app-weather-page',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormsModule],
   template: `
@@ -191,11 +190,11 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                   <div class="space-y-4">
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunrise') }}</span>
-                      <span class="text-sm font-medium text-[#a85100]">{{ formatTime(today.sunrise) }}</span>
+                      <span class="text-sm font-medium text-data-orange">{{ formatTime(today.sunrise) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunset') }}</span>
-                      <span class="text-sm font-medium text-[#9c4a00]">{{ formatTime(today.sunset) }}</span>
+                      <span class="text-sm font-medium text-data-orange-deep">{{ formatTime(today.sunset) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunshine') }}</span>
@@ -240,8 +239,8 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                       <span class="text-lg">{{ weatherInfo(hour.weatherCode).icon }}</span>
                       <span class="text-sm font-semibold text-text-primary">{{ hour.temp }}°</span>
                       <div class="flex items-center gap-0.5">
-                        <svg class="w-3 h-3 text-[#1864ab]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/></svg>
-                        <span class="text-[10px] text-[#1864ab]">{{ hour.precipProb }}%</span>
+                        <svg class="w-3 h-3 text-data-blue" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/></svg>
+                        <span class="text-[10px] text-data-blue">{{ hour.precipProb }}%</span>
                       </div>
                       <span class="text-[10px] text-text-secondary">{{ hour.windSpeed }} km/h</span>
                     </div>
@@ -314,14 +313,14 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                     <span class="text-2xl w-10 text-center">{{ weatherInfo(day.weatherCode).icon }}</span>
                     <div class="flex-1 flex items-center gap-2">
                       <!-- Temp range bar -->
-                      <span class="text-sm text-[#1864ab] w-10 text-right">{{ day.min }}°</span>
+                      <span class="text-sm text-data-blue w-10 text-right">{{ day.min }}°</span>
                       <div class="flex-1 h-3 bg-bg-card border-2 border-ink relative overflow-hidden">
                         <div class="absolute h-full bg-accent-secondary transition-all"
                              [style.left.%]="day.barLeft"
                              [style.width.%]="day.barWidth">
                         </div>
                       </div>
-                      <span class="text-sm text-[#9c4a00] w-10">{{ day.max }}°</span>
+                      <span class="text-sm text-data-orange-deep w-10">{{ day.max }}°</span>
                     </div>
                     <div class="hidden md:flex items-center gap-4 text-xs text-text-secondary">
                       <span [title]="i18n.t('weather.precipitationTitle')">💧 {{ day.precip }} mm</span>
@@ -435,9 +434,9 @@ export class WeatherPageComponent {
   }
 
   uvColor(uv: number): string {
-    if (uv < 3) return 'text-[#287234]';
-    if (uv < 6) return 'text-[#a85100]';
-    if (uv < 8) return 'text-[#9c4a00]';
+    if (uv < 3) return 'text-data-green';
+    if (uv < 6) return 'text-data-orange';
+    if (uv < 8) return 'text-data-orange-deep';
     return 'text-red-400';
   }
 

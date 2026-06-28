@@ -57,7 +57,6 @@ const LANG_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-github-page',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
