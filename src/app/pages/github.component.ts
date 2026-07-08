@@ -160,7 +160,7 @@ const LANG_COLORS: Record<string, string> = {
                 <!-- Language bar -->
                 <div class="flex h-5 overflow-hidden mb-4 border-2 border-ink shadow-brutal-sm bg-bg-card">
                   @for (lang of languages(); track lang.name) {
-                    <div [class]="langColor(lang.name) + ' border-r-2 border-ink transition-all hover:opacity-80'"
+                    <div [class]="langColor(lang.name) + ' box-border border-r-2 border-ink transition-all hover:opacity-80'"
                          [style.width.%]="lang.pct"
                          [title]="lang.name + ': ' + (lang.count === 1 ? i18n.t('github.repoCountOne') : i18n.t('github.repoCount', { count: lang.count }))">
                     </div>
