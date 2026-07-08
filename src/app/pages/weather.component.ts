@@ -82,25 +82,23 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
 
 @Component({
   selector: 'app-weather-page',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormsModule],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
-      <!-- Background -->
-      <div class="absolute inset-0 bg-gradient-to-br from-[#0a0a2e] via-[#0a0a0f] to-[#0a1a2e] animate-gradient-shift opacity-40"></div>
-      <app-floating-orb class="absolute top-[15%] right-[10%] z-[1]" delay="0s" [size]="60" />
-      <app-floating-orb class="absolute bottom-[20%] left-[5%] z-[1]" delay="3s" [size]="80" />
+      <!-- Decorative shapes -->
+      <app-floating-orb class="hidden md:block absolute top-[15%] right-[10%] z-[1]" delay="0s" [size]="60" shape="circle" color="sky" rotate="-4deg" />
+      <app-floating-orb class="hidden md:block absolute bottom-[20%] left-[5%] z-[1]" delay="3s" [size]="80" shape="square" color="yellow" rotate="6deg" />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
+          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-sky-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">{{ i18n.t('weather.title') }}</span>
+            <span class="marker marker-sky">{{ i18n.t('weather.title') }}</span>
           </h1>
           <p class="text-text-secondary mt-2">{{ i18n.t('weather.subtitle') }}</p>
           <!-- Location search -->
@@ -111,10 +109,10 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                    [attr.placeholder]="i18n.t('weather.searchPlaceholder')"
                    maxlength="100"
                    autocomplete="off"
-                   class="flex-1 bg-white/[0.05] border border-border rounded-xl px-4 py-2 text-sm text-text-primary placeholder-text-secondary/50 outline-none focus:border-accent-primary/50 transition-colors" />
+                   class="flex-1 min-w-0 bg-bg-card border-2 border-ink px-4 py-2 text-sm text-text-primary placeholder-text-secondary/70 shadow-brutal-sm transition-colors" />
             <button (click)="searchLocation()"
                     [disabled]="searching()"
-                    class="px-4 py-2 text-sm font-medium rounded-xl bg-accent-primary/20 text-accent-light hover:bg-accent-primary/30 border border-accent-primary/30 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-4 py-2 text-sm font-bold bg-pop-sky text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               @if (searching()) { {{ i18n.t('weather.searching') }} } @else { {{ i18n.t('weather.search') }} }
             </button>
           </div>
@@ -128,8 +126,8 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
             @for (i of [1,2,3,4,5,6]; track i) {
               <app-glow-card>
                 <div class="animate-pulse space-y-3">
-                  <div class="h-6 bg-white/5 rounded w-1/2"></div>
-                  <div class="h-20 bg-white/5 rounded"></div>
+                  <div class="h-6 bg-ink/10 w-1/2"></div>
+                  <div class="h-20 bg-ink/10"></div>
                 </div>
               </app-glow-card>
             }
@@ -162,22 +160,22 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                   </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">💨 {{ i18n.t('weather.wind') }}</div>
-                    <div class="text-lg font-semibold text-text-primary">{{ data.current.wind_speed_10m }} km/h</div>
-                    <div class="text-xs text-text-secondary">{{ windDirection(data.current.wind_direction_10m) }}</div>
+                  <div class="bg-pop-sky border-2 border-ink p-3 shadow-brutal-sm">
+                    <div class="text-xs text-ink mb-1">💨 {{ i18n.t('weather.wind') }}</div>
+                    <div class="text-lg font-semibold text-ink">{{ data.current.wind_speed_10m }} km/h</div>
+                    <div class="text-xs text-ink">{{ windDirection(data.current.wind_direction_10m) }}</div>
                   </div>
-                  <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">🌊 {{ i18n.t('weather.gusts') }}</div>
-                    <div class="text-lg font-semibold text-text-primary">{{ data.current.wind_gusts_10m }} km/h</div>
+                  <div class="bg-pop-orange border-2 border-ink p-3 shadow-brutal-sm">
+                    <div class="text-xs text-ink mb-1">🌊 {{ i18n.t('weather.gusts') }}</div>
+                    <div class="text-lg font-semibold text-ink">{{ data.current.wind_gusts_10m }} km/h</div>
                   </div>
-                  <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">💧 {{ i18n.t('weather.humidity') }}</div>
-                    <div class="text-lg font-semibold text-text-primary">{{ data.current.relative_humidity_2m }}%</div>
+                  <div class="bg-pop-lime border-2 border-ink p-3 shadow-brutal-sm">
+                    <div class="text-xs text-ink mb-1">💧 {{ i18n.t('weather.humidity') }}</div>
+                    <div class="text-lg font-semibold text-ink">{{ data.current.relative_humidity_2m }}%</div>
                   </div>
-                  <div class="bg-white/[0.03] rounded-xl p-3">
-                    <div class="text-xs text-text-secondary mb-1">☁️ {{ i18n.t('weather.cloudCover') }}</div>
-                    <div class="text-lg font-semibold text-text-primary">{{ data.current.cloud_cover }}%</div>
+                  <div class="bg-pop-yellow border-2 border-ink p-3 shadow-brutal-sm">
+                    <div class="text-xs text-ink mb-1">☁️ {{ i18n.t('weather.cloudCover') }}</div>
+                    <div class="text-lg font-semibold text-ink">{{ data.current.cloud_cover }}%</div>
                   </div>
                 </div>
               </app-glow-card>
@@ -192,17 +190,17 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                   <div class="space-y-4">
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunrise') }}</span>
-                      <span class="text-sm font-medium text-amber-300">{{ formatTime(today.sunrise) }}</span>
+                      <span class="text-sm font-medium text-data-orange">{{ formatTime(today.sunrise) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunset') }}</span>
-                      <span class="text-sm font-medium text-orange-400">{{ formatTime(today.sunset) }}</span>
+                      <span class="text-sm font-medium text-data-orange-deep">{{ formatTime(today.sunset) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunshine') }}</span>
                       <span class="text-sm font-medium text-text-primary">{{ formatDuration(today.sunshineDuration) }}</span>
                     </div>
-                    <hr class="border-white/5" />
+                    <hr class="border-t-2 border-ink" />
                     <div class="flex justify-between items-center">
                       <span class="text-sm text-text-secondary">{{ i18n.t('weather.uvIndex') }}</span>
                       <span class="text-sm font-semibold" [class]="uvColor(today.uvIndex)">{{ today.uvIndex.toFixed(1) }}</span>
@@ -235,14 +233,14 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
               <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('weather.hourlyForecastRegion')">
                 <div class="flex gap-3 min-w-max pb-2">
                   @for (hour of next24Hours(); track hour.time) {
-                    <div class="flex flex-col items-center gap-1 min-w-[60px] p-2 rounded-xl transition-colors"
-                         [class]="hour.isNow ? 'bg-accent-primary/10 border border-accent-primary/30' : 'bg-white/[0.02]'">
+                    <div class="flex flex-col items-center gap-1 min-w-[60px] p-2 border-2 border-ink shadow-brutal-sm transition-colors"
+                         [class]="hour.isNow ? 'bg-bg-card-hover shadow-brutal' : 'bg-bg-card hover:bg-bg-card-hover'">
                       <span class="text-xs text-text-secondary">{{ hour.timeLabel }}</span>
                       <span class="text-lg">{{ weatherInfo(hour.weatherCode).icon }}</span>
                       <span class="text-sm font-semibold text-text-primary">{{ hour.temp }}°</span>
                       <div class="flex items-center gap-0.5">
-                        <svg class="w-3 h-3 text-sky-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/></svg>
-                        <span class="text-[10px] text-sky-400">{{ hour.precipProb }}%</span>
+                        <svg class="w-3 h-3 text-data-blue" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/></svg>
+                        <span class="text-[10px] text-data-blue">{{ hour.precipProb }}%</span>
                       </div>
                       <span class="text-[10px] text-text-secondary">{{ hour.windSpeed }} km/h</span>
                     </div>
@@ -270,20 +268,20 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                 <div class="flex-1 relative">
                   <!-- Grid lines -->
                   <div class="absolute inset-0 flex flex-col justify-between pointer-events-none py-0.5">
-                    <div class="border-t border-white/[0.06]"></div>
-                    <div class="border-t border-white/[0.06]"></div>
-                    <div class="border-t border-white/[0.06]"></div>
+                    <div class="border-t-2 border-ink/15"></div>
+                    <div class="border-t-2 border-ink/15"></div>
+                    <div class="border-t-2 border-ink/15"></div>
                   </div>
                   <!-- Bars -->
                   <div class="flex items-end gap-0.5 h-full relative z-[1]">
                     @for (hour of next24Hours(); track hour.time) {
-                      <div class="flex-1 rounded-t-sm transition-all duration-300 group relative"
+                      <div class="flex-1 transition-all duration-300 group relative"
                            [style.height.%]="hour.tempPct">
-                        <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-bg-card border border-border rounded px-1.5 py-0.5 text-[10px] text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity">
+                        <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-bg-card border-2 border-ink shadow-brutal-sm px-1.5 py-0.5 text-[10px] text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity">
                           {{ hour.temp }}°C
                         </div>
-                        <div class="w-full h-full rounded-t-sm"
-                             [class]="hour.isNow ? 'bg-accent-primary' : (hour.temp > 0 ? 'bg-sky-500/40' : 'bg-blue-400/40')">
+                        <div class="w-full h-full"
+                             [class]="hour.isNow ? 'bg-accent-primary' : (hour.temp > 0 ? 'bg-pop-orange' : 'bg-pop-sky')">
                         </div>
                       </div>
                     }
@@ -309,20 +307,20 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
               </div>
               <div class="space-y-3">
                 @for (day of dailyForecast(); track day.date) {
-                  <div class="flex items-center gap-4 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-                       [class]="day.isToday ? 'border border-accent-primary/20' : ''">
+                  <div class="flex items-center gap-4 p-3 border-2 border-ink shadow-brutal-sm transition-colors"
+                       [class]="day.isToday ? 'bg-bg-card-hover shadow-brutal' : 'bg-bg-card hover:bg-bg-card-hover'">
                     <div class="w-20 text-sm font-medium text-text-primary">{{ day.dayLabel }}</div>
                     <span class="text-2xl w-10 text-center">{{ weatherInfo(day.weatherCode).icon }}</span>
                     <div class="flex-1 flex items-center gap-2">
                       <!-- Temp range bar -->
-                      <span class="text-sm text-blue-300 w-10 text-right">{{ day.min }}°</span>
-                      <div class="flex-1 h-2 rounded-full bg-white/5 relative overflow-hidden">
-                        <div class="absolute h-full rounded-full bg-gradient-to-r from-blue-400 to-orange-400 transition-all"
+                      <span class="text-sm text-data-blue w-10 text-right">{{ day.min }}°</span>
+                      <div class="flex-1 h-3 bg-bg-card border-2 border-ink relative overflow-hidden">
+                        <div class="absolute h-full bg-accent-secondary transition-all"
                              [style.left.%]="day.barLeft"
                              [style.width.%]="day.barWidth">
                         </div>
                       </div>
-                      <span class="text-sm text-orange-300 w-10">{{ day.max }}°</span>
+                      <span class="text-sm text-data-orange-deep w-10">{{ day.max }}°</span>
                     </div>
                     <div class="hidden md:flex items-center gap-4 text-xs text-text-secondary">
                       <span [title]="i18n.t('weather.precipitationTitle')">💧 {{ day.precip }} mm</span>
@@ -339,7 +337,7 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
           <!-- Attribution -->
           <div class="mt-6 text-center">
             <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer"
-               class="text-xs text-text-secondary/50 hover:text-text-secondary transition-colors">
+               class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
               {{ i18n.t('weather.attribution') }}
             </a>
           </div>
@@ -436,9 +434,9 @@ export class WeatherPageComponent {
   }
 
   uvColor(uv: number): string {
-    if (uv < 3) return 'text-emerald-400';
-    if (uv < 6) return 'text-amber-400';
-    if (uv < 8) return 'text-orange-400';
+    if (uv < 3) return 'text-data-green';
+    if (uv < 6) return 'text-data-orange';
+    if (uv < 8) return 'text-data-orange-deep';
     return 'text-red-400';
   }
 

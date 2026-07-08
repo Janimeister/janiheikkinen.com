@@ -30,7 +30,7 @@ export class {Name}Component {}
 - Use `input()` / `output()` instead of `@Input()` / `@Output()` decorators
 - Use `resource()` for async data fetching, not HttpClient
 - Use `@if` / `@for` / `@switch` control flow, not structural directives
-- Use Tailwind CSS classes matching the dark theme (bg-bg-card, text-text-primary, etc.)
-- For cards with glow effect, import and wrap content with `GlowCardComponent`
+- Follow the neo-brutalist design system in `docs/design-system.md` (cream bg, 2px ink borders, hard shadows, pop fills with ink text; tokens like bg-bg-card, text-text-primary, border-ink)
+- For card sections, import and wrap content with `GlowCardComponent` (brutalist bordered card)
 - Place shared components in `src/app/components/shared/`
 - Place page-specific components alongside their page in `src/app/pages/` or `src/app/components/{feature}/`

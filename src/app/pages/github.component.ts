@@ -57,27 +57,25 @@ const LANG_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-github-page',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
-    <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
-      <!-- Background -->
-      <div class="absolute inset-0 bg-gradient-to-br from-[#0a0a1e] via-[#0a0a0f] to-[#1a0a1e] animate-gradient-shift opacity-40"></div>
-      <app-floating-orb class="absolute top-[12%] right-[12%] z-[1]" delay="0s" [size]="65" />
-      <app-floating-orb class="absolute bottom-[25%] left-[8%] z-[1]" delay="3s" [size]="55" />
+    <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">
+      <app-floating-orb class="hidden md:block absolute top-[12%] right-[12%] z-[1]" delay="0s" [size]="65" shape="square" color="sky" rotate="-6deg" />
+      <app-floating-orb class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]" delay="3s" [size]="55" shape="circle" color="pink" rotate="4deg" />
+      <app-floating-orb class="hidden lg:block absolute top-[46%] left-[3%] z-[1]" delay="1.5s" [size]="44" shape="triangle" color="yellow" rotate="-12deg" />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm text-text-secondary hover:text-accent-primary transition-colors mb-4 inline-flex items-center gap-1">
+          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             {{ i18n.t('common.backToHome') }}
           </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="bg-gradient-to-r from-slate-200 via-indigo-300 to-purple-400 bg-clip-text text-transparent">{{ i18n.t('github.title') }}</span>
+          <h1 class="text-4xl md:text-5xl font-bold mt-3 leading-tight">
+            <span class="marker marker-pink">{{ i18n.t('github.title') }}</span>
           </h1>
-          <p class="text-text-secondary mt-2">{{ i18n.t('github.subtitle') }}</p>
+          <p class="text-text-secondary mt-3 text-lg">{{ i18n.t('github.subtitle') }}</p>
         </div>
 
         @if (profile.isLoading()) {
@@ -85,8 +83,8 @@ const LANG_COLORS: Record<string, string> = {
             @for (i of [1,2,3]; track i) {
               <app-glow-card>
                 <div class="animate-pulse space-y-3">
-                  <div class="h-6 bg-white/5 rounded w-1/2"></div>
-                  <div class="h-20 bg-white/5 rounded"></div>
+                  <div class="h-6 bg-ink/10 w-1/2"></div>
+                  <div class="h-20 bg-ink/10"></div>
                 </div>
               </app-glow-card>
             }
@@ -100,9 +98,9 @@ const LANG_COLORS: Record<string, string> = {
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8 animate-fade-slide-up stagger-1">
             <div class="lg:col-span-2">
               <app-glow-card>
-                <div class="flex items-start gap-5">
+                <div class="flex flex-col sm:flex-row items-start gap-5">
                   <img [src]="user.avatar_url" [alt]="user.login"
-                       class="w-20 h-20 md:w-24 md:h-24 rounded-2xl border-2 border-white/10 shadow-lg" width="96" height="96" />
+                       class="w-20 h-20 md:w-24 md:h-24 border-2 border-ink shadow-brutal-sm object-cover" width="96" height="96" />
                   <div class="flex-1 min-w-0">
                     <h2 class="text-2xl font-bold text-text-primary">{{ user.name || user.login }}</h2>
                     <a [href]="user.html_url" target="_blank" rel="noopener noreferrer"
@@ -116,7 +114,7 @@ const LANG_COLORS: Record<string, string> = {
                       }
                       @if (user.blog) {
                         <a [href]="blogUrl(user.blog)" target="_blank" rel="noopener noreferrer"
-                           class="flex items-center gap-1 hover:text-accent-primary transition-colors">
+                           class="flex items-center gap-1 hover:text-accent-light transition-colors underline decoration-2 underline-offset-4">
                           🔗 {{ user.blog }}
                         </a>
                       }
@@ -130,21 +128,21 @@ const LANG_COLORS: Record<string, string> = {
               <app-glow-card>
                 <h3 class="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">{{ i18n.t('github.stats') }}</h3>
                 <div class="grid grid-cols-2 gap-3">
-                  <div class="bg-white/[0.03] rounded-xl p-3 text-center">
-                    <div class="text-2xl font-bold text-accent-primary font-[JetBrains_Mono,monospace]">{{ user.public_repos }}</div>
-                    <div class="text-xs text-text-secondary">{{ i18n.t('github.repositoriesCount') }}</div>
+                  <div class="bg-pop-yellow border-2 border-ink shadow-brutal-sm p-3 text-center">
+                    <div class="text-2xl font-display text-ink">{{ user.public_repos }}</div>
+                    <div class="text-xs text-ink">{{ i18n.t('github.repositoriesCount') }}</div>
                   </div>
-                  <div class="bg-white/[0.03] rounded-xl p-3 text-center">
-                    <div class="text-2xl font-bold text-accent-secondary font-[JetBrains_Mono,monospace]">{{ user.followers }}</div>
-                    <div class="text-xs text-text-secondary">{{ i18n.t('github.followers') }}</div>
+                  <div class="bg-pop-sky border-2 border-ink shadow-brutal-sm p-3 text-center">
+                    <div class="text-2xl font-display text-ink">{{ user.followers }}</div>
+                    <div class="text-xs text-ink">{{ i18n.t('github.followers') }}</div>
                   </div>
-                  <div class="bg-white/[0.03] rounded-xl p-3 text-center">
-                    <div class="text-2xl font-bold text-emerald-400 font-[JetBrains_Mono,monospace]">{{ user.following }}</div>
-                    <div class="text-xs text-text-secondary">{{ i18n.t('github.following') }}</div>
+                  <div class="bg-pop-lime border-2 border-ink shadow-brutal-sm p-3 text-center">
+                    <div class="text-2xl font-display text-ink">{{ user.following }}</div>
+                    <div class="text-xs text-ink">{{ i18n.t('github.following') }}</div>
                   </div>
-                  <div class="bg-white/[0.03] rounded-xl p-3 text-center">
-                    <div class="text-2xl font-bold text-amber-400 font-[JetBrains_Mono,monospace]">{{ user.public_gists }}</div>
-                    <div class="text-xs text-text-secondary">{{ i18n.t('github.gists') }}</div>
+                  <div class="bg-pop-orange border-2 border-ink shadow-brutal-sm p-3 text-center">
+                    <div class="text-2xl font-display text-ink">{{ user.public_gists }}</div>
+                    <div class="text-xs text-ink">{{ i18n.t('github.gists') }}</div>
                   </div>
                 </div>
               </app-glow-card>
@@ -160,19 +158,18 @@ const LANG_COLORS: Record<string, string> = {
                   <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.languages') }}</h2>
                 </div>
                 <!-- Language bar -->
-                <div class="flex h-4 rounded-full overflow-hidden mb-4">
+                <div class="flex h-5 overflow-hidden mb-4 border-2 border-ink shadow-brutal-sm bg-bg-card">
                   @for (lang of languages(); track lang.name) {
-                    <div [class]="langColor(lang.name)"
+                    <div [class]="langColor(lang.name) + ' box-border border-r-2 border-ink transition-all hover:opacity-80'"
                          [style.width.%]="lang.pct"
-                         [title]="lang.name + ': ' + (lang.count === 1 ? i18n.t('github.repoCountOne') : i18n.t('github.repoCount', { count: lang.count }))"
-                         class="transition-all hover:opacity-80">
+                         [title]="lang.name + ': ' + (lang.count === 1 ? i18n.t('github.repoCountOne') : i18n.t('github.repoCount', { count: lang.count }))">
                     </div>
                   }
                 </div>
                 <div class="flex flex-wrap gap-4">
                   @for (lang of languages(); track lang.name) {
                     <div class="flex items-center gap-2 text-sm">
-                      <span class="w-3 h-3 rounded-full" [class]="langColor(lang.name)"></span>
+                      <span [class]="langColor(lang.name) + ' w-3 h-3 border border-ink shrink-0'"></span>
                       <span class="text-text-primary">{{ lang.name }}</span>
                       <span class="text-text-secondary text-xs">({{ lang.count }})</span>
                     </div>
@@ -193,9 +190,9 @@ const LANG_COLORS: Record<string, string> = {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   @for (repo of repoList; track repo.name) {
                     <a [href]="repo.html_url" target="_blank" rel="noopener noreferrer"
-                       class="block p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-accent-primary/30 hover:bg-white/[0.04] transition-all group">
+                       class="block p-4 bg-bg-card border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform group">
                       <div class="flex items-start justify-between mb-2">
-                        <h3 class="text-sm font-semibold text-text-primary group-hover:text-accent-primary transition-colors truncate">
+                        <h3 class="text-sm font-semibold text-text-primary group-hover:text-accent-light transition-colors truncate">
                           {{ repo.name }}
                         </h3>
                         <div class="flex items-center gap-2 text-xs text-text-secondary shrink-0 ml-2">
@@ -213,7 +210,7 @@ const LANG_COLORS: Record<string, string> = {
                       <div class="flex items-center gap-3 text-xs text-text-secondary">
                         @if (repo.language) {
                           <span class="flex items-center gap-1">
-                            <span class="w-2.5 h-2.5 rounded-full" [class]="langColor(repo.language)"></span>
+                            <span [class]="langColor(repo.language) + ' w-2.5 h-2.5 border border-ink shrink-0'"></span>
                             {{ repo.language }}
                           </span>
                         }
@@ -236,7 +233,7 @@ const LANG_COLORS: Record<string, string> = {
                 </div>
                 <div class="space-y-3">
                   @for (event of recentActivity(); track $index) {
-                    <div class="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02]">
+                    <div class="flex items-start gap-3 p-3 bg-bg-card-hover border-2 border-ink shadow-brutal-sm">
                       <span class="text-lg mt-0.5">{{ event.icon }}</span>
                       <div class="min-w-0 flex-1">
                         <div class="text-sm text-text-primary">

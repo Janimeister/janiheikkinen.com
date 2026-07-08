@@ -15,8 +15,8 @@ import { LanguageToggleComponent } from '../language-toggle/language-toggle.comp
     <nav class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
          [class.nav-scrolled]="scrolled()">
       <div class="max-w-6xl mx-auto px-6 md:px-12 lg:px-20 h-16 flex items-center justify-between gap-4">
-        <a routerLink="/" class="text-lg font-semibold text-text-primary tracking-tight hover:text-accent-primary transition-colors shrink-0">
-          JH<span class="text-accent-primary">.</span>
+        <a routerLink="/" class="logo shrink-0" aria-label="Home">
+          JH<span class="text-ink">.</span>
         </a>
         <app-language-toggle class="shrink-0" />
         <div class="relative min-w-0 flex-1 flex items-center justify-end gap-3">
@@ -26,15 +26,14 @@ import { LanguageToggleComponent } from '../language-toggle/language-toggle.comp
               <div class="nav-fade nav-fade-left" aria-hidden="true"></div>
             }
             <div #navScroll
-                 class="flex items-center gap-6 overflow-x-auto scrollbar-hide scroll-smooth"
+                 class="flex items-center gap-5 overflow-x-auto scrollbar-hide scroll-smooth"
                  (scroll)="checkOverflow()">
               @for (link of navLinks; track link.route) {
                 <a [routerLink]="link.route"
-                   routerLinkActive="text-accent-primary!"
+                   routerLinkActive="nav-link-active"
                    [routerLinkActiveOptions]="{ exact: link.route === '/' }"
-                   class="text-sm text-text-secondary hover:text-accent-primary transition-colors relative group whitespace-nowrap shrink-0">
+                   class="nav-link whitespace-nowrap shrink-0">
                   {{ i18n.t(link.labelKey) }}
-                  <span class="absolute -bottom-1 left-0 w-0 h-px bg-accent-primary transition-all duration-300 group-hover:w-full animate-breathing-border"></span>
                 </a>
               }
             </div>
@@ -49,13 +48,43 @@ import { LanguageToggleComponent } from '../language-toggle/language-toggle.comp
   `,
   styles: `
     nav {
-      backdrop-filter: blur(0px);
-      background: transparent;
+      background: var(--color-bg-primary);
+      border-bottom: 2px solid transparent;
     }
     .nav-scrolled {
-      backdrop-filter: blur(12px);
-      background: rgba(10, 10, 15, 0.8);
-      border-bottom: 1px solid var(--color-border);
+      border-bottom: 2px solid var(--color-ink);
+      box-shadow: 0 4px 0 0 rgba(19,19,16,0.1);
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      color: var(--color-ink);
+      border: 2px solid var(--color-ink);
+      background: var(--color-pop-yellow);
+      padding: 0.125rem 0.5rem;
+      box-shadow: var(--shadow-brutal-sm);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .logo:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-brutal);
+    }
+    .nav-link {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      padding: 0.25rem 0.375rem;
+      border: 2px solid transparent;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .nav-link:hover {
+      background: var(--color-pop-yellow);
+      border-color: var(--color-ink);
+    }
+    .nav-link-active {
+      background: var(--color-pop-pink);
+      border-color: var(--color-ink);
+      box-shadow: var(--shadow-brutal-sm);
     }
     .scrollbar-hide {
       -ms-overflow-style: none;
@@ -74,17 +103,11 @@ import { LanguageToggleComponent } from '../language-toggle/language-toggle.comp
     }
     .nav-fade-left {
       left: 0;
-      background: linear-gradient(to right, rgba(10, 10, 15, 0.9), transparent);
+      background: linear-gradient(to right, var(--color-bg-primary), transparent);
     }
     .nav-fade-right {
       right: 0;
-      background: linear-gradient(to left, rgba(10, 10, 15, 0.9), transparent);
-    }
-    .nav-scrolled .nav-fade-left {
-      background: linear-gradient(to right, rgba(10, 10, 15, 0.8), transparent);
-    }
-    .nav-scrolled .nav-fade-right {
-      background: linear-gradient(to left, rgba(10, 10, 15, 0.8), transparent);
+      background: linear-gradient(to left, var(--color-bg-primary), transparent);
     }
   `
 })
