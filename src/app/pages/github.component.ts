@@ -41,18 +41,19 @@ interface GitHubEvent {
   payload: Record<string, unknown>;
 }
 
+/** Language swatch colors restricted to the design-system pop palette (docs/design-system.md §2). */
 const LANG_COLORS: Record<string, string> = {
-  TypeScript: 'bg-blue-400',
-  JavaScript: 'bg-yellow-400',
-  Python: 'bg-green-400',
-  HTML: 'bg-orange-400',
-  CSS: 'bg-purple-400',
-  PHP: 'bg-indigo-400',
+  TypeScript: 'bg-pop-sky',
+  JavaScript: 'bg-pop-yellow',
+  Python: 'bg-pop-lime',
+  HTML: 'bg-pop-orange',
+  CSS: 'bg-pop-pink',
+  PHP: 'bg-accent-secondary',
   Java: 'bg-red-400',
-  'C#': 'bg-emerald-400',
-  Go: 'bg-cyan-400',
-  Rust: 'bg-amber-600',
-  Shell: 'bg-lime-400',
+  'C#': 'bg-pop-lime',
+  Go: 'bg-pop-sky',
+  Rust: 'bg-pop-orange',
+  Shell: 'bg-pop-lime',
 };
 
 @Component({
@@ -154,7 +155,7 @@ const LANG_COLORS: Record<string, string> = {
             <div class="mb-8 animate-fade-slide-up stagger-2">
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
-                  <span class="text-xl">🎨</span>
+                  <span class="text-xl" aria-hidden="true">🎨</span>
                   <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.languages') }}</h2>
                 </div>
                 <!-- Language bar -->
@@ -184,7 +185,7 @@ const LANG_COLORS: Record<string, string> = {
             <div class="mb-8 animate-fade-slide-up stagger-3">
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
-                  <span class="text-xl">📦</span>
+                  <span class="text-xl" aria-hidden="true">📦</span>
                   <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.repositories') }}</h2>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -221,6 +222,12 @@ const LANG_COLORS: Record<string, string> = {
                 </div>
               </app-glow-card>
             </div>
+          } @else if (reposError()) {
+            <div class="mb-8 animate-fade-slide-up stagger-3">
+              <app-glow-card>
+                <p class="text-red-400">{{ i18n.t('github.reposLoadError') }}</p>
+              </app-glow-card>
+            </div>
           }
 
           <!-- Recent Activity -->
@@ -228,11 +235,11 @@ const LANG_COLORS: Record<string, string> = {
             <div class="animate-fade-slide-up stagger-4">
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
-                  <span class="text-xl">📡</span>
+                  <span class="text-xl" aria-hidden="true">📡</span>
                   <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.recentActivity') }}</h2>
                 </div>
                 <div class="space-y-3">
-                  @for (event of recentActivity(); track $index) {
+                  @for (event of recentActivity(); track event.type + event.date + event.repo) {
                     <div class="flex items-start gap-3 p-3 bg-bg-card-hover border-2 border-ink shadow-brutal-sm">
                       <span class="text-lg mt-0.5">{{ event.icon }}</span>
                       <div class="min-w-0 flex-1">
@@ -247,6 +254,12 @@ const LANG_COLORS: Record<string, string> = {
                 </div>
               </app-glow-card>
             </div>
+          } @else if (activityError()) {
+            <div class="animate-fade-slide-up stagger-4">
+              <app-glow-card>
+                <p class="text-red-400">{{ i18n.t('github.activityLoadError') }}</p>
+              </app-glow-card>
+            </div>
           }
         }
       </div>
@@ -258,17 +271,17 @@ export class GithubPageComponent {
   private readonly username = 'Janimeister';
 
   profile = resource({
-    loader: async (): Promise<GitHubUser> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}`);
+    loader: async ({ abortSignal }): Promise<GitHubUser> => {
+      const res = await fetch(`https://api.github.com/users/${this.username}`, { signal: abortSignal });
       if (!res.ok) throw new Error('GitHub API error');
       return res.json();
     },
   });
 
   repos = resource({
-    loader: async (): Promise<GitHubRepo[]> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}/repos?sort=updated&per_page=30`);
-      if (!res.ok) return [];
+    loader: async ({ abortSignal }): Promise<GitHubRepo[]> => {
+      const res = await fetch(`https://api.github.com/users/${this.username}/repos?sort=updated&per_page=30`, { signal: abortSignal });
+      if (!res.ok) throw new Error('GitHub repos API error');
       const data: GitHubRepo[] = await res.json();
       return data.filter(r => !r.fork).sort(
         (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -277,12 +290,15 @@ export class GithubPageComponent {
   });
 
   private events = resource({
-    loader: async (): Promise<GitHubEvent[]> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}/events/public?per_page=15`);
-      if (!res.ok) return [];
+    loader: async ({ abortSignal }): Promise<GitHubEvent[]> => {
+      const res = await fetch(`https://api.github.com/users/${this.username}/events/public?per_page=15`, { signal: abortSignal });
+      if (!res.ok) throw new Error('GitHub events API error');
       return res.json();
     },
   });
+
+  protected reposError = computed(() => this.repos.error() !== undefined);
+  protected activityError = computed(() => this.events.error() !== undefined);
 
   languages = computed(() => {
     const repoList = this.repos.value();
@@ -317,6 +333,7 @@ export class GithubPageComponent {
     return eventList.slice(0, 10).map(e => {
       const info = eventMap[e.type];
       return {
+        type: e.type,
         icon: info?.icon ?? '📌',
         action: info ? this.i18n.t(info.actionKey) : this.i18n.t('github.eventUnknown'),
         repo: e.repo.name.split('/')[1] || e.repo.name,
@@ -338,7 +355,7 @@ export class GithubPageComponent {
   }
 
   relativeDate(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const diff = Math.max(0, Date.now() - new Date(dateStr).getTime());
     const days = Math.floor(diff / 86400000);
     if (days === 0) return this.i18n.t('github.today');
     if (days === 1) return this.i18n.t('github.yesterday');

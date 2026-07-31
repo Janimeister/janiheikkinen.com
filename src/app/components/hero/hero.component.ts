@@ -52,6 +52,11 @@ interface CatFact { fact: string }
                data-testid="catfact-text">
               🐱 {{ factData.fact }}
             </p>
+          } @else if (catFact.error()) {
+            <p class="text-xs text-text-secondary leading-relaxed font-mono border-l-4 border-pop-orange pl-3 text-left"
+               data-testid="catfact-text">
+              🐱 {{ i18n.t('hero.catFactFallback') }}
+            </p>
           }
         </div>
       </div>
@@ -86,8 +91,8 @@ export class HeroComponent {
   protected readonly i18n = inject(LanguageService);
 
   catFact = resource({
-    loader: async (): Promise<CatFact> => {
-      const res = await fetch('https://catfact.ninja/fact?max_length=120');
+    loader: async ({ abortSignal }): Promise<CatFact> => {
+      const res = await fetch('https://catfact.ninja/fact?max_length=120', { signal: abortSignal });
       if (!res.ok) throw new Error('CatFact API error');
       return res.json();
     }

@@ -7,6 +7,7 @@ import { LanguageService } from '../i18n/language.service';
 import type { TranslationKey } from '../i18n/translations';
 
 interface WeatherCurrent {
+  time: string;
   temperature_2m: number;
   weather_code: number;
   wind_speed_10m: number;
@@ -107,6 +108,7 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                    [(ngModel)]="searchQuery"
                    (keydown.enter)="searchLocation()"
                    [attr.placeholder]="i18n.t('weather.searchPlaceholder')"
+                   [attr.aria-label]="i18n.t('weather.searchPlaceholder')"
                    maxlength="100"
                    autocomplete="off"
                    class="flex-1 min-w-0 bg-bg-card border-2 border-ink px-4 py-2 text-sm text-text-primary placeholder-text-secondary/70 shadow-brutal-sm transition-colors" />
@@ -276,6 +278,8 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                   <div class="flex items-end gap-0.5 h-full relative z-[1]">
                     @for (hour of next24Hours(); track hour.time) {
                       <div class="flex-1 transition-all duration-300 group relative"
+                           role="img"
+                           [attr.aria-label]="hour.timeLabel + ': ' + hour.temp + '°C'"
                            [style.height.%]="hour.tempPct">
                         <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-bg-card border-2 border-ink shadow-brutal-sm px-1.5 py-0.5 text-[10px] text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity">
                           {{ hour.temp }}°C
@@ -350,12 +354,12 @@ export class WeatherPageComponent {
   protected readonly i18n = inject(LanguageService);
   private coords = signal<{ lat: number; lon: number }>({ lat: 60.17, lon: 24.94 });
   locationName = signal('Helsinki');
-  searchQuery = '';
+  searchQuery = signal('');
   searching = signal(false);
   searchError = signal<{ key: TranslationKey; params?: Record<string, string | number> } | null>(null);
 
   async searchLocation() {
-    const raw = this.searchQuery.trim();
+    const raw = this.searchQuery().trim();
     if (!raw) return;
 
     // Sanitize: allow only letters, spaces, hyphens, apostrophes, periods, and digits
@@ -383,8 +387,7 @@ export class WeatherPageComponent {
       const result = data.results[0];
       this.coords.set({ lat: result.latitude, lon: result.longitude });
       this.locationName.set(result.name);
-      this.searchQuery = '';
-      this.weather.reload();
+      this.searchQuery.set('');
     } catch {
       this.searchError.set({ key: 'weather.searchFailed' });
     } finally {
@@ -393,8 +396,8 @@ export class WeatherPageComponent {
   }
 
   weather = resource({
-    loader: async (): Promise<WeatherResponse> => {
-      const { lat, lon } = this.coords();
+    params: () => this.coords(),
+    loader: async ({ params: { lat, lon }, abortSignal }): Promise<WeatherResponse> => {
       const params = [
         `latitude=${lat}`,
         `longitude=${lon}`,
@@ -404,7 +407,7 @@ export class WeatherPageComponent {
         'timezone=auto',
         'forecast_days=7',
       ].join('&');
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: abortSignal });
       if (!res.ok) throw new Error('Weather API error');
       return res.json();
     },
@@ -456,9 +459,11 @@ export class WeatherPageComponent {
   next24Hours = computed(() => {
     const data = this.weather.value();
     if (!data?.hourly) return [];
-    const now = new Date();
-    const currentHourIdx = data.hourly.time.findIndex(t => new Date(t) >= now);
-    const startIdx = Math.max(0, currentHourIdx);
+    // Open-Meteo returns times in the *location's* timezone without an offset,
+    // so compare the raw strings against current.time instead of parsing with Date
+    // (which would apply the browser's timezone).
+    const nextHourIdx = data.hourly.time.findIndex(t => t > data.current.time);
+    const startIdx = Math.max(0, nextHourIdx === -1 ? data.hourly.time.length - 1 : nextHourIdx - 1);
     const slice = Array.from({ length: 24 }, (_, i) => startIdx + i).filter(
       i => i < data.hourly.time.length
     );
@@ -492,7 +497,8 @@ export class WeatherPageComponent {
   dailyForecast = computed(() => {
     const data = this.weather.value();
     if (!data?.daily) return [];
-    const today = new Date().toISOString().split('T')[0];
+    // Use the location-local date reported by the API, not the browser's UTC date.
+    const today = data.current.time.split('T')[0];
 
     const allMin = Math.min(...data.daily.temperature_2m_min);
     const allMax = Math.max(...data.daily.temperature_2m_max);

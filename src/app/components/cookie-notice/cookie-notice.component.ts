@@ -10,7 +10,7 @@ import { LanguageService } from '../../i18n/language.service';
         <div class="max-w-3xl mx-auto bg-bg-card border-2 border-ink p-5 shadow-brutal">
           <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div class="flex-1">
-              <h3 class="text-sm font-bold text-text-primary mb-1.5">{{ i18n.t('cookie.title') }}</h3>
+              <h2 class="text-sm font-bold text-text-primary mb-1.5">{{ i18n.t('cookie.title') }}</h2>
               <p class="text-xs text-text-secondary leading-relaxed">
                 {{ i18n.t('cookie.bodyStart') }}
                 <strong class="text-text-primary">{{ i18n.t('cookie.localStorage') }}</strong>
@@ -33,7 +33,11 @@ export class CookieNoticeComponent {
   visible = signal(!this.hasConsented());
 
   accept() {
-    localStorage.setItem('cookie-consent', 'accepted');
+    try {
+      localStorage.setItem('cookie-consent', 'accepted');
+    } catch {
+      // Storage may be unavailable (e.g. private browsing) - still dismiss the notice.
+    }
     this.visible.set(false);
   }
 
