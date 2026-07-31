@@ -337,15 +337,15 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
               </div>
             </app-glow-card>
           </div>
-
-          <!-- Attribution -->
-          <div class="mt-6 text-center">
-            <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer"
-               class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
-              {{ i18n.t('weather.attribution') }}
-            </a>
-          </div>
         }
+
+        <!-- Attribution -->
+        <div class="mt-6 text-center">
+          <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer"
+             class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
+            {{ i18n.t('weather.attribution') }}
+          </a>
+        </div>
       </div>
     </section>
   `,
@@ -407,7 +407,7 @@ export class WeatherPageComponent {
         'timezone=auto',
         'forecast_days=7',
       ].join('&');
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: abortSignal });
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
       if (!res.ok) throw new Error('Weather API error');
       return res.json();
     },
@@ -444,7 +444,7 @@ export class WeatherPageComponent {
   }
 
   todayDaily = computed(() => {
-    const data = this.weather.value();
+    const data = this.weather.hasValue() ? this.weather.value() : undefined;
     if (!data?.daily) return null;
     return {
       sunrise: data.daily.sunrise[0],
@@ -457,7 +457,7 @@ export class WeatherPageComponent {
   });
 
   next24Hours = computed(() => {
-    const data = this.weather.value();
+    const data = this.weather.hasValue() ? this.weather.value() : undefined;
     if (!data?.hourly) return [];
     // Open-Meteo returns times in the *location's* timezone without an offset,
     // so compare the raw strings against current.time instead of parsing with Date
@@ -495,7 +495,7 @@ export class WeatherPageComponent {
   });
 
   dailyForecast = computed(() => {
-    const data = this.weather.value();
+    const data = this.weather.hasValue() ? this.weather.value() : undefined;
     if (!data?.daily) return [];
     // Use the location-local date reported by the API, not the browser's UTC date.
     const today = data.current.time.split('T')[0];

@@ -47,10 +47,10 @@ interface CatFact { fact: string }
 
         <!-- Cat fact -->
         <div class="max-w-sm mx-auto">
-          @if (catFact.value(); as factData) {
+          @if (catFact.hasValue()) {
             <p class="text-xs text-text-secondary leading-relaxed font-mono border-l-4 border-pop-orange pl-3 text-left"
                data-testid="catfact-text">
-              🐱 {{ factData.fact }}
+              🐱 {{ catFact.value().fact }}
             </p>
           } @else if (catFact.error()) {
             <p class="text-xs text-text-secondary leading-relaxed font-mono border-l-4 border-pop-orange pl-3 text-left"
@@ -92,7 +92,7 @@ export class HeroComponent {
 
   catFact = resource({
     loader: async ({ abortSignal }): Promise<CatFact> => {
-      const res = await fetch('https://catfact.ninja/fact?max_length=120', { signal: abortSignal });
+      const res = await fetch('https://catfact.ninja/fact?max_length=120', { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
       if (!res.ok) throw new Error('CatFact API error');
       return res.json();
     }

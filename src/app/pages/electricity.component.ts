@@ -228,15 +228,15 @@ function localDateKey(d: Date): string {
               </div>
             </app-glow-card>
           </div>
-
-          <!-- Attribution -->
-          <div class="mt-6 text-center">
-            <a href="https://porssisahko.net" target="_blank" rel="noopener noreferrer"
-               class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
-              {{ i18n.t('electricity.attribution') }}
-            </a>
-          </div>
         }
+
+        <!-- Attribution -->
+        <div class="mt-6 text-center">
+          <a href="https://porssisahko.net" target="_blank" rel="noopener noreferrer"
+             class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
+            {{ i18n.t('electricity.attribution') }}
+          </a>
+        </div>
       </div>
     </section>
   `,
@@ -269,14 +269,14 @@ export class ElectricityPageComponent {
   priceData = resource({
     loader: async ({ abortSignal }): Promise<PriceResponse> => {
       const baseUrl = environment.workerUrl;
-      const res = await fetch(`${baseUrl}/v2/latest-prices.json`, { signal: abortSignal });
+      const res = await fetch(`${baseUrl}/v2/latest-prices.json`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
       if (!res.ok) throw new Error('Electricity API error');
       return res.json();
     },
   });
 
   private sortedPrices = computed(() => {
-    const data = this.priceData.value();
+    const data = this.priceData.hasValue() ? this.priceData.value() : undefined;
     if (!data?.prices?.length) return [];
     return [...data.prices].sort(
       (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()

@@ -181,7 +181,7 @@ const LANG_COLORS: Record<string, string> = {
           }
 
           <!-- Repositories -->
-          @if (repos.value(); as repoList) {
+          @if (repoList(); as repoList) {
             <div class="mb-8 animate-fade-slide-up stagger-3">
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
@@ -272,7 +272,7 @@ export class GithubPageComponent {
 
   profile = resource({
     loader: async ({ abortSignal }): Promise<GitHubUser> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}`, { signal: abortSignal });
+      const res = await fetch(`https://api.github.com/users/${this.username}`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
       if (!res.ok) throw new Error('GitHub API error');
       return res.json();
     },
@@ -280,7 +280,7 @@ export class GithubPageComponent {
 
   repos = resource({
     loader: async ({ abortSignal }): Promise<GitHubRepo[]> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}/repos?sort=updated&per_page=30`, { signal: abortSignal });
+      const res = await fetch(`https://api.github.com/users/${this.username}/repos?sort=updated&per_page=30`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
       if (!res.ok) throw new Error('GitHub repos API error');
       const data: GitHubRepo[] = await res.json();
       return data.filter(r => !r.fork).sort(
@@ -291,7 +291,7 @@ export class GithubPageComponent {
 
   private events = resource({
     loader: async ({ abortSignal }): Promise<GitHubEvent[]> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}/events/public?per_page=15`, { signal: abortSignal });
+      const res = await fetch(`https://api.github.com/users/${this.username}/events/public?per_page=15`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
       if (!res.ok) throw new Error('GitHub events API error');
       return res.json();
     },
@@ -300,8 +300,11 @@ export class GithubPageComponent {
   protected reposError = computed(() => this.repos.error() !== undefined);
   protected activityError = computed(() => this.events.error() !== undefined);
 
+  /** Safe view of the repos resource - value() throws while in the error state. */
+  protected repoList = computed(() => (this.repos.hasValue() ? this.repos.value() : undefined));
+
   languages = computed(() => {
-    const repoList = this.repos.value();
+    const repoList = this.repoList();
     if (!repoList?.length) return [];
     const counts: Record<string, number> = {};
     repoList.forEach(r => {
@@ -314,7 +317,7 @@ export class GithubPageComponent {
   });
 
   recentActivity = computed(() => {
-    const eventList = this.events.value();
+    const eventList = this.events.hasValue() ? this.events.value() : undefined;
     if (!eventList?.length) return [];
 
     const eventMap: Record<string, { icon: string; actionKey: TranslationKey }> = {
