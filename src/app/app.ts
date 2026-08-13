@@ -6,7 +6,6 @@ import { CookieNoticeComponent } from './components/cookie-notice/cookie-notice.
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, NavbarComponent, FooterComponent, CookieNoticeComponent],
   template: `

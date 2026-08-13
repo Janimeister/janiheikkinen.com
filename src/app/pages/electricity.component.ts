@@ -1,4 +1,4 @@
-import { Component, resource, computed, signal, ChangeDetectionStrategy, effect, ElementRef, inject, afterNextRender, Injector } from '@angular/core';
+import { Component, resource, computed, signal, ChangeDetectionStrategy, ElementRef, inject, afterRenderEffect, viewChild, DestroyRef } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
@@ -13,6 +13,11 @@ interface PriceEntry {
 
 interface PriceResponse {
   prices: PriceEntry[];
+}
+
+/** Local-timezone YYYY-MM-DD key for a date (avoids UTC/local mismatches around midnight). */
+function localDateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 @Component({
@@ -59,7 +64,7 @@ interface PriceResponse {
             <div class="md:col-span-2">
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
-                  <span class="text-xl">⚡</span>
+                  <span class="text-xl" aria-hidden="true">⚡</span>
                   <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.currentPrice') }}</h2>
                 </div>
                 @if (currentPrice() !== null) {
@@ -74,7 +79,7 @@ interface PriceResponse {
                     {{ i18n.t('electricity.vatNotice', { range: currentTimeRange() }) }}
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 border-2 border-ink shadow-brutal-sm" [class]="priceDotColor(currentPrice()!)"></span>
+                    <span class="w-3 h-3 border-2 border-ink shadow-brutal-sm" [class]="priceBgColor(currentPrice()!)"></span>
                     <span class="text-sm" [class]="priceColor(currentPrice()!)">{{ priceLevel(currentPrice()!) }}</span>
                   </div>
                 } @else {
@@ -85,7 +90,7 @@ interface PriceResponse {
             <div>
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
-                  <span class="text-xl">📊</span>
+                  <span class="text-xl" aria-hidden="true">📊</span>
                   <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.todayStats') }}</h2>
                 </div>
                 @if (todayStats(); as stats) {
@@ -123,7 +128,7 @@ interface PriceResponse {
           <div class="mb-8 animate-fade-slide-up stagger-2">
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
-                <span class="text-xl">📈</span>
+                <span class="text-xl" aria-hidden="true">📈</span>
                 <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.priceChart') }}</h2>
               </div>
               <div class="flex">
@@ -138,18 +143,21 @@ interface PriceResponse {
                   <div [style.min-width.px]="chartBars().length * 10" class="pt-8">
                     <div class="flex items-end gap-0.5 h-48">
                       @for (bar of chartBars(); track bar.hour; let i = $index) {
-                        <div class="flex-1 flex flex-col items-center justify-end h-full group relative"
-                             (click)="onBarClick($event, i)"
-                             [attr.data-current]="bar.isCurrent || null">
-                          <div class="absolute bottom-full mb-1 bg-bg-card border-2 border-ink shadow-brutal-sm px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100"
+                        <button type="button"
+                                class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer"
+                                (click)="onBarClick($event, i)"
+                                [attr.data-current]="bar.isCurrent || null"
+                                [attr.aria-label]="bar.hour + ': ' + bar.price.toFixed(2) + ' c/kWh'"
+                                [attr.aria-pressed]="activeBarIdx() === i">
+                          <div class="absolute bottom-full mb-1 bg-bg-card border-2 border-ink shadow-brutal-sm px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
                                [style.opacity]="activeBarIdx() === i ? 1 : null">
                             {{ bar.hour }}: {{ bar.price.toFixed(2) }} c/kWh
                           </div>
-                          <div class="w-full transition-all duration-300 cursor-pointer"
+                          <div class="w-full transition-all duration-300"
                                [class]="bar.isCurrent ? 'bg-accent-primary border-2 border-ink' : bar.colorClass"
                                [style.height.%]="bar.heightPct">
                           </div>
-                        </div>
+                        </button>
                       }
                     </div>
                     <!-- X-axis labels -->
@@ -179,7 +187,7 @@ interface PriceResponse {
           <div class="animate-fade-slide-up stagger-3">
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
-                <span class="text-xl">📋</span>
+                <span class="text-xl" aria-hidden="true">📋</span>
                 <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.hourlyPrices') }}</h2>
               </div>
               <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.hourlyPricesRegion')">
@@ -208,7 +216,7 @@ interface PriceResponse {
                         <td class="py-2 hidden md:table-cell text-text-secondary">{{ priceLevel(row.price) }}</td>
                         <td class="py-2">
                           <div class="w-full h-3 bg-bg-card border-2 border-ink overflow-hidden">
-                            <div class="h-full transition-all" [class]="priceBarColor(row.price)"
+                            <div class="h-full transition-all" [class]="priceBgColor(row.price)"
                                  [style.width.%]="row.barPct">
                             </div>
                           </div>
@@ -220,51 +228,55 @@ interface PriceResponse {
               </div>
             </app-glow-card>
           </div>
-
-          <!-- Attribution -->
-          <div class="mt-6 text-center">
-            <a href="https://porssisahko.net" target="_blank" rel="noopener noreferrer"
-               class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
-              {{ i18n.t('electricity.attribution') }}
-            </a>
-          </div>
         }
+
+        <!-- Attribution -->
+        <div class="mt-6 text-center">
+          <a href="https://porssisahko.net" target="_blank" rel="noopener noreferrer"
+             class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
+            {{ i18n.t('electricity.attribution') }}
+          </a>
+        </div>
       </div>
     </section>
   `,
 })
 export class ElectricityPageComponent {
-  private el = inject(ElementRef);
-  private injector = inject(Injector);
   protected readonly i18n = inject(LanguageService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly chartScroller = viewChild<ElementRef<HTMLElement>>('chartScroller');
   activeBarIdx = signal<number | null>(null);
 
+  /** Ticks every minute so time-dependent computeds stay fresh while the tab is open. */
+  private readonly nowTick = signal(Date.now());
+
   constructor() {
-    effect(() => {
+    const timer = setInterval(() => this.nowTick.set(Date.now()), 60_000);
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+
+    afterRenderEffect(() => {
       const bars = this.chartBars();
-      if (!bars.length || !bars.some(b => b.isCurrent)) return;
-      afterNextRender(() => {
-        const scroller = this.el.nativeElement.querySelector('[data-current]')?.closest('.overflow-x-auto');
-        const currentBar = scroller?.querySelector('[data-current]') as HTMLElement | null;
-        if (scroller && currentBar) {
-          const scrollLeft = currentBar.offsetLeft - scroller.clientWidth / 2 + currentBar.offsetWidth / 2;
-          scroller.scrollTo({ left: scrollLeft, behavior: 'instant' });
-        }
-      }, { injector: this.injector });
+      const scroller = this.chartScroller()?.nativeElement;
+      if (!scroller || !bars.some(b => b.isCurrent)) return;
+      const currentBar = scroller.querySelector('[data-current]') as HTMLElement | null;
+      if (currentBar) {
+        const scrollLeft = currentBar.offsetLeft - scroller.clientWidth / 2 + currentBar.offsetWidth / 2;
+        scroller.scrollTo({ left: scrollLeft, behavior: 'instant' });
+      }
     });
   }
 
   priceData = resource({
-    loader: async (): Promise<PriceResponse> => {
+    loader: async ({ abortSignal }): Promise<PriceResponse> => {
       const baseUrl = environment.workerUrl;
-      const res = await fetch(`${baseUrl}/v2/latest-prices.json`);
+      const res = await fetch(`${baseUrl}/v2/latest-prices.json`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
       if (!res.ok) throw new Error('Electricity API error');
       return res.json();
     },
   });
 
   private sortedPrices = computed(() => {
-    const data = this.priceData.value();
+    const data = this.priceData.hasValue() ? this.priceData.value() : undefined;
     if (!data?.prices?.length) return [];
     return [...data.prices].sort(
       (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
@@ -273,10 +285,10 @@ export class ElectricityPageComponent {
 
   private currentIdx = computed(() => {
     const prices = this.sortedPrices();
-    const now = new Date();
+    const now = this.nowTick();
     return prices.findIndex(p => {
-      const start = new Date(p.startDate);
-      const end = new Date(p.endDate);
+      const start = new Date(p.startDate).getTime();
+      const end = new Date(p.endDate).getTime();
       return now >= start && now < end;
     });
   });
@@ -284,8 +296,7 @@ export class ElectricityPageComponent {
   currentPrice = computed(() => {
     const idx = this.currentIdx();
     const prices = this.sortedPrices();
-    if (idx >= 0) return prices[idx].price;
-    return prices.length ? prices[0].price : null;
+    return idx >= 0 ? prices[idx].price : null;
   });
 
   currentTimeRange = computed(() => {
@@ -301,8 +312,8 @@ export class ElectricityPageComponent {
   todayStats = computed(() => {
     const prices = this.sortedPrices();
     if (!prices.length) return null;
-    const today = new Date().toISOString().split('T')[0];
-    const todayPrices = prices.filter(p => p.startDate.startsWith(today));
+    const today = localDateKey(new Date(this.nowTick()));
+    const todayPrices = prices.filter(p => localDateKey(new Date(p.startDate)) === today);
     if (!todayPrices.length) return null;
 
     const vals = todayPrices.map(p => p.price);
@@ -345,7 +356,7 @@ export class ElectricityPageComponent {
       price: p.price,
       heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
       isCurrent: i === curIdx,
-      colorClass: p.price < 5 ? 'bg-pop-lime' : p.price < 10 ? 'bg-pop-yellow' : 'bg-red-400',
+      colorClass: this.priceBgColor(p.price),
     }));
   });
 
@@ -369,13 +380,7 @@ export class ElectricityPageComponent {
     return 'text-red-400';
   }
 
-  priceBarColor(price: number): string {
-    if (price < 5) return 'bg-pop-lime';
-    if (price < 10) return 'bg-pop-yellow';
-    return 'bg-red-400';
-  }
-
-  priceDotColor(price: number): string {
+  priceBgColor(price: number): string {
     if (price < 5) return 'bg-pop-lime';
     if (price < 10) return 'bg-pop-yellow';
     return 'bg-red-400';

@@ -3,7 +3,6 @@ import { HeroComponent } from '../components/hero/hero.component';
 
 @Component({
   selector: 'app-home',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HeroComponent],
   template: `<app-hero />`,

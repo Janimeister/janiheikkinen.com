@@ -9,6 +9,8 @@ export default defineConfig({
     baseURL: 'http://localhost:4200',
     headless: true,
     viewport: { width: 1280, height: 720 },
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },

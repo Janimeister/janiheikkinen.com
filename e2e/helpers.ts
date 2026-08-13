@@ -16,5 +16,5 @@ export async function expectBackLink(page: Page) {
 
 /** Assert that an attribution link is present */
 export async function expectAttribution(page: Page, href: string) {
-  await expect(page.locator(`a[href="${href}"]`)).toBeVisible();
+  await expect(page.locator('main').locator(`a[href="${href}"]`)).toBeVisible();
 }

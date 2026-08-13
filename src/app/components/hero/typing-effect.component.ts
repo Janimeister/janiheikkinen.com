@@ -28,7 +28,7 @@ export class TypingEffectComponent implements OnDestroy {
     effect(() => {
       this.i18n.language(); // track language changes and restart animation
       this.restartAnimation();
-    }, { allowSignalWrites: true });
+    });
   }
 
   private restartAnimation() {

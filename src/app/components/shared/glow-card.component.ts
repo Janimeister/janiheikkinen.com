@@ -1,7 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 
 @Component({
   selector: 'app-glow-card',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="glow-card" [class]="extraClass()">
       <ng-content />

@@ -36,6 +36,7 @@ export const EN_TRANSLATIONS = {
   'hero.sticker': 'Hello there!',
   'hero.role1': 'Oh boy',
   'hero.role2': 'Best ever',
+  'hero.catFactFallback': 'Cats sleep for around 13 to 16 hours a day. (Fact service is napping too - try again later!)',
 
   'weather.title': 'Weather Conditions',
   'weather.subtitle': 'Detailed forecast from Open-Meteo - Updated every 15 minutes',
@@ -134,6 +135,8 @@ export const EN_TRANSLATIONS = {
   'github.title': 'GitHub Profile',
   'github.subtitle': 'Public repositories & activity',
   'github.loadError': 'Could not load GitHub data. The API may be rate-limited - try again later.',
+  'github.reposLoadError': 'Could not load repositories. The API may be rate-limited - try again later.',
+  'github.activityLoadError': 'Could not load recent activity. The API may be rate-limited - try again later.',
   'github.memberSince': 'Member since {year}',
   'github.stats': 'Stats',
   'github.repositoriesCount': 'Repositories',
@@ -328,6 +331,7 @@ export const FI_TRANSLATIONS = {
   'hero.sticker': 'Moikka!',
   'hero.role1': 'Voi pojat',
   'hero.role2': 'Parasta ikinä',
+  'hero.catFactFallback': 'Kissat nukkuvat noin 13-16 tuntia päivässä. (Faktapalvelukin taitaa olla päiväunilla - yritä myöhemmin uudelleen!)',
 
   'weather.title': 'Sääolosuhteet',
   'weather.subtitle': 'Yksityiskohtainen ennuste Open-Meteolta - Päivittyy 15 minuutin välein',
@@ -425,6 +429,8 @@ export const FI_TRANSLATIONS = {
   'github.title': 'GitHub-profiili',
   'github.subtitle': 'Julkiset repot ja aktiivisuus',
   'github.loadError': 'GitHub-tietoja ei voitu ladata. API voi olla rajoitettu - yritä myöhemmin uudelleen.',
+  'github.reposLoadError': 'Repositorioita ei voitu ladata. API voi olla rajoitettu - yritä myöhemmin uudelleen.',
+  'github.activityLoadError': 'Viimeaikaista aktiivisuutta ei voitu ladata. API voi olla rajoitettu - yritä myöhemmin uudelleen.',
   'github.memberSince': 'Jäsen vuodesta {year}',
   'github.stats': 'Tilastot',
   'github.repositoriesCount': 'Repot',
