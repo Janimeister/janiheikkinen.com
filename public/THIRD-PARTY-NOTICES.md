@@ -236,37 +236,6 @@ SOFTWARE.
 
 ---
 
-### AnalogJS (vite-plugin-angular / vitest-angular)
-- **Packages:** `@analogjs/vite-plugin-angular`, `@analogjs/vitest-angular`
-- **License:** MIT
-- **Copyright:** © Brandon Roberts and contributors
-
-```
-The MIT License
-
-Copyright (c) Brandon Roberts and contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
 ### axe-core (Playwright integration)
 - **Package:** `@axe-core/playwright`
 - **License:** Mozilla Public License 2.0 (MPL-2.0)
@@ -645,6 +614,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 ### Vite
 - **Package:** `vite`
+- **Usage:** Transitive build and test dependency of Angular's build tooling and Vitest
 - **License:** MIT
 - **Copyright:** © 2019-present, Yuxi (Evan) You and Vite contributors
 
@@ -767,42 +737,11 @@ SOFTWARE.
 
 ---
 
-### Zone.js
-- **Package:** `zone.js`
-- **License:** MIT
-- **Copyright:** © Google LLC
-
-```
-The MIT License
-
-Copyright (c) 2010-2022 Google LLC. https://angular.io/license
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
 ## External APIs and Data Sources
 
 ### Open-Meteo
 - **URL:** https://open-meteo.com
-- **Usage:** Helsinki weather data (temperature, wind speed, humidity, weather codes)
+- **Usage:** Weather data for user-selected locations (temperature, wind speed, humidity, weather codes)
 - **License:** Data is provided under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) license. The Open-Meteo API software is open source under the [GNU Affero General Public License v3 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html).
 - **Attribution:** Weather data from [Open-Meteo.com](https://open-meteo.com)
 
@@ -813,7 +752,7 @@ SOFTWARE.
 
 ### GitHub REST API
 - **URL:** https://docs.github.com/en/rest
-- **Usage:** Public GitHub profile data (repositories, followers, account age)
+- **Usage:** Public GitHub profile, repository, and recent activity data
 - **Notes:** Used in accordance with [GitHub's Terms of Service](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) and [GitHub API Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features). Data belongs to respective GitHub users.
 
 ### Cat Fact Ninja
@@ -840,4 +779,4 @@ SOFTWARE.
 
 ---
 
-*This file was last updated: May 2026*
+*This file was last updated: August 2026*

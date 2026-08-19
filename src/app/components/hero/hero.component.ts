@@ -1,4 +1,5 @@
-import { Component, resource, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { TypingEffectComponent } from './typing-effect.component';
 import { FloatingOrbComponent } from '../shared/floating-orb.component';
 import { LanguageService } from '../../i18n/language.service';
@@ -7,7 +8,6 @@ interface CatFact { fact: string }
 
 @Component({
   selector: 'app-hero',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TypingEffectComponent, FloatingOrbComponent],
   template: `
     <section id="hero" class="relative flex-1 flex items-center justify-center overflow-hidden px-6">
@@ -90,11 +90,9 @@ interface CatFact { fact: string }
 export class HeroComponent {
   protected readonly i18n = inject(LanguageService);
 
-  catFact = resource({
-    loader: async ({ abortSignal }): Promise<CatFact> => {
-      const res = await fetch('https://catfact.ninja/fact?max_length=120', { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
-      if (!res.ok) throw new Error('CatFact API error');
-      return res.json();
-    }
-  });
+  catFact = httpResource<CatFact>(() => ({
+    url: 'https://catfact.ninja/fact',
+    params: { max_length: 120 },
+    timeout: 10_000,
+  }));
 }

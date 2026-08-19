@@ -9,8 +9,8 @@ Create a new routed detail page for this Angular portfolio site.
 ## Requirements
 
 1. **Create the page component** at `src/app/pages/{name}.component.ts`:
-   - Use `ChangeDetectionStrategy.OnPush`
-   - Fetch data with `resource()` — NOT HttpClient
+   - Rely on Angular 22's default `OnPush` change detection
+   - Fetch reactive HTTP data with `httpResource()`
    - Import and use `GlowCardComponent` from `../components/shared/glow-card.component` for data sections
    - Import `RouterLink` for the back link
    - Use inline template and styles

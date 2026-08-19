@@ -1,20 +1,20 @@
 # janiheikkinen.com
 
-Personal portfolio and dashboard site built with Angular 21, Tailwind CSS 4, and TypeScript.
+Personal portfolio and dashboard site built with Angular 22, Tailwind CSS 4, and TypeScript.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | [Angular 21](https://angular.dev) (standalone components, signals) |
-| Language | [TypeScript 5.9](https://www.typescriptlang.org) |
+| Framework | [Angular 22](https://angular.dev) (standalone components, signals, Signal Forms) |
+| Language | [TypeScript 6](https://www.typescriptlang.org) |
 | Build tool | [Vite](https://vite.dev) via `@angular/build` |
 | Styling | [Tailwind CSS 4](https://tailwindcss.com) via `@tailwindcss/postcss` — neo-brutalist design system, see [docs/design-system.md](docs/design-system.md) |
 | Routing | Angular Router with lazy-loaded page components |
-| Data fetching | Angular `resource()` API |
+| Data fetching | Angular `httpResource()` and `HttpClient` APIs |
 | E2E testing | [Playwright](https://playwright.dev) |
 | Accessibility testing | [axe-core/playwright](https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright) |
-| Unit testing | [Vitest](https://vitest.dev) with `@analogjs/vite-plugin-angular` |
+| Unit testing | [Vitest](https://vitest.dev) through Angular's native `@angular/build:unit-test` builder |
 
 ## Architecture
 
@@ -132,7 +132,7 @@ npm run watch
 
 ### Unit tests
 
-Unit tests use Vitest with the Angular plugin for component testing:
+Unit tests use Vitest through Angular's native zoneless test builder:
 
 ```bash
 npm test

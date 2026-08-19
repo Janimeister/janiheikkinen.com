@@ -7,8 +7,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "ng test --watch=false",
+    "test:watch": "ng test"
   },
   "private": true,
   "packageManager": "npm@11.12.0",
@@ -23,12 +23,9 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@analogjs/vite-plugin-angular": "^2.7.0",
-    "@analogjs/vitest-angular": "^2.7.0",
     "@angular/build": "^22.1.4",
     "@angular/cli": "^22.1.4",
     "@angular/compiler-cli": "^22.1.2",
-    "@angular/platform-browser-dynamic": "^22.1.2",
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
@@ -38,8 +35,6 @@
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.11",
-    "zone.js": "^0.16.1"
+    "vitest": "^4.1.11"
   }
 }

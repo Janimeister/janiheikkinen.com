@@ -1,10 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LanguageService } from '../../i18n/language.service';
 
 @Component({
   selector: 'app-footer',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   template: `
     <footer class="relative z-10 border-t-2 border-ink py-6 px-6 bg-bg-card">

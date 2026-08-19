@@ -2,10 +2,8 @@ import {
   Component,
   signal,
   computed,
-  ChangeDetectionStrategy,
   ElementRef,
   viewChild,
-  NgZone,
   inject,
   OnDestroy,
 } from '@angular/core';
@@ -23,7 +21,6 @@ interface Point {
 
 @Component({
   selector: 'app-snake-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   host: {
     '(window:keydown)': 'onKeyDown($event)',
@@ -215,7 +212,6 @@ interface Point {
   `,
 })
 export class SnakePageComponent implements OnDestroy {
-  private readonly zone = inject(NgZone);
   protected readonly i18n = inject(LanguageService);
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('gameCanvas');
 
@@ -449,18 +445,16 @@ export class SnakePageComponent implements OnDestroy {
 
   private startLoop() {
     this.stopLoop();
-    this.zone.runOutsideAngular(() => {
-      const loop = (timestamp: number) => {
-        this.animFrameId = requestAnimationFrame(loop);
-        if (!this.lastTick) this.lastTick = timestamp;
-        if (timestamp - this.lastTick >= this.tickInterval) {
-          this.lastTick = timestamp;
-          this.zone.run(() => this.tick());
-          this.draw();
-        }
-      };
+    const loop = (timestamp: number) => {
       this.animFrameId = requestAnimationFrame(loop);
-    });
+      if (!this.lastTick) this.lastTick = timestamp;
+      if (timestamp - this.lastTick >= this.tickInterval) {
+        this.lastTick = timestamp;
+        this.tick();
+        this.draw();
+      }
+    };
+    this.animFrameId = requestAnimationFrame(loop);
   }
 
   private stopLoop() {

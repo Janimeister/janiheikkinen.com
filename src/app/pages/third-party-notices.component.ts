@@ -1,4 +1,5 @@
-import { Component, resource, computed, ChangeDetectionStrategy, SecurityContext, ViewEncapsulation, inject } from '@angular/core';
+import { Component, computed, SecurityContext, ViewEncapsulation, inject } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
@@ -6,7 +7,6 @@ import { LanguageService } from '../i18n/language.service';
 
 @Component({
   selector: 'app-third-party-notices',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   imports: [RouterLink],
   template: `
@@ -148,14 +148,10 @@ export class ThirdPartyNoticesComponent {
   private readonly document = inject(DOCUMENT);
   protected readonly i18n = inject(LanguageService);
 
-  readonly noticesResource = resource({
-    loader: async () => {
-      const url = new URL('THIRD-PARTY-NOTICES.md', this.document.baseURI).href;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.text();
-    },
-  });
+  readonly noticesResource = httpResource.text(() => ({
+    url: new URL('THIRD-PARTY-NOTICES.md', this.document.baseURI).href,
+    timeout: 10_000,
+  }));
 
   readonly renderedHtml = computed(() => {
     const md = this.noticesResource.value();

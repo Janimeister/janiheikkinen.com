@@ -1,4 +1,5 @@
-import { Component, resource, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
@@ -58,7 +59,6 @@ const LANG_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-github-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">
@@ -270,32 +270,26 @@ export class GithubPageComponent {
   protected readonly i18n = inject(LanguageService);
   private readonly username = 'Janimeister';
 
-  profile = resource({
-    loader: async ({ abortSignal }): Promise<GitHubUser> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
-      if (!res.ok) throw new Error('GitHub API error');
-      return res.json();
-    },
+  profile = httpResource<GitHubUser>(() => ({
+    url: `https://api.github.com/users/${this.username}`,
+    timeout: 10_000,
+  }));
+
+  repos = httpResource<GitHubRepo[]>(() => ({
+    url: `https://api.github.com/users/${this.username}/repos`,
+    params: { sort: 'updated', per_page: 30 },
+    timeout: 10_000,
+  }), {
+    parse: value => (value as GitHubRepo[]).filter(repo => !repo.fork).sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    ),
   });
 
-  repos = resource({
-    loader: async ({ abortSignal }): Promise<GitHubRepo[]> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}/repos?sort=updated&per_page=30`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
-      if (!res.ok) throw new Error('GitHub repos API error');
-      const data: GitHubRepo[] = await res.json();
-      return data.filter(r => !r.fork).sort(
-        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
-    },
-  });
-
-  private events = resource({
-    loader: async ({ abortSignal }): Promise<GitHubEvent[]> => {
-      const res = await fetch(`https://api.github.com/users/${this.username}/events/public?per_page=15`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
-      if (!res.ok) throw new Error('GitHub events API error');
-      return res.json();
-    },
-  });
+  private events = httpResource<GitHubEvent[]>(() => ({
+    url: `https://api.github.com/users/${this.username}/events/public`,
+    params: { per_page: 15 },
+    timeout: 10_000,
+  }));
 
   protected reposError = computed(() => this.repos.error() !== undefined);
   protected activityError = computed(() => this.events.error() !== undefined);

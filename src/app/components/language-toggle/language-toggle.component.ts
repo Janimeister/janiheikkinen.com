@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { LanguageService } from '../../i18n/language.service';
 import type { Language } from '../../i18n/translations';
 
 @Component({
   selector: 'app-language-toggle',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="language-toggle" role="group" [attr.aria-label]="i18n.t('language.label')">
       @for (language of i18n.languages; track language.code) {

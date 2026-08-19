@@ -2,13 +2,12 @@ import {
   Component,
   signal,
   computed,
-  ChangeDetectionStrategy,
-  NgZone,
   inject,
   OnDestroy,
   OnInit,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormField, form, maxLength, required } from '@angular/forms/signals';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 import { LanguageService } from '../i18n/language.service';
@@ -117,8 +116,7 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
 
 @Component({
   selector: 'app-pet-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
+  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormField],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <app-floating-orb class="hidden md:block absolute top-[10%] right-[10%] z-[1]" delay="0s" [size]="70" shape="circle" color="orange" rotate="4deg" />
@@ -281,10 +279,9 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                   <label for="pet-name" class="text-xs text-text-secondary uppercase tracking-wider text-left">{{ i18n.t('pet.name') }}</label>
                   <input id="pet-name"
                          type="text"
-                         maxlength="16"
-                         [value]="nameInput()"
-                         (input)="onNameInput($event)"
+                         [formField]="nameForm.name"
                          [attr.placeholder]="i18n.t('pet.namePlaceholder')"
+                         [attr.aria-invalid]="nameForm.name().invalid() && nameForm.name().touched()"
                          data-testid="pet-name-input"
                          class="w-full px-4 py-2.5 bg-bg-card border-2 border-ink text-ink placeholder:text-text-secondary focus:outline-none focus:shadow-brutal-sm transition-all" />
                   <button (click)="hatch()"
@@ -352,12 +349,15 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
   `,
 })
 export class PetPageComponent implements OnInit, OnDestroy {
-  private readonly zone = inject(NgZone);
   protected readonly i18n = inject(LanguageService);
 
   // ── State ─────────────────────────────────────────────────────────
   protected readonly pet = signal<PetState | null>(null);
-  protected readonly nameInput = signal('');
+  private readonly nameModel = signal({ name: '' });
+  protected readonly nameForm = form(this.nameModel, name => {
+    required(name.name);
+    maxLength(name.name, 16);
+  });
   protected readonly eventLog = signal<readonly EventLogEntry[]>([]);
 
   private tickHandle: ReturnType<typeof setInterval> | null = null;
@@ -366,16 +366,14 @@ export class PetPageComponent implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────
   ngOnInit() {
     this.loadFromStorage();
-    this.zone.runOutsideAngular(() => {
-      this.tickHandle = setInterval(() => {
-        const pet = this.pet();
-        if (!pet || pet.dead) {
-          return;
-        }
+    this.tickHandle = setInterval(() => {
+      const pet = this.pet();
+      if (!pet || pet.dead) {
+        return;
+      }
 
-        this.zone.run(() => this.tick());
-      }, TICK_MS);
-    });
+      this.tick();
+    }, TICK_MS);
   }
 
   ngOnDestroy() {
@@ -386,7 +384,9 @@ export class PetPageComponent implements OnInit, OnDestroy {
   }
 
   // ── Derived view data ─────────────────────────────────────────────
-  protected readonly canHatch = computed(() => this.nameInput().trim().length > 0);
+  protected readonly canHatch = computed(() =>
+    this.nameForm.name().valid() && this.nameModel().name.trim().length > 0
+  );
   protected readonly canAct = computed(() => {
     const p = this.pet();
     return !!p && !p.dead;
@@ -504,15 +504,9 @@ export class PetPageComponent implements OnInit, OnDestroy {
     return classes[stat];
   }
 
-  // ── Input handlers ───────────────────────────────────────────────
-  protected onNameInput(event: Event) {
-    const target = event.target as HTMLInputElement | null;
-    this.nameInput.set(target?.value ?? '');
-  }
-
   // ── Actions ──────────────────────────────────────────────────────
   protected hatch() {
-    const name = this.nameInput().trim().slice(0, 16);
+    const name = this.nameModel().name.trim().slice(0, 16);
     if (!name) return;
     const species = SPECIES[Math.floor(Math.random() * SPECIES.length)];
     const now = Date.now();
@@ -587,7 +581,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
 
   protected reset() {
     this.pet.set(null);
-    this.nameInput.set('');
+    this.nameModel.set({ name: '' });
     this.eventLog.set([]);
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
   }

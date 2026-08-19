@@ -1,9 +1,8 @@
-import { Component, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { LanguageService } from '../../i18n/language.service';
 
 @Component({
   selector: 'app-cookie-notice',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (visible()) {
       <div class="fixed bottom-0 inset-x-0 z-50 p-4 md:p-6">

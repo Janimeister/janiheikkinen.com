@@ -3,7 +3,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 ## Project Overview
 
-This is **janiheikkinen.com** — a personal portfolio/dashboard site built with Angular 21, Tailwind CSS 4, and Vite.
+This is **janiheikkinen.com** — a personal portfolio/dashboard site built with Angular 22, Tailwind CSS 4, and Vite.
 
 ### Architecture
 
@@ -15,7 +15,7 @@ This is **janiheikkinen.com** — a personal portfolio/dashboard site built with
 
 ### Routing
 
-Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electricity`, `/github`) has a "Back to Home" link and fetches data from external APIs using `resource()`.
+Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electricity`, `/github`) has a "Back to Home" link and fetches data from external APIs using `httpResource()`.
 
 ### Styling
 
@@ -27,7 +27,8 @@ Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electrici
 
 ### APIs & Data Fetching
 
-- Use Angular's `resource()` for async data fetching in components (not HttpClient)
+- Use Angular's `httpResource()` for reactive HTTP reads and `HttpClient` for imperative requests or mutations
+- Use `resource()` only for asynchronous work that is not backed by HTTP
 - Weather: Open-Meteo API (free, CC BY 4.0)
 - Electricity: api.porssisahko.net (proxied via `proxy.conf.json` to avoid CORS)
 - GitHub: GitHub REST API (rate-limited to 60 req/hr for unauthenticated)
@@ -73,9 +74,9 @@ Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electrici
 - Keep components small and focused on a single responsibility
 - Use `input()` and `output()` functions instead of decorators
 - Use `computed()` for derived state
-- Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
+- Rely on Angular 22's default `OnPush` change detection; configure `Eager` only for an explicit compatibility need
 - Prefer inline templates for small components
-- Prefer Reactive forms instead of Template-driven ones
+- Prefer Signal Forms instead of template-driven forms
 - Do NOT use `ngClass`, use `class` bindings instead
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.

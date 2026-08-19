@@ -1,11 +1,10 @@
-import { Component, signal, ChangeDetectionStrategy, ElementRef, viewChild, AfterViewInit, OnDestroy, inject, effect } from '@angular/core';
+import { Component, signal, ElementRef, viewChild, AfterViewInit, OnDestroy, inject, effect } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LanguageService } from '../../i18n/language.service';
 import { LanguageToggleComponent } from '../language-toggle/language-toggle.component';
 
 @Component({
   selector: 'app-navbar',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, RouterLinkActive, LanguageToggleComponent],
   host: {
     '(window:scroll)': 'onScroll()',
