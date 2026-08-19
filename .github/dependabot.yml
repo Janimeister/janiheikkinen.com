@@ -4,7 +4,15 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 10
     groups:
+      # Angular framework + toolchain must upgrade in lockstep (strict peer deps).
+      # Listed first: a dependency joins the first group it matches.
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@analogjs/*"
+          - "zone.js"
       dev-dependencies:
         dependency-type: development
 
@@ -12,3 +20,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
