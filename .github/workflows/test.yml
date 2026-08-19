@@ -80,7 +80,14 @@ jobs:
       - run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        # Browsers first, without apt. `install-deps` shells out to apt-get, which
+        # stalls for the whole job budget when the runner's Ubuntu mirror is
+        # unreachable, so it is capped and non-fatal: the runner image already
+        # ships nearly all of the required shared libraries.
+        run: |
+          npx playwright install
+          timeout 5m npx playwright install-deps \
+            || echo "::warning::playwright install-deps timed out or failed; falling back to runner image libraries"
 
       - name: Run Playwright tests
         run: npx playwright test
