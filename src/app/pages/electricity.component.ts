@@ -1,4 +1,5 @@
-import { Component, resource, computed, signal, ChangeDetectionStrategy, ElementRef, inject, afterRenderEffect, viewChild, DestroyRef } from '@angular/core';
+import { Component, computed, signal, ElementRef, inject, afterRenderEffect, viewChild, DestroyRef } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
@@ -22,7 +23,6 @@ function localDateKey(d: Date): string {
 
 @Component({
   selector: 'app-electricity-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
@@ -266,14 +266,10 @@ export class ElectricityPageComponent {
     });
   }
 
-  priceData = resource({
-    loader: async ({ abortSignal }): Promise<PriceResponse> => {
-      const baseUrl = environment.workerUrl;
-      const res = await fetch(`${baseUrl}/v2/latest-prices.json`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
-      if (!res.ok) throw new Error('Electricity API error');
-      return res.json();
-    },
-  });
+  priceData = httpResource<PriceResponse>(() => ({
+    url: `${environment.workerUrl}/v2/latest-prices.json`,
+    timeout: 10_000,
+  }));
 
   private sortedPrices = computed(() => {
     const data = this.priceData.hasValue() ? this.priceData.value() : undefined;

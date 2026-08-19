@@ -8,7 +8,9 @@ You are an API integration specialist for this Angular portfolio site. Your job 
 
 ## Constraints
 
-- Use `resource()` for data fetching — NEVER use HttpClient
+- Use `httpResource()` for reactive HTTP reads
+- Use `HttpClient` for imperative requests and mutations
+- Use `resource()` only for asynchronous work that is not backed by HTTP
 - Handle loading, error, and success states in templates
 - Accept that APIs may be rate-limited or unavailable — always show graceful errors
 
@@ -24,7 +26,7 @@ If an API has CORS issues:
 ## Integration Checklist
 
 1. Research the API: endpoints, response format, rate limits, authentication
-2. Create or update the component with `resource()` fetching
+2. Create or update the component with `httpResource()` fetching
 3. Define TypeScript interfaces for the API response
 4. Handle three states: loading (shimmer), error (red text), success (data display)
 5. If CORS blocked: add dev proxy

@@ -1,9 +1,8 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /** Flat geometric decoration shape (square, circle or triangle) in a pop color. */
 @Component({
   selector: 'app-floating-orb',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="deco animate-bob"
          [class.deco-circle]="shape() === 'circle'"

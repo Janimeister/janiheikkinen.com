@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectionStrategy, afterNextRender, OnDestroy, inject } from '@angular/core';
+import { Component, signal, afterNextRender, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
@@ -22,7 +22,6 @@ const ASPECT_CORRECTION = 0.5;
 
 @Component({
   selector: 'app-ascii-art-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">

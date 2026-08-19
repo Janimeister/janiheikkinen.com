@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
@@ -6,7 +6,6 @@ import { CookieNoticeComponent } from './components/cookie-notice/cookie-notice.
 
 @Component({
   selector: 'app-root',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, NavbarComponent, FooterComponent, CookieNoticeComponent],
   template: `
     <app-navbar />

@@ -11,8 +11,6 @@ updates:
       angular:
         patterns:
           - "@angular/*"
-          - "@analogjs/*"
-          - "zone.js"
       dev-dependencies:
         dependency-type: development
     ignore:

@@ -1,9 +1,8 @@
-import { Component, signal, ChangeDetectionStrategy, OnDestroy, effect, inject } from '@angular/core';
+import { Component, signal, OnDestroy, effect, inject } from '@angular/core';
 import { LanguageService } from '../../i18n/language.service';
 
 @Component({
   selector: 'app-typing-effect',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="text-text-primary text-lg md:text-xl font-mono font-medium">
       {{ displayText() }}<span class="animate-cursor-blink text-accent-primary font-bold" aria-hidden="true">█</span>

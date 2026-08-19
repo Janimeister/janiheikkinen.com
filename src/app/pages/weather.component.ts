@@ -1,6 +1,8 @@
-import { Component, resource, computed, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, computed, signal, inject } from '@angular/core';
+import { HttpClient, httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormField, FormRoot, form, maxLength, required } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 import { LanguageService } from '../i18n/language.service';
@@ -54,6 +56,14 @@ interface WeatherResponse {
   daily: WeatherDaily;
 }
 
+interface GeocodingResponse {
+  results?: Array<{
+    latitude: number;
+    longitude: number;
+    name: string;
+  }>;
+}
+
 const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> = {
   0: { labelKey: 'weather.clearSky', icon: '☀️' },
   1: { labelKey: 'weather.mainlyClear', icon: '🌤️' },
@@ -83,8 +93,7 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
 
 @Component({
   selector: 'app-weather-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormsModule],
+  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormField, FormRoot],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <!-- Decorative shapes -->
@@ -103,21 +112,20 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
           </h1>
           <p class="text-text-secondary mt-2">{{ i18n.t('weather.subtitle') }}</p>
           <!-- Location search -->
-          <div class="mt-4 flex gap-2 max-w-sm">
+          <form [formRoot]="searchForm" class="mt-4 flex gap-2 max-w-sm">
             <input type="text"
-                   [(ngModel)]="searchQuery"
-                   (keydown.enter)="searchLocation()"
+                   [formField]="searchForm.location"
                    [attr.placeholder]="i18n.t('weather.searchPlaceholder')"
                    [attr.aria-label]="i18n.t('weather.searchPlaceholder')"
-                   maxlength="100"
+                   [attr.aria-invalid]="searchForm.location().invalid() && searchForm.location().touched()"
                    autocomplete="off"
                    class="flex-1 min-w-0 bg-bg-card border-2 border-ink px-4 py-2 text-sm text-text-primary placeholder-text-secondary/70 shadow-brutal-sm transition-colors" />
-            <button (click)="searchLocation()"
-                    [disabled]="searching()"
+            <button type="submit"
+                    [disabled]="searchForm().submitting() || searchForm().invalid()"
                     class="px-4 py-2 text-sm font-bold bg-pop-sky text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-              @if (searching()) { {{ i18n.t('weather.searching') }} } @else { {{ i18n.t('weather.search') }} }
+              @if (searchForm().submitting()) { {{ i18n.t('weather.searching') }} } @else { {{ i18n.t('weather.search') }} }
             </button>
-          </div>
+          </form>
           @if (searchError(); as err) {
             <p class="text-xs text-red-400 mt-2">{{ i18n.t(err.key, err.params) }}</p>
           }
@@ -352,14 +360,22 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
 })
 export class WeatherPageComponent {
   protected readonly i18n = inject(LanguageService);
+  private readonly http = inject(HttpClient);
   private coords = signal<{ lat: number; lon: number }>({ lat: 60.17, lon: 24.94 });
   locationName = signal('Helsinki');
-  searchQuery = signal('');
-  searching = signal(false);
+  private readonly searchModel = signal({ location: '' });
+  protected readonly searchForm = form(this.searchModel, search => {
+    required(search.location);
+    maxLength(search.location, 100);
+  }, {
+    submission: {
+      action: async search => this.searchLocation(search.location().value()),
+    },
+  });
   searchError = signal<{ key: TranslationKey; params?: Record<string, string | number> } | null>(null);
 
-  async searchLocation() {
-    const raw = this.searchQuery().trim();
+  private async searchLocation(location: string) {
+    const raw = location.trim();
     if (!raw) return;
 
     // Sanitize: allow only letters, spaces, hyphens, apostrophes, periods, and digits
@@ -369,15 +385,21 @@ export class WeatherPageComponent {
       return;
     }
 
-    this.searching.set(true);
     this.searchError.set(null);
 
     try {
-      const res = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(sanitized)}&count=1&language=${this.i18n.language()}&format=json`
-      );
-      if (!res.ok) throw new Error('Geocoding request failed');
-      const data = await res.json();
+      const data = await firstValueFrom(this.http.get<GeocodingResponse>(
+        'https://geocoding-api.open-meteo.com/v1/search',
+        {
+          params: {
+            name: sanitized,
+            count: 1,
+            language: this.i18n.language(),
+            format: 'json',
+          },
+          timeout: 10_000,
+        },
+      ));
 
       if (!data.results?.length) {
         this.searchError.set({ key: 'weather.noResults', params: { location: sanitized } });
@@ -387,30 +409,27 @@ export class WeatherPageComponent {
       const result = data.results[0];
       this.coords.set({ lat: result.latitude, lon: result.longitude });
       this.locationName.set(result.name);
-      this.searchQuery.set('');
+      this.searchForm.location().value.set('');
     } catch {
       this.searchError.set({ key: 'weather.searchFailed' });
-    } finally {
-      this.searching.set(false);
     }
   }
 
-  weather = resource({
-    params: () => this.coords(),
-    loader: async ({ params: { lat, lon }, abortSignal }): Promise<WeatherResponse> => {
-      const params = [
-        `latitude=${lat}`,
-        `longitude=${lon}`,
-        'current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,surface_pressure,is_day',
-        'hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,cloud_cover',
-        'daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,sunshine_duration',
-        'timezone=auto',
-        'forecast_days=7',
-      ].join('&');
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: AbortSignal.any([abortSignal, AbortSignal.timeout(10_000)]) });
-      if (!res.ok) throw new Error('Weather API error');
-      return res.json();
-    },
+  weather = httpResource<WeatherResponse>(() => {
+    const { lat, lon } = this.coords();
+    return {
+      url: 'https://api.open-meteo.com/v1/forecast',
+      params: {
+        latitude: lat,
+        longitude: lon,
+        current: 'temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,surface_pressure,is_day',
+        hourly: 'temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,cloud_cover',
+        daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,sunshine_duration',
+        timezone: 'auto',
+        forecast_days: 7,
+      },
+      timeout: 10_000,
+    };
   });
 
   weatherInfo(code: number) {

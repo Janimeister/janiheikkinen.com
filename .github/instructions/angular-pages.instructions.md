@@ -1,11 +1,11 @@
 ---
-description: "Angular page component conventions — data fetching with resource(), brutal cards, loading/error states, staggered animations, back links."
+description: "Angular page component conventions — data fetching with httpResource(), brutal cards, loading/error states, staggered animations, back links."
 applyTo: "src/app/pages/**/*.ts"
 ---
 
 # Page Component Conventions
 
-- Fetch data with `resource()`, not HttpClient
+- Use `httpResource()` for reactive HTTP reads and `HttpClient` for imperative requests or mutations
 - Import `GlowCardComponent` (renders a `.glow-card` — now a brutalist bordered card) for data section wrappers
 - Import `RouterLink` for navigation links
 - Include a "Back to Home" link with `routerLink="/"`
