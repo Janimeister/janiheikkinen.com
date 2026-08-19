@@ -1,6 +1,7 @@
 {
   "name": "janiheikkinen-com",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -28,17 +29,17 @@
     "@angular/cli": "^22.1.4",
     "@angular/compiler-cli": "^22.1.2",
     "@angular/platform-browser-dynamic": "^22.1.2",
-    "@axe-core/playwright": "^4.11.3",
-    "@playwright/test": "^1.58.2",
-    "@tailwindcss/postcss": "^4.2.2",
-    "@types/node": "^25.5.0",
-    "jsdom": "^29.1.1",
-    "postcss": "^8.5.8",
-    "prettier": "^3.8.1",
-    "tailwindcss": "^4.2.2",
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.2.0",
+    "jsdom": "^30.0.1",
+    "postcss": "^8.5.26",
+    "prettier": "^3.9.6",
+    "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
-    "vite": "^7.3.1",
-    "vitest": "^4.1.5",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.11",
     "zone.js": "^0.16.1"
   }
 }

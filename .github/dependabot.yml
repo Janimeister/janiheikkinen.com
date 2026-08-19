@@ -15,6 +15,14 @@ updates:
           - "zone.js"
       dev-dependencies:
         dependency-type: development
+    ignore:
+      # The Angular 22 toolchain pins `peer typescript@">=6.0 <6.1"`, so both
+      # major and minor TypeScript bumps break `npm ci`. Only patches are safe;
+      # `ng update` moves TypeScript as part of the Angular upgrade itself.
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
 
   - package-ecosystem: github-actions
     directory: /
