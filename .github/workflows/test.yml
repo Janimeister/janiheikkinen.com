@@ -37,8 +37,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - name: Build
         run: npm run build
@@ -58,8 +57,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - name: Run unit tests
         run: npm test
@@ -79,11 +77,17 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        # Browsers first, without apt. `install-deps` shells out to apt-get, which
+        # stalls for the whole job budget when the runner's Ubuntu mirror is
+        # unreachable, so it is capped and non-fatal: the runner image already
+        # ships nearly all of the required shared libraries.
+        run: |
+          npx playwright install
+          timeout 5m npx playwright install-deps \
+            || echo "::warning::playwright install-deps timed out or failed; falling back to runner image libraries"
 
       - name: Run Playwright tests
         run: npx playwright test

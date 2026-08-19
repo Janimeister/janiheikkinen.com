@@ -42,8 +42,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # --legacy-peer-deps needed due to @analogjs/vite-plugin-angular peer dep version ranges
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - name: Generate production environment file
         shell: bash
