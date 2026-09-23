@@ -11,8 +11,15 @@ updates:
       angular:
         patterns:
           - "@angular/*"
+          - "@angular-devkit/*"
       dev-dependencies:
         dependency-type: development
+        exclude-patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+        update-types:
+          - minor
+          - patch
     ignore:
       # The Angular 22 toolchain pins `peer typescript@">=6.0 <6.1"`, so both
       # major and minor TypeScript bumps break `npm ci`. Only patches are safe;
@@ -21,6 +28,10 @@ updates:
         update-types:
           - version-update:semver-major
           - version-update:semver-minor
+      # Angular's build integration currently requires Vitest 4.
+      - dependency-name: vitest
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
