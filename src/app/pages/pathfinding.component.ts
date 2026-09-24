@@ -222,7 +222,12 @@ function exampleTerrain(rows: number, columns: number): Terrain[] {
             {{ i18n.t('pathfinding.complexity') }}: {{ algorithm().time }} ·
             {{ i18n.t('pathfinding.space') }}: {{ algorithm().space }}
           </p>
-          <div class="overflow-x-auto mt-6">
+          <div
+            class="overflow-x-auto mt-6"
+            tabindex="0"
+            role="region"
+            [attr.aria-label]="i18n.t('pathfinding.algorithms')"
+          >
             <table class="w-full text-left text-sm">
               <caption class="text-left font-bold text-lg mb-3">
                 {{
