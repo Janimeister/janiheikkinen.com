@@ -16,7 +16,7 @@ describe('Sorting playback', () => {
     vi.useRealTimers();
   });
 
-  it('pauses, steps, resets and completes both algorithms on the same input', () => {
+  it('pauses, steps, resets and completes all algorithms on the same input', () => {
     const page = TestBed.createComponent(SortingPageComponent).componentInstance;
     page.changeSize(5);
     const input = [...page.values()];
@@ -33,12 +33,31 @@ describe('Sorting playback', () => {
       expect(page.values()).toEqual(input);
       page.step();
       expect(page.status()).toBe('paused');
-      expect(page.comparisons()).toBe(1);
       page.toggle();
       vi.runAllTimers();
       expect(page.status()).toBe('done');
       expect(page.values()).toEqual([1, 2, 3, 4, 5]);
     }
+  });
+
+  it('shows insertion-prefix and Quick Sort pivot/partition cues as events are consumed', () => {
+    const page = TestBed.createComponent(SortingPageComponent).componentInstance;
+    page.changeSize(5);
+    page.selectAlgorithm('insertion');
+    page.step();
+    expect(page.insertionIndex()).toBe(1);
+    expect(page.sorted()).toEqual(new Set([0]));
+    page.step();
+    expect(page.comparisons()).toBe(1);
+
+    page.selectAlgorithm('quick');
+    page.step();
+    expect(page.partition()).toEqual({ start: 0, end: 4 });
+    page.step();
+    expect(page.pivot()).toBe(4);
+    page.reset();
+    expect(page.pivot()).toBeNull();
+    expect(page.partition()).toBeNull();
   });
 
   it('measures playback across speed changes, excludes pauses and manual steps, and freezes at completion', () => {

@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { LanguageService } from '../i18n/language.service';
 import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
+import { VisualizationPlayback } from '../visualization/playback-controller';
 
 @Component({
   selector: 'app-sorting-page',
@@ -109,19 +110,40 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
           @for (value of values(); track $index) {
             <div
               class="bar"
-              [class.active]="active().includes($index)"
-              [class.complete]="status() === 'done'"
+              [class.comparing]="active().includes($index)"
+              [class.partition]="isInPartition($index)"
+              [class.pivot]="pivot() === $index"
+              [class.sorted]="sorted().has($index) || status() === 'done'"
+              [class.inserting]="insertionIndex() === $index"
+              [class.shifting]="shifting().includes($index)"
+              [class.final-insertion]="finalInsertion() === $index"
               [style.height.%]="(value / size()) * 100"
               [attr.data-value]="value"
-              [attr.title]="value"
+              [attr.title]="barTitle($index, value)"
             >
               @if (size() <= 20) {
                 <span>{{ value }}</span>
+              }
+              @if (pivot() === $index) {
+                <b class="marker-label">P</b>
+              }
+              @if (insertionIndex() === $index) {
+                <b class="marker-label">K</b>
+              }
+              @if (finalInsertion() === $index) {
+                <b class="marker-label">↓</b>
               }
             </div>
           }
         </div>
         <p class="text-sm mt-4">{{ i18n.t('sorting.legend') }}</p>
+        <p class="text-sm text-text-secondary mt-1" aria-live="polite">
+          {{
+            insertionValue() === null
+              ? ''
+              : i18n.t('sorting.insertingValue', { value: insertionValue() ?? 0 })
+          }}
+        </p>
         <details class="mt-3 text-sm">
           <summary class="cursor-pointer font-bold">{{ i18n.t('sorting.values') }}</summary>
           <p class="font-mono mt-2 break-words">{{ values().join(', ') }}</p>
@@ -131,10 +153,20 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
         <app-glow-card>
           <h2 class="text-xl mb-3">{{ i18n.t(algorithm().nameKey) }}</h2>
           <p>{{ i18n.t(algorithm().descriptionKey) }}</p>
-          <p class="font-mono text-sm mt-4">
-            {{ i18n.t('sorting.space') }}:
-            {{ algorithm().space }}
-          </p>
+          <dl class="metadata mt-4 text-sm">
+            <div>
+              <dt>{{ i18n.t('sorting.space') }}</dt>
+              <dd>{{ algorithm().space }}</dd>
+            </div>
+            <div>
+              <dt>{{ i18n.t('sorting.stability') }}</dt>
+              <dd>{{ i18n.t(algorithm().stable ? 'sorting.stable' : 'sorting.unstable') }}</dd>
+            </div>
+            <div>
+              <dt>{{ i18n.t('sorting.inPlace') }}</dt>
+              <dd>{{ i18n.t(algorithm().inPlace ? 'sorting.yes' : 'sorting.no') }}</dd>
+            </div>
+          </dl>
           <p class="text-sm text-text-secondary mt-2">{{ i18n.t('sorting.spaceHelp') }}</p>
           <div class="overflow-x-auto mt-6">
             <table class="w-full text-left text-sm" data-testid="complexity-table">
@@ -149,6 +181,9 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
                   <th scope="col">{{ i18n.t('sorting.best') }}</th>
                   <th scope="col">{{ i18n.t('sorting.average') }}</th>
                   <th scope="col">{{ i18n.t('sorting.worst') }}</th>
+                  <th scope="col">{{ i18n.t('sorting.space') }}</th>
+                  <th scope="col">{{ i18n.t('sorting.stability') }}</th>
+                  <th scope="col">{{ i18n.t('sorting.inPlace') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -158,6 +193,9 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
                     <td>{{ item.time.best }}</td>
                     <td>{{ item.time.average }}</td>
                     <td>{{ item.time.worst }}</td>
+                    <td>{{ item.space }}</td>
+                    <td>{{ i18n.t(item.stable ? 'sorting.stable' : 'sorting.unstable') }}</td>
+                    <td>{{ i18n.t(item.inPlace ? 'sorting.yes' : 'sorting.no') }}</td>
                   </tr>
                 }
               </tbody>
@@ -220,12 +258,34 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
       border: 2px solid var(--color-ink);
       position: relative;
     }
-    .bar.active {
+    .bar.comparing {
       background: var(--color-pop-pink);
       border-top: 6px solid var(--color-ink);
     }
-    .bar.complete {
-      background: var(--color-pop-lime);
+    .bar.partition {
+      outline: 2px dashed var(--color-ink);
+      outline-offset: -4px;
+    }
+    .bar.pivot {
+      background: var(--color-pop-orange);
+      box-shadow: inset 0 0 0 3px var(--color-ink);
+    }
+    .bar.sorted {
+      background: repeating-linear-gradient(135deg, var(--color-pop-lime) 0 7px, #c9ed91 7px 10px);
+    }
+    .bar.inserting {
+      background: var(--color-pop-yellow);
+      border-top: 6px solid var(--color-ink);
+    }
+    .bar.shifting {
+      background: repeating-linear-gradient(
+        45deg,
+        var(--color-pop-pink) 0 5px,
+        var(--color-bg-card) 5px 8px
+      );
+    }
+    .bar.final-insertion {
+      border-bottom: 8px solid var(--color-ink);
     }
     .bar span {
       position: absolute;
@@ -233,6 +293,25 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
       left: 50%;
       transform: translateX(-50%);
       font: 700 0.7rem var(--font-mono);
+    }
+    .marker-label {
+      position: absolute;
+      top: -1.4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font: 700 0.7rem var(--font-mono);
+    }
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+    }
+    .metadata dt {
+      color: var(--color-text-secondary);
+    }
+    .metadata dd {
+      font-family: var(--font-mono);
+      font-weight: 700;
     }
     @media (max-width: 480px) {
       .bar {
@@ -246,6 +325,11 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
         gap: 1px;
       }
     }
+    @media (prefers-reduced-motion: reduce) {
+      .bar {
+        transition: none;
+      }
+    }
   `,
 })
 export class SortingPageComponent implements OnDestroy {
@@ -254,32 +338,37 @@ export class SortingPageComponent implements OnDestroy {
   readonly maxSize = 80;
   readonly algorithm = signal(SORTING_ALGORITHMS[0]);
   readonly size = signal(30);
-  readonly speed = signal(25);
+  readonly playback = new VisualizationPlayback<SortStep>();
+  readonly speed = this.playback.speed;
+  readonly status = this.playback.status;
+  readonly elapsedMs = this.playback.elapsedMs;
   readonly values = signal<number[]>([]);
   readonly active = signal<readonly number[]>([]);
+  readonly sorted = signal<ReadonlySet<number>>(new Set());
+  readonly partition = signal<{ start: number; end: number } | null>(null);
+  readonly pivot = signal<number | null>(null);
+  readonly insertionIndex = signal<number | null>(null);
+  readonly insertionValue = signal<number | null>(null);
+  readonly shifting = signal<readonly number[]>([]);
+  readonly finalInsertion = signal<number | null>(null);
   readonly comparisons = signal(0);
   readonly writes = signal(0);
-  readonly elapsedMs = signal(0);
-  readonly status = signal<'ready' | 'running' | 'paused' | 'done'>('ready');
   readonly statusKey = computed(
     () =>
-      (
-        ({
-          ready: 'sorting.ready',
-          running: 'sorting.running',
-          paused: 'sorting.paused',
-          done: 'sorting.done',
-        }) as const
-      )[this.status()],
+      ({
+        ready: 'sorting.ready',
+        running: 'sorting.running',
+        paused: 'sorting.paused',
+        done: 'sorting.done',
+      })[this.status()] as 'sorting.ready' | 'sorting.running' | 'sorting.paused' | 'sorting.done',
   );
-  private elapsedBeforeRun = 0;
-  private runStartedAt?: number;
-  private clock?: ReturnType<typeof setInterval>;
   private original: number[] = [];
-  private iterator?: Generator<SortStep, void, unknown>;
-  private timer?: ReturnType<typeof setTimeout>;
 
   constructor() {
+    this.playback.configure(
+      () => this.algorithm().sort(this.values()),
+      (event) => this.applyStep(event),
+    );
     this.shuffle();
   }
 
@@ -297,12 +386,7 @@ export class SortingPageComponent implements OnDestroy {
   }
 
   changeSpeed(value: number): void {
-    if (!Number.isFinite(value)) return;
-    this.speed.set(Math.max(1, Math.min(100, Math.round(value))));
-    if (this.status() === 'running') {
-      this.cancelTimer();
-      this.schedule();
-    }
+    this.playback.setSpeed(value);
   }
 
   shuffle(): void {
@@ -315,99 +399,117 @@ export class SortingPageComponent implements OnDestroy {
   }
 
   reset(): void {
-    this.cancelTimer();
-    this.stopClock();
-    this.elapsedBeforeRun = 0;
-    this.elapsedMs.set(0);
-    this.iterator = undefined;
+    this.playback.reset();
     this.values.set([...this.original]);
     this.active.set([]);
+    this.sorted.set(new Set());
+    this.partition.set(null);
+    this.pivot.set(null);
+    this.insertionIndex.set(null);
+    this.insertionValue.set(null);
+    this.shifting.set([]);
+    this.finalInsertion.set(null);
     this.comparisons.set(0);
     this.writes.set(0);
-    this.status.set('ready');
   }
 
   toggle(): void {
-    if (this.status() === 'done') return;
-    if (this.status() === 'running') {
-      this.cancelTimer();
-      this.stopClock();
-      this.status.set('paused');
-    } else {
-      this.status.set('running');
-      this.startClock();
-      this.schedule();
-    }
+    this.playback.startOrPause();
   }
 
   step(): void {
-    if (this.status() === 'running' || this.status() === 'done') return;
-    this.status.set('paused');
-    this.advance();
+    this.playback.step();
   }
 
-  private advance(): void {
-    this.iterator ??= this.algorithm().sort(this.values());
-    const next = this.iterator.next();
-    if (next.done) {
-      this.active.set([]);
-      this.stopClock();
-      this.status.set('done');
-      return;
-    }
-    const step = next.value;
+  isInPartition(index: number): boolean {
+    const range = this.partition();
+    return range !== null && index >= range.start && index <= range.end;
+  }
+
+  barTitle(index: number, value: number): string {
+    const state =
+      this.pivot() === index
+        ? this.i18n.t('sorting.pivotLabel')
+        : this.insertionIndex() === index
+          ? this.i18n.t('sorting.keyLabel')
+          : this.sorted().has(index) || this.status() === 'done'
+            ? this.i18n.t('sorting.sortedLabel')
+            : this.i18n.t('sorting.valueLabel');
+    return `${state}: ${value}`;
+  }
+
+  private applyStep(step: SortStep): void {
     if (step.type === 'compare') {
       this.active.set(step.indices);
       this.comparisons.update((count) => count + 1);
-    } else {
+      this.shifting.set([]);
+      return;
+    }
+    if (step.type === 'swap') {
       const values = [...this.values()];
-      if (step.type === 'swap') {
-        const [a, b] = step.indices;
-        [values[a], values[b]] = [values[b], values[a]];
-        this.active.set(step.indices);
-        this.writes.update((count) => count + 2);
-      } else {
-        values[step.index] = step.value;
-        this.active.set([step.index]);
-        this.writes.update((count) => count + 1);
-      }
+      const [left, right] = step.indices;
+      [values[left], values[right]] = [values[right], values[left]];
       this.values.set(values);
+      this.active.set(step.indices);
+      this.writes.update((count) => count + 2);
+      const pivot = this.pivot();
+      if (pivot === left) this.pivot.set(right);
+      else if (pivot === right) this.pivot.set(left);
+      return;
     }
-  }
-
-  private schedule(): void {
-    this.timer = setTimeout(() => {
-      this.timer = undefined;
-      this.advance();
-      if (this.status() === 'running') this.schedule();
-    }, 1000 / this.speed());
-  }
-
-  private startClock(): void {
-    this.runStartedAt = performance.now();
-    this.clock = setInterval(() => this.updateClock(), 50);
-  }
-
-  private updateClock(): void {
-    if (this.runStartedAt !== undefined) {
-      this.elapsedMs.set(this.elapsedBeforeRun + performance.now() - this.runStartedAt);
+    if (step.type === 'write') {
+      this.write(step.index, step.value);
+      this.active.set([step.index]);
+      return;
     }
+    if (step.type === 'setPartition') {
+      this.partition.set({ start: step.start, end: step.end });
+      return;
+    }
+    if (step.type === 'selectPivot') {
+      this.pivot.set(step.index);
+      this.active.set([]);
+      return;
+    }
+    if (step.type === 'selectInsertion') {
+      this.insertionIndex.set(step.index);
+      this.insertionValue.set(step.value);
+      this.finalInsertion.set(null);
+      this.active.set([]);
+      this.sorted.set(new Set(Array.from({ length: step.prefixEnd + 1 }, (_, index) => index)));
+      return;
+    }
+    if (step.type === 'shift') {
+      this.write(step.to, step.value);
+      this.active.set([step.from, step.to]);
+      this.shifting.set([step.from, step.to]);
+      return;
+    }
+    if (step.type === 'insert') {
+      this.write(step.index, step.value);
+      this.finalInsertion.set(step.index);
+      this.active.set([step.index]);
+      this.insertionIndex.set(null);
+      this.insertionValue.set(null);
+      return;
+    }
+    if (step.type === 'markSorted') {
+      this.sorted.update((current) => new Set([...current, ...step.indices]));
+      return;
+    }
+    this.partition.set(null);
+    this.pivot.set(null);
+    this.active.set([]);
   }
 
-  private stopClock(): void {
-    this.updateClock();
-    this.elapsedBeforeRun = this.elapsedMs();
-    this.runStartedAt = undefined;
-    clearInterval(this.clock);
-    this.clock = undefined;
+  private write(index: number, value: number): void {
+    const values = [...this.values()];
+    values[index] = value;
+    this.values.set(values);
+    this.writes.update((count) => count + 1);
   }
 
-  private cancelTimer(): void {
-    clearTimeout(this.timer);
-    this.timer = undefined;
-  }
   ngOnDestroy(): void {
-    this.cancelTimer();
-    this.stopClock();
+    this.playback.destroy();
   }
 }

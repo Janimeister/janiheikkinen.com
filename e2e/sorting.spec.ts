@@ -15,7 +15,7 @@ test.describe('Sorting', () => {
     const original = await bars.evaluateAll((elements) =>
       elements.map((el) => el.getAttribute('data-value')),
     );
-    for (const algorithm of ['bubble', 'merge']) {
+    for (const algorithm of ['bubble', 'insertion', 'merge', 'quick']) {
       await page.getByLabel('Algorithm', { exact: true }).selectOption(algorithm);
       await page.getByRole('button', { name: 'Single step', exact: true }).click();
       await expect(page.getByRole('status')).toHaveText('Paused');
@@ -41,12 +41,14 @@ test.describe('Sorting', () => {
     const timer = page.getByRole('timer', { name: 'Elapsed animation time' });
     await expect(timer).toContainText('0.00 s');
     const table = page.getByRole('table', { name: 'Time complexity' });
-    await expect(
-      table.getByRole('row', { name: 'Bubble Sort O(n) O(n²) O(n²)', exact: true }),
-    ).toBeVisible();
-    await expect(
-      table.getByRole('row', { name: 'Merge Sort O(n log n) O(n log n) O(n log n)', exact: true }),
-    ).toBeVisible();
+    await expect(table.getByRole('row').filter({ hasText: 'Bubble Sort' })).toContainText('O(n)');
+    await expect(table.getByRole('row').filter({ hasText: 'Insertion Sort' })).toContainText(
+      'O(n²)',
+    );
+    await expect(table.getByRole('row').filter({ hasText: 'Merge Sort' })).toContainText(
+      'O(n log n)',
+    );
+    await expect(table.getByRole('row').filter({ hasText: 'Quick Sort' })).toContainText('O(n²)');
     await page.getByRole('slider', { name: /^Speed:/ }).press('Home');
     await page.getByRole('button', { name: 'Start', exact: true }).click();
     await page.clock.runFor(500);
