@@ -10,7 +10,7 @@ export interface SortingAlgorithm {
   readonly id: string;
   readonly nameKey: TranslationKey;
   readonly descriptionKey: TranslationKey;
-  readonly time: string;
+  readonly time: { readonly best: string; readonly average: string; readonly worst: string };
   readonly space: string;
   readonly sort: (input: readonly number[]) => Generator<SortStep, void, unknown>;
 }
@@ -61,7 +61,7 @@ export const SORTING_ALGORITHMS: readonly SortingAlgorithm[] = [
     id: 'bubble',
     nameKey: 'sorting.bubble',
     descriptionKey: 'sorting.bubbleDescription',
-    time: 'O(n²)',
+    time: { best: 'O(n)', average: 'O(n²)', worst: 'O(n²)' },
     space: 'O(n)',
     sort: bubbleSort,
   },
@@ -69,7 +69,7 @@ export const SORTING_ALGORITHMS: readonly SortingAlgorithm[] = [
     id: 'merge',
     nameKey: 'sorting.merge',
     descriptionKey: 'sorting.mergeDescription',
-    time: 'O(n log n)',
+    time: { best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n log n)' },
     space: 'O(n)',
     sort: mergeSort,
   },

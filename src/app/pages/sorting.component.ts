@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
@@ -6,7 +7,7 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
 
 @Component({
   selector: 'app-sorting-page',
-  imports: [RouterLink, GlowCardComponent],
+  imports: [RouterLink, GlowCardComponent, DecimalPipe],
   template: `
     <section class="relative max-w-6xl mx-auto px-6 md:px-12 pt-28 pb-16">
       <a routerLink="/" class="text-accent-light font-bold">← {{ i18n.t('common.backToHome') }}</a>
@@ -94,6 +95,16 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
             {{ i18n.t('sorting.writes') }}: {{ writes() }}
           </p>
         </div>
+        <p
+          class="font-mono font-bold mb-2"
+          role="timer"
+          aria-live="off"
+          [attr.aria-label]="i18n.t('sorting.elapsed')"
+          data-testid="elapsed-time"
+        >
+          {{ i18n.t('sorting.elapsed') }}: {{ elapsedMs() / 1000 | number: '1.2-2' }} s
+        </p>
+        <p class="text-sm text-text-secondary mb-4">{{ i18n.t('sorting.elapsedHelp') }}</p>
         <div class="bars" role="img" [attr.aria-label]="i18n.t('sorting.chart', { count: size() })">
           @for (value of values(); track $index) {
             <div
@@ -121,15 +132,52 @@ import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
           <h2 class="text-xl mb-3">{{ i18n.t(algorithm().nameKey) }}</h2>
           <p>{{ i18n.t(algorithm().descriptionKey) }}</p>
           <p class="font-mono text-sm mt-4">
-            {{ i18n.t('sorting.time') }}: {{ algorithm().time }} · {{ i18n.t('sorting.space') }}:
+            {{ i18n.t('sorting.space') }}:
             {{ algorithm().space }}
           </p>
           <p class="text-sm text-text-secondary mt-2">{{ i18n.t('sorting.spaceHelp') }}</p>
+          <div class="overflow-x-auto mt-6">
+            <table class="w-full text-left text-sm" data-testid="complexity-table">
+              <caption class="text-left font-bold text-lg mb-3">
+                {{
+                  i18n.t('sorting.complexity')
+                }}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ i18n.t('sorting.algorithm') }}</th>
+                  <th scope="col">{{ i18n.t('sorting.best') }}</th>
+                  <th scope="col">{{ i18n.t('sorting.average') }}</th>
+                  <th scope="col">{{ i18n.t('sorting.worst') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of algorithms; track item.id) {
+                  <tr>
+                    <th scope="row">{{ i18n.t(item.nameKey) }}</th>
+                    <td>{{ item.time.best }}</td>
+                    <td>{{ item.time.average }}</td>
+                    <td>{{ item.time.worst }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="text-sm text-text-secondary mt-3">{{ i18n.t('sorting.complexityHelp') }}</p>
         </app-glow-card>
       </div>
     </section>
   `,
   styles: `
+    th,
+    td {
+      padding: 0.5rem;
+      border-bottom: 2px solid var(--color-ink);
+    }
+    td {
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
     label {
       display: block;
       font-weight: 700;
@@ -211,6 +259,7 @@ export class SortingPageComponent implements OnDestroy {
   readonly active = signal<readonly number[]>([]);
   readonly comparisons = signal(0);
   readonly writes = signal(0);
+  readonly elapsedMs = signal(0);
   readonly status = signal<'ready' | 'running' | 'paused' | 'done'>('ready');
   readonly statusKey = computed(
     () =>
@@ -223,6 +272,9 @@ export class SortingPageComponent implements OnDestroy {
         }) as const
       )[this.status()],
   );
+  private elapsedBeforeRun = 0;
+  private runStartedAt?: number;
+  private clock?: ReturnType<typeof setInterval>;
   private original: number[] = [];
   private iterator?: Generator<SortStep, void, unknown>;
   private timer?: ReturnType<typeof setTimeout>;
@@ -264,6 +316,9 @@ export class SortingPageComponent implements OnDestroy {
 
   reset(): void {
     this.cancelTimer();
+    this.stopClock();
+    this.elapsedBeforeRun = 0;
+    this.elapsedMs.set(0);
     this.iterator = undefined;
     this.values.set([...this.original]);
     this.active.set([]);
@@ -276,9 +331,11 @@ export class SortingPageComponent implements OnDestroy {
     if (this.status() === 'done') return;
     if (this.status() === 'running') {
       this.cancelTimer();
+      this.stopClock();
       this.status.set('paused');
     } else {
       this.status.set('running');
+      this.startClock();
       this.schedule();
     }
   }
@@ -294,6 +351,7 @@ export class SortingPageComponent implements OnDestroy {
     const next = this.iterator.next();
     if (next.done) {
       this.active.set([]);
+      this.stopClock();
       this.status.set('done');
       return;
     }
@@ -325,11 +383,31 @@ export class SortingPageComponent implements OnDestroy {
     }, 1000 / this.speed());
   }
 
+  private startClock(): void {
+    this.runStartedAt = performance.now();
+    this.clock = setInterval(() => this.updateClock(), 50);
+  }
+
+  private updateClock(): void {
+    if (this.runStartedAt !== undefined) {
+      this.elapsedMs.set(this.elapsedBeforeRun + performance.now() - this.runStartedAt);
+    }
+  }
+
+  private stopClock(): void {
+    this.updateClock();
+    this.elapsedBeforeRun = this.elapsedMs();
+    this.runStartedAt = undefined;
+    clearInterval(this.clock);
+    this.clock = undefined;
+  }
+
   private cancelTimer(): void {
     clearTimeout(this.timer);
     this.timer = undefined;
   }
   ngOnDestroy(): void {
     this.cancelTimer();
+    this.stopClock();
   }
 }

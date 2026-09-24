@@ -41,6 +41,55 @@ describe('Sorting playback', () => {
     }
   });
 
+  it('measures playback across speed changes, excludes pauses and manual steps, and freezes at completion', () => {
+    const page = TestBed.createComponent(SortingPageComponent).componentInstance;
+    page.changeSize(5);
+    page.changeSpeed(1);
+    page.toggle();
+    vi.advanceTimersByTime(250);
+    expect(page.elapsedMs()).toBeCloseTo(250);
+    page.changeSpeed(100);
+    vi.advanceTimersByTime(5);
+    page.toggle();
+    expect(page.elapsedMs()).toBeCloseTo(255);
+    vi.advanceTimersByTime(10000);
+    page.step();
+    expect(page.elapsedMs()).toBeCloseTo(255);
+    page.toggle();
+    vi.runAllTimers();
+    expect(page.status()).toBe('done');
+    const finished = page.elapsedMs();
+    expect(finished).toBeGreaterThan(255);
+    vi.advanceTimersByTime(10000);
+    expect(page.elapsedMs()).toBe(finished);
+    page.reset();
+    expect(page.elapsedMs()).toBe(0);
+  });
+
+  it('takes proportionally longer at a slower playback speed on the same input', () => {
+    const page = TestBed.createComponent(SortingPageComponent).componentInstance;
+    page.changeSize(5);
+    page.changeSpeed(10);
+    page.toggle();
+    vi.runAllTimers();
+    const slowTime = page.elapsedMs();
+    page.reset();
+    page.changeSpeed(100);
+    page.toggle();
+    vi.runAllTimers();
+    expect(slowTime).toBeCloseTo(page.elapsedMs() * 10);
+    page.selectAlgorithm('merge');
+    expect(page.elapsedMs()).toBe(0);
+    page.toggle();
+    vi.advanceTimersByTime(50);
+    page.changeSize(10);
+    expect(page.elapsedMs()).toBe(0);
+    page.toggle();
+    vi.advanceTimersByTime(50);
+    page.shuffle();
+    expect(page.elapsedMs()).toBe(0);
+  });
+
   it('clamps sizes and cancels pending work on changes and destruction', () => {
     const fixture = TestBed.createComponent(SortingPageComponent);
     const page = fixture.componentInstance;
@@ -62,7 +111,9 @@ describe('Sorting playback', () => {
     expect(page.comparisons()).toBe(0);
     page.toggle();
     fixture.destroy();
+    const stoppedTime = page.elapsedMs();
     vi.advanceTimersByTime(5000);
+    expect(page.elapsedMs()).toBe(stoppedTime);
     expect(page.comparisons()).toBe(0);
   });
 });

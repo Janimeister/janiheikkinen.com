@@ -7,6 +7,14 @@ export type Language = (typeof SUPPORTED_LANGUAGES)[number]['code'];
 
 export const EN_TRANSLATIONS = {
   'language.label': 'Language',
+  "sorting.elapsed": "Elapsed animation time",
+  "sorting.elapsedHelp": "Actual playback time, including animation delays at the chosen speed. Pauses and manual steps add no time. Speed changes affect the remaining playback, not time already elapsed. This is not a CPU benchmark.",
+  "sorting.complexity": "Time complexity",
+  "sorting.best": "Best case",
+  "sorting.average": "Average case",
+  "sorting.worst": "Worst case",
+  "sorting.complexityHelp": "n is the number of values. Big O describes how the work grows as n increases; animation speed does not change it. Bubble Sort takes O(n) on already sorted input because it stops after a pass with no swaps. Merge Sort splits and merges at every level, taking O(n log n) in all three cases.",
+
   "nav.sorting": "Sorting",
   "sorting.title": "Sorting Algorithms",
   "sorting.subtitle": "Watch order emerge, one operation at a time. Compare two approaches on the same shuffled numbers.",
@@ -334,6 +342,14 @@ export type TranslationKey = keyof typeof EN_TRANSLATIONS;
 
 export const FI_TRANSLATIONS = {
   'language.label': 'Kieli',
+  "sorting.elapsed": "Animaatioon kulunut aika",
+  "sorting.elapsedHelp": "Todellinen toistoaika sisältää valitun nopeuden mukaiset animaatioviiveet. Tauot ja käsin suoritetut vaiheet eivät lisää aikaa. Nopeuden vaihto vaikuttaa jäljellä olevaan toistoon, ei jo kuluneeseen aikaan. Tämä ei ole suorittimen nopeustesti.",
+  "sorting.complexity": "Aikavaativuus",
+  "sorting.best": "Paras tapaus",
+  "sorting.average": "Keskimäärin",
+  "sorting.worst": "Pahin tapaus",
+  "sorting.complexityHelp": "n on lukujen määrä. O-merkintä kuvaa työmäärän kasvua n:n kasvaessa; animaation nopeus ei muuta sitä. Kuplalajittelun aikavaativuus on O(n) valmiiksi järjestetyllä syötteellä, koska se lopettaa vaihdottoman kierroksen jälkeen. Lomituslajittelu jakaa ja lomittaa jokaisella tasolla, joten sen aikavaativuus on O(n log n) kaikissa kolmessa tapauksessa.",
+
   "nav.sorting": "Lajittelu",
   "sorting.title": "Lajittelualgoritmit",
   "sorting.subtitle": "Seuraa järjestyksen syntymistä vaihe kerrallaan. Vertaa kahta menetelmää samoilla sekoitetuilla luvuilla.",

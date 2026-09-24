@@ -26,3 +26,16 @@ Comparisons count emitted comparison operations; writes count one per write and
 two per swap, excluding internal copies and merge buffers. Displayed memory bounds
 include the generator's input copy. Merge writes may temporarily duplicate values;
 this is expected while a buffered merged range is written back.
+
+## Timing and complexity
+
+Elapsed animation time uses a monotonic clock (`performance.now()`) to measure
+actual active playback, including animation delays. It refreshes every 50 ms,
+excludes paused time and manual steps, and freezes when sorting completes. Speed
+changes affect future playback without rescaling elapsed time. Reset, shuffle,
+size and algorithm changes clear the timer; leaving the page clears both timers.
+This is animation duration, not a benchmark of raw algorithm execution time.
+
+The registry provides best, average and worst-case time complexity for the
+comparison table. Bubble Sort: O(n), O(n²), O(n²); Merge Sort: O(n log n) in all
+three cases. Animation speed does not affect these complexity bounds.
