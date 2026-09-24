@@ -115,7 +115,7 @@ Flat geometric decoration (square / circle / triangle) in a pop color, gentle `a
 `bg-bg-card border-2 border-ink text-text-primary px-4 py-2` + `placeholder:text-text-secondary`. Focus is handled globally by `:focus-visible` (3px ink outline) — do not add custom focus borders.
 
 ### Navbar / footer
-Navbar: cream, gains a 2px ink bottom border when scrolled; logo is a yellow sticker block; links get pop-yellow hover fill, active link gets pop-pink fill + ink border + small shadow. Footer: card surface, 2px ink top border, mono text.
+Navbar: compact cream header with a yellow sticker logo, current-page label, language toggle and yellow Explore button; gains a 2px ink bottom border when scrolled. Explore opens a native modal dialog with an ink-tinted backdrop, cream surface, grouped page cards and search. On mobile the dialog fills the screen. Cards get pop-yellow hover fills and the current page gets a pop-pink fill. The homepage shares the same cards. Footer: card surface, 2px ink top border, mono text.
 
 ## 7. Motion
 
@@ -141,7 +141,7 @@ Game/art canvases use design-system colors in their draw code (e.g. Snake board 
 
 ## 9. Adding a new page — recipe
 
-1. Lazy route in `app.routes.ts`; nav link + i18n keys (`nav.*`, page titles) in `src/app/i18n/translations.ts` (EN + FI).
+1. Add an entry in `src/app/navigation/page-registry.ts` with the lazy component loader, path, category, title, description and search keyword translation keys. `app.routes.ts`, Explore and the homepage directory use this registry. Add the copy to `src/app/i18n/translations.ts` (EN + FI). Footer-only utility routes stay in `app.routes.ts`.
 2. Header: "Back to Home" link (`routerLink="/"`), `h1` with `<span class="marker marker-{color}">`, subtitle in `text-text-secondary`.
 3. Sections in `app-glow-card`, entrance via `animate-fade-slide-up stagger-N`, `h2` headings.
 4. Data with `resource()`; `animate-pulse bg-ink/10` shimmers while loading; `<p class="text-red-400">` + i18n message on error; attribution link if the API requires it.

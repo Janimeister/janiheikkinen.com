@@ -31,17 +31,26 @@ src/app/
 │   └── third-party-notices.component.ts # Third-party license notices
 ├── components/
 │   ├── hero/                # Hero section with typing effect and deco shapes
-│   ├── navbar/              # Top navigation bar (scrollable on small screens)
+│   ├── navbar/              # Compact header and Explore dialog
 │   ├── language-toggle/     # EN/FI language switcher
 │   ├── footer/              # Site footer
 │   ├── shared/              # GlowCardComponent, FloatingOrbComponent
 │   └── cookie-notice/       # Cookie consent banner
+├── navigation/              # Shared page registry, search and page cards
 ├── i18n/                    # Signal-based runtime translations
 ├── app.routes.ts            # Route definitions
 └── app.config.ts            # Application configuration
 ```
 
 Theme tokens and animation keyframes are centralized in `src/styles.css`. The visual language ("Paper & Ink" neo-brutalism — cream background, 2px ink borders, hard offset shadows, flat pop-color fills) is documented in [docs/design-system.md](docs/design-system.md).
+
+## Explore Navigation
+
+The compact header keeps the home logo, current page, language toggle and **Explore** button visible. Explore opens a searchable, grouped page launcher; on mobile it fills the screen. `Ctrl+K` / `Cmd+K` opens or closes it, and Escape dismisses it. The dialog contains keyboard focus, restores focus when dismissed and prevents background scrolling. Search matches translated titles, descriptions, categories and keywords. **Surprise me** opens a different experiment or game.
+
+The homepage displays the same page cards below the introduction. Add a page to `src/app/navigation/page-registry.ts` with its lazy component loader, category and translation keys, then add the English and Finnish copy to `src/app/i18n/translations.ts`. That single entry supplies the route, launcher and homepage card. Third-party notices remain a footer destination.
+
+Navigation behavior and dialog accessibility are covered in `e2e/navigation.spec.ts`; registry/search behavior and component state also have unit tests.
 
 ## Language Support
 
