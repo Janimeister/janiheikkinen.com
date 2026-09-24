@@ -9,5 +9,6 @@ export const routes: Routes = [
   { path: 'snake', title: 'Snake Game · Jani Heikkinen', loadComponent: () => import('./pages/snake.component').then(m => m.SnakePageComponent) },
   { path: 'pet', title: 'Virtual Pet · Jani Heikkinen', loadComponent: () => import('./pages/pet.component').then(m => m.PetPageComponent) },
   { path: 'third-party-notices', title: 'Third-Party Notices · Jani Heikkinen', loadComponent: () => import('./pages/third-party-notices.component').then(m => m.ThirdPartyNoticesComponent) },
+  { path: 'sorting', title: 'Sorting Algorithms · Jani Heikkinen', loadComponent: () => import('./pages/sorting.component').then(m => m.SortingPageComponent) },
   { path: '**', redirectTo: '' },
 ];

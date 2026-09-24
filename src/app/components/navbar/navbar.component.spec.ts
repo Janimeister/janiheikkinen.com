@@ -21,7 +21,7 @@ describe('NavbarComponent', () => {
   it('should have correct nav links', () => {
     const fixture = TestBed.createComponent(NavbarComponent);
     const component = fixture.componentInstance;
-    expect(component.navLinks).toHaveLength(7);
+    expect(component.navLinks).toHaveLength(8);
     expect(component.navLinks[0]).toEqual({ labelKey: 'nav.home', route: '/' });
     expect(component.navLinks[1]).toEqual({ labelKey: 'nav.weather', route: '/weather' });
     expect(component.navLinks[2]).toEqual({ labelKey: 'nav.electricity', route: '/electricity' });
@@ -35,8 +35,8 @@ describe('NavbarComponent', () => {
     const fixture = TestBed.createComponent(NavbarComponent);
     fixture.detectChanges();
     const links = fixture.nativeElement.querySelectorAll('a');
-    // logo + 7 nav links = 8
-    expect(links.length).toBe(8);
+    // logo + 8 nav links = 9
+    expect(links.length).toBe(9);
   });
 
   it('should place the language toggle next to the logo before nav links', () => {
