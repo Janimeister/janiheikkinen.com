@@ -1,41 +1,41 @@
 # Sorting visualizer
 
-The lazy-loaded `/sorting` page supports 5–80 bars (default 30), Bubble Sort and
-Merge Sort, and 1–100 operations per second. Speed changes apply during playback.
-Reset or selecting another algorithm restores the original shuffled input for
-comparison. Changing the count or shuffling cancels playback and creates a new
-input. Playback is opt-in; Single step provides a motion-free alternative.
+The lazy-loaded `/sorting` page supports 5–80 bars and Bubble Sort, Insertion
+Sort, Merge Sort, and Quick Sort. The selector, descriptions, complexity table,
+stability, and in-place labels come from `SORTING_ALGORITHMS` metadata.
 
 ## Adding an algorithm
 
 1. Implement a pure generator matching `SortingAlgorithm.sort` in
    `src/app/sorting/sorting-algorithms.ts` (or import it from a separate file).
-   Copy the readonly input; emit `compare`, `swap`, or `write` operations with
-   zero-based indices. Operations must replay to the sorted result. The generator
-   must terminate; the player marks the entire array complete when it does.
-2. Add metadata to `SORTING_ALGORITHMS` and English/Finnish name and description
-   keys to `src/app/i18n/translations.ts`. The selector and explanation are derived
-   from this registry, so no page or playback changes are required.
-3. Run `npm test` and `npm run build`. The registry-driven correctness tests
-   automatically cover the new algorithm, including duplicates and empty input.
+   Copy the readonly input and emit typed comparison, swap, write, pivot,
+   insertion, and completion events as needed. The generator must not update
+   Angular signals or the DOM.
+2. Add its metadata and English/Finnish name and description keys. The selector,
+   explanatory text, and complexity table are rendered from this registry.
+3. Add representative input cases to the registry-driven algorithm tests and
+   run `npm test` and `npm run build`.
 
-Generators contain no timers, DOM code or Angular dependencies. The component
-consumes one operation per timer tick and cancels timers on pause, reset, shuffle,
-algorithm/size changes and destruction. Steps are generated lazily, not stored.
-Comparisons count emitted comparison operations; writes count one per write and
-two per swap, excluding internal copies and merge buffers. Displayed memory bounds
-include the generator's input copy. Merge writes may temporarily duplicate values;
-this is expected while a buffered merged range is written back.
+The shared `VisualizationPlayback` consumes one event at a time and owns speed,
+start/pause/resume, manual step, reset, elapsed playback time, and cancellation.
+The page applies each event to bar state. Playback is opt-in and Single step can
+be used without timed animation. The timer measures active playback duration,
+including the selected delays; it is not a benchmark of raw execution time.
 
-## Timing and complexity
+## Complexity
 
-Elapsed animation time uses a monotonic clock (`performance.now()`) to measure
-actual active playback, including animation delays. It refreshes every 50 ms,
-excludes paused time and manual steps, and freezes when sorting completes. Speed
-changes affect future playback without rescaling elapsed time. Reset, shuffle,
-size and algorithm changes clear the timer; leaving the page clears both timers.
-This is animation duration, not a benchmark of raw algorithm execution time.
+| Algorithm      | Best       | Average    | Worst      | Space                        | Stable | In-place |
+| -------------- | ---------- | ---------- | ---------- | ---------------------------- | ------ | -------- |
+| Bubble Sort    | O(n)       | O(n²)      | O(n²)      | O(1)                         | Yes    | Yes      |
+| Insertion Sort | O(n)       | O(n²)      | O(n²)      | O(1)                         | Yes    | Yes      |
+| Merge Sort     | O(n log n) | O(n log n) | O(n log n) | O(n)                         | Yes    | No       |
+| Quick Sort     | O(n log n) | O(n log n) | O(n²)      | O(log n) average, O(n) worst | No     | Yes      |
 
-The registry provides best, average and worst-case time complexity for the
-comparison table. Bubble Sort: O(n), O(n²), O(n²); Merge Sort: O(n log n) in all
-three cases. Animation speed does not affect these complexity bounds.
+These are standard algorithm bounds; the event generator and visualizer use
+additional state. Quick Sort uses the last value as its pivot, making already
+ordered input a visible worst-case example. Merge Sort writes a buffered range
+back into the bars, so temporary duplicate values during that animation are
+expected.
+
+See [Algorithms Visualizer](algorithms-visualizer.md) for search and pathfinding
+behavior, the shared event model, and the pathfinding cost rules.

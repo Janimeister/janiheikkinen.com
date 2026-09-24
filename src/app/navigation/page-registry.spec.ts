@@ -44,5 +44,8 @@ describe('Page registry', () => {
     expect(findPageGroups('binary search', en)[0].pages.map((page) => page.path)).toContain(
       'searching',
     );
+    expect(findPageGroups('dijkstra', en)[0].pages.map((page) => page.path)).toContain(
+      'pathfinding',
+    );
   });
 });

@@ -5,10 +5,11 @@ import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { LanguageService } from '../i18n/language.service';
 import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
 import { VisualizationPlayback } from '../visualization/playback-controller';
+import { VisualizerNavComponent } from '../visualization/visualizer-nav.component';
 
 @Component({
   selector: 'app-sorting-page',
-  imports: [RouterLink, GlowCardComponent, DecimalPipe],
+  imports: [RouterLink, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
   template: `
     <section class="relative max-w-6xl mx-auto px-6 md:px-12 pt-28 pb-16">
       <a routerLink="/" class="text-accent-light font-bold">← {{ i18n.t('common.backToHome') }}</a>
@@ -17,6 +18,7 @@ import { VisualizationPlayback } from '../visualization/playback-controller';
           <span class="marker marker-sky">{{ i18n.t('sorting.title') }}</span>
         </h1>
         <p class="text-text-secondary max-w-2xl">{{ i18n.t('sorting.subtitle') }}</p>
+        <app-visualizer-nav category="sorting" />
       </header>
       <app-glow-card>
         <div class="grid gap-6 md:grid-cols-3">

@@ -103,6 +103,16 @@ export const SITE_PAGES: readonly SitePage[] = [
     loadComponent: () =>
       import('../pages/searching.component').then((m) => m.SearchingPageComponent),
   },
+  {
+    path: 'pathfinding',
+    title: 'Pathfinding Algorithms · Jani Heikkinen',
+    labelKey: 'algorithms.pathfinding',
+    descriptionKey: 'explore.pathfindingDescription',
+    keywordsKey: 'explore.pathfindingKeywords',
+    group: 'experiments',
+    loadComponent: () =>
+      import('../pages/pathfinding.component').then((m) => m.PathfindingPageComponent),
+  },
 ];
 
 export function findPageGroups(query: string, translate: (key: TranslationKey) => string) {

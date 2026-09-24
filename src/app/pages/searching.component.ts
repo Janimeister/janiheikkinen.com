@@ -10,10 +10,11 @@ import {
   SEARCH_ALGORITHMS,
 } from '../searching/search-algorithms';
 import { VisualizationPlayback } from '../visualization/playback-controller';
+import { VisualizerNavComponent } from '../visualization/visualizer-nav.component';
 
 @Component({
   selector: 'app-searching-page',
-  imports: [RouterLink, GlowCardComponent, DecimalPipe],
+  imports: [RouterLink, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
   template: `
     <section class="relative max-w-6xl mx-auto px-6 md:px-12 pt-28 pb-16">
       <a routerLink="/" class="text-accent-light font-bold">← {{ i18n.t('common.backToHome') }}</a>
@@ -22,6 +23,7 @@ import { VisualizationPlayback } from '../visualization/playback-controller';
           <span class="marker marker-pink">{{ i18n.t('searching.title') }}</span>
         </h1>
         <p class="text-text-secondary max-w-2xl">{{ i18n.t('searching.subtitle') }}</p>
+        <app-visualizer-nav category="searching" />
       </header>
       <app-glow-card>
         <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">

@@ -28,6 +28,9 @@ src/app/
 │   ├── ascii.component.ts       # Procedural ASCII art generator
 │   ├── snake.component.ts       # Classic Snake game
 │   ├── pet.component.ts         # Virtual pet simulator
+│   ├── sorting.component.ts     # Sorting algorithms visualizer
+│   ├── searching.component.ts   # Search algorithms visualizer
+│   ├── pathfinding.component.ts # Weighted grid pathfinding visualizer
 │   └── third-party-notices.component.ts # Third-party license notices
 ├── components/
 │   ├── hero/                # Hero section with typing effect and deco shapes
@@ -37,6 +40,10 @@ src/app/
 │   ├── shared/              # GlowCardComponent, FloatingOrbComponent
 │   └── cookie-notice/       # Cookie consent banner
 ├── navigation/              # Shared page registry, search and page cards
+├── sorting/                  # Sorting algorithms, metadata and event generators
+├── searching/                # Search algorithms and event generators
+├── pathfinding/              # Weighted grid algorithms and event generators
+├── visualization/            # Shared playback, metadata types and category nav
 ├── i18n/                    # Signal-based runtime translations
 ├── app.routes.ts            # Route definitions
 └── app.config.ts            # Application configuration
@@ -51,6 +58,18 @@ The compact header keeps the home logo, current page, language toggle and **Expl
 The homepage displays the same page cards below the introduction. Add a page to `src/app/navigation/page-registry.ts` with its lazy component loader, category and translation keys, then add the English and Finnish copy to `src/app/i18n/translations.ts`. That single entry supplies the route, launcher and homepage card. Third-party notices remain a footer destination.
 
 Navigation behavior and dialog accessibility are covered in `e2e/navigation.spec.ts`; registry/search behavior and component state also have unit tests.
+
+## Algorithms Visualizer
+
+The **Sorting**, **Searching**, and **Pathfinding** routes share one playback controller for event timing, speed changes, pause/resume, single stepping, reset, and cancellation. Algorithm generators produce typed events; page components apply those events to visualization state. Each algorithm's name, description, category, complexity, requirements, and relevant characteristics live beside its generator in a catalog.
+
+- Sorting supports Bubble, Insertion, Merge, and Quick Sort with up to 80 values. Its complexity metadata describes the standard algorithm and excludes the extra state used to animate it.
+- Searching compares Linear and Binary Search over 5–80 ordered distinct values. The target can be typed, picked from the data, or set to a value that is absent.
+- Pathfinding compares BFS, Dijkstra, and A* on a 10 × 12 grid. Users can move endpoints and edit walls or terrain costs; tile entry costs are 1, 3, or 8. Diagonal movement is disabled. BFS minimizes moves and ignores weights, while Dijkstra and A* minimize total terrain cost.
+
+The elapsed counters show visualization playback time, including the chosen delay. They are not computational benchmarks. Pure algorithm correctness tests live alongside each algorithm catalog; page behavior and representative browser flows are covered by component and Playwright tests.
+
+See [docs/algorithms-visualizer.md](docs/algorithms-visualizer.md) for event and cost-model details.
 
 ## Language Support
 
