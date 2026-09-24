@@ -29,11 +29,13 @@ test.describe('Navigation', () => {
     await expect(page).toHaveTitle(/Jani Heikkinen/);
   });
 
-  test('navbar shows logo and all links', async ({ page }) => {
+  test('compact header opens the page launcher', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('app-navbar nav')).toBeVisible();
     await expect(page.locator('app-navbar a').first()).toContainText('JH');
 
+    await page.getByRole('button', { name: 'Explore', exact: true }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     for (const { label } of NAV_ROUTES) {
       await expect(page.locator('app-navbar a', { hasText: label })).toBeVisible();
     }
@@ -42,7 +44,9 @@ test.describe('Navigation', () => {
   for (const { label, path, heading } of NAV_ROUTES) {
     test(`"${label}" link navigates to ${path}`, async ({ page }) => {
       await page.goto('/');
-      await page.click(`app-navbar a:has-text("${label}")`);
+      await page.getByRole('button', { name: 'Explore', exact: true }).click();
+      await page.locator(`dialog a[href="${path}"]`).click();
+      await expect(page.getByRole('dialog')).not.toBeVisible();
       await expect(page).toHaveURL(new RegExp(path));
       await expect(page.locator('h1')).toContainText(heading);
     });
@@ -65,13 +69,13 @@ test.describe('Language Settings', () => {
 
   test('switches between English and Finnish and persists the choice', async ({ page }) => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.locator('app-navbar')).toContainText('Weather');
+    await expect(page.getByRole('button', { name: 'Explore', exact: true })).toBeVisible();
 
     await page.getByTestId('language-fi').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'fi');
-    await expect(page.locator('app-navbar')).toContainText('Sää');
-    await expect(page.locator('app-navbar')).toContainText('Sähkö');
+    await expect(page.getByRole('button', { name: 'Tutustu', exact: true })).toBeVisible();
+    await expect(page.locator('app-home app-page-directory')).toContainText('Sähkö');
     await expect(page.locator('app-footer')).toContainText('Kolmansien osapuolten ilmoitukset');
 
     // Verify Finnish copy on a detail page
@@ -83,12 +87,12 @@ test.describe('Language Settings', () => {
     await page.reload();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'fi');
-    await expect(page.locator('app-navbar')).toContainText('Sää');
+    await expect(page.getByRole('button', { name: 'Tutustu', exact: true })).toBeVisible();
 
     await page.getByTestId('language-en').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.locator('app-navbar')).toContainText('Weather');
+    await expect(page.getByRole('button', { name: 'Explore', exact: true })).toBeVisible();
   });
 });
 
