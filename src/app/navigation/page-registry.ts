@@ -93,6 +93,16 @@ export const SITE_PAGES: readonly SitePage[] = [
     group: 'experiments',
     loadComponent: () => import('../pages/sorting.component').then((m) => m.SortingPageComponent),
   },
+  {
+    path: 'searching',
+    title: 'Searching Algorithms · Jani Heikkinen',
+    labelKey: 'algorithms.searching',
+    descriptionKey: 'explore.searchingDescription',
+    keywordsKey: 'explore.searchingKeywords',
+    group: 'experiments',
+    loadComponent: () =>
+      import('../pages/searching.component').then((m) => m.SearchingPageComponent),
+  },
 ];
 
 export function findPageGroups(query: string, translate: (key: TranslationKey) => string) {

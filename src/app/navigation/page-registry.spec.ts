@@ -41,5 +41,8 @@ describe('Page registry', () => {
     expect(findPageGroups('LÄMPÖTILA', (key) => FI_TRANSLATIONS[key])[0].pages[0].path).toBe(
       'weather',
     );
+    expect(findPageGroups('binary search', en)[0].pages.map((page) => page.path)).toContain(
+      'searching',
+    );
   });
 });
