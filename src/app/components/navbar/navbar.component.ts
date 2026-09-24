@@ -126,6 +126,7 @@ export class NavbarComponent implements AfterViewInit, OnDestroy {
     { labelKey: 'nav.ascii', route: '/ascii' },
     { labelKey: 'nav.snake', route: '/snake' },
     { labelKey: 'nav.pet', route: '/pet' },
+    { labelKey: 'nav.sorting', route: '/sorting' },
   ] as const;
 
   private resizeObserver: ResizeObserver | undefined;

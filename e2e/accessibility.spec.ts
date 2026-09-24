@@ -9,6 +9,7 @@ import { expectSectionOrError } from './helpers';
  * asserts either a known success element or the error fallback.
  */
 const PAGES = [
+  { path: '/sorting', name: 'Sorting', waitSection: null },
   { path: '/', name: 'Home', waitSection: null },
   { path: '/weather', name: 'Weather', waitSection: '24-Hour Forecast' },
   { path: '/electricity', name: 'Electricity', waitSection: 'Current Price' },
