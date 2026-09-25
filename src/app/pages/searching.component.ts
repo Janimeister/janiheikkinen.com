@@ -46,7 +46,7 @@ import { VisualizerNavComponent } from '../visualization/visualizer-nav.componen
               #sizeControl
               id="size"
               type="range"
-              min="5"
+              min="1"
               [max]="maxSize"
               [value]="size()"
               aria-describedby="size-help"
@@ -136,6 +136,7 @@ import { VisualizerNavComponent } from '../visualization/visualizer-nav.componen
             <div
               class="bar"
               [class.checked]="checked().has($index)"
+              [class.search-range]="$index >= low() && $index <= high()"
               [class.outside]="isEliminated($index)"
               [class.current]="current() === $index"
               [class.midpoint]="midpoint() === $index"
@@ -193,7 +194,12 @@ import { VisualizerNavComponent } from '../visualization/visualizer-nav.componen
             {{ i18n.t('searching.space') }}: {{ algorithm().space }}
           </p>
           <p class="mt-2 text-sm text-text-secondary">{{ i18n.t(algorithm().requirements[0]) }}</p>
-          <div class="overflow-x-auto mt-6">
+          <div
+            class="overflow-x-auto mt-6"
+            tabindex="0"
+            role="region"
+            [attr.aria-label]="i18n.t('searching.complexity')"
+          >
             <table class="w-full text-left text-sm">
               <caption class="text-left font-bold text-lg mb-3">
                 {{
@@ -269,11 +275,14 @@ import { VisualizerNavComponent } from '../visualization/visualizer-nav.componen
       border: 2px solid var(--color-ink);
       position: relative;
     }
+    .bar.search-range {
+      outline: 2px dashed var(--color-ink);
+      outline-offset: -4px;
+    }
     .bar.checked {
       background: repeating-linear-gradient(135deg, var(--color-pop-pink) 0 7px, #ffe0f7 7px 10px);
     }
     .bar.outside {
-      opacity: 0.35;
       background: repeating-linear-gradient(45deg, #85857d 0 4px, var(--color-bg-card) 4px 8px);
     }
     .bar.current {
@@ -396,7 +405,7 @@ export class SearchingPageComponent implements OnDestroy {
 
   changeSize(value: number): void {
     if (!Number.isFinite(value)) return;
-    this.size.set(Math.max(5, Math.min(this.maxSize, Math.round(value))));
+    this.size.set(Math.max(1, Math.min(this.maxSize, Math.round(value))));
     this.generate();
   }
 
@@ -450,10 +459,7 @@ export class SearchingPageComponent implements OnDestroy {
   }
 
   isEliminated(index: number): boolean {
-    return (
-      this.eliminated().has(index) ||
-      (this.algorithm().id === 'binary' && (index < this.low() || index > this.high()))
-    );
+    return this.foundIndex() !== index && this.eliminated().has(index);
   }
 
   barTitle(index: number, value: number): string {
@@ -485,7 +491,11 @@ export class SearchingPageComponent implements OnDestroy {
       this.eliminated.update((items) => new Set([...items, ...step.indices]));
     } else if (step.type === 'found') {
       this.foundIndex.set(step.index);
-      this.current.set(step.index);
+      this.current.set(null);
+      this.midpoint.set(null);
+    } else if (step.type === 'notFound') {
+      this.current.set(null);
+      this.midpoint.set(null);
     }
   }
 

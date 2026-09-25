@@ -452,7 +452,10 @@ export class PathfindingPageComponent implements OnDestroy {
     this.playback.configure(
       () => this.algorithm().findPath(this.createInput()),
       (event) => this.applyStep(event),
-      (result) => this.result.set(result),
+      (result) => {
+        this.result.set(result);
+        this.current.set(null);
+      },
     );
   }
 
@@ -508,7 +511,10 @@ export class PathfindingPageComponent implements OnDestroy {
 
   generateLayout(): void {
     this.resetRun();
-    this.terrain.set(exampleTerrain(this.rows, this.columns));
+    const terrain = exampleTerrain(this.rows, this.columns);
+    terrain[this.start()] = 'normal';
+    terrain[this.destination()] = 'normal';
+    this.terrain.set(terrain);
   }
 
   resetRun(): void {
@@ -558,11 +564,11 @@ export class PathfindingPageComponent implements OnDestroy {
     };
     const delta = directions[event.key];
     if (delta === undefined) return;
+    event.preventDefault();
     const target = index + delta;
     if (target < 0 || target >= this.rows * this.columns) return;
     if (event.key === 'ArrowLeft' && index % this.columns === 0) return;
     if (event.key === 'ArrowRight' && index % this.columns === this.columns - 1) return;
-    event.preventDefault();
     this.focusedCell.set(target);
     const board = (event.currentTarget as HTMLElement).parentElement;
     board?.querySelector<HTMLButtonElement>(`[data-cell="${target}"]`)?.focus();

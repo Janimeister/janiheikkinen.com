@@ -84,4 +84,56 @@ describe('Pathfinding grid and playback', () => {
     page.editCell(page.start());
     expect(page.destination()).toBe(page.start());
   });
+  it('keeps relocated endpoints open when reloading the example layout', () => {
+    const page = TestBed.createComponent(PathfindingPageComponent).componentInstance;
+    page.setTool('start');
+    page.editCell(60);
+    page.setTool('destination');
+    page.editCell(61);
+    page.generateLayout();
+    expect(page.terrain()[60]).toBe('normal');
+    expect(page.terrain()[61]).toBe('normal');
+    page.selectAlgorithm('dijkstra');
+    page.changeSpeed(100);
+    page.toggle();
+    vi.runAllTimers();
+    expect(page.result()).toMatchObject({ found: true, path: [60, 61], cost: 1 });
+  });
+
+  it('can remove a blocking wall and rerun without stale results', () => {
+    const page = TestBed.createComponent(PathfindingPageComponent).componentInstance;
+    page.clearGrid();
+    page.setTool('wall');
+    for (const index of [1, 12, 14, 25]) page.editCell(index);
+    page.changeSpeed(100);
+    page.toggle();
+    vi.runAllTimers();
+    expect(page.result()?.found).toBe(false);
+    page.editCell(14);
+    expect(page.result()).toBeNull();
+    page.toggle();
+    vi.runAllTimers();
+    expect(page.result()?.found).toBe(true);
+    expect(page.current()).toBeNull();
+  });
+
+  it('pauses and resets without losing terrain, and destroys every timer', () => {
+    const fixture = TestBed.createComponent(PathfindingPageComponent);
+    const page = fixture.componentInstance;
+    const terrain = page.terrain();
+    page.toggle();
+    vi.advanceTimersByTime(120);
+    page.toggle();
+    const visited = page.nodesVisited();
+    vi.advanceTimersByTime(1000);
+    expect(page.nodesVisited()).toBe(visited);
+    expect(vi.getTimerCount()).toBe(0);
+    page.toggle();
+    page.resetRun();
+    expect(page.terrain()).toEqual(terrain);
+    expect(vi.getTimerCount()).toBe(0);
+    page.toggle();
+    fixture.destroy();
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });

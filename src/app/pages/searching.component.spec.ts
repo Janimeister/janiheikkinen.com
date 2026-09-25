@@ -80,4 +80,43 @@ describe('Searching playback', () => {
     expect(page.elapsedMs()).toBe(0);
     expect(page.comparisons()).toBe(0);
   });
+  it('supports single-item data and keeps a found target visibly distinct', () => {
+    const fixture = TestBed.createComponent(SearchingPageComponent);
+    const page = fixture.componentInstance;
+    page.changeSize(1);
+    expect(page.values()).toHaveLength(1);
+    page.selectAlgorithm('binary');
+    page.setTarget(page.values()[0]);
+    page.toggle();
+    vi.runAllTimers();
+    fixture.detectChanges();
+    expect(page.result()).toEqual({ found: true, index: 0 });
+    expect(page.isEliminated(0)).toBe(false);
+    const bar: HTMLElement = fixture.nativeElement.querySelector('.bar');
+    expect(bar.classList.contains('found')).toBe(true);
+    expect(bar.classList.contains('outside')).toBe(false);
+    expect(bar.textContent).toContain('✓');
+    expect(bar.textContent).not.toContain('M');
+    page.chooseMissingTarget();
+    page.toggle();
+    vi.runAllTimers();
+    expect(page.result()?.found).toBe(false);
+    expect(page.current()).toBeNull();
+    expect(page.midpoint()).toBeNull();
+  });
+
+  it('cancels timers on target changes, regeneration, and component destruction', () => {
+    const fixture = TestBed.createComponent(SearchingPageComponent);
+    const page = fixture.componentInstance;
+    for (const change of [() => page.setTarget(5), () => page.generate()]) {
+      page.toggle();
+      vi.advanceTimersByTime(80);
+      change();
+      expect(vi.getTimerCount()).toBe(0);
+      expect(page.comparisons()).toBe(0);
+    }
+    page.toggle();
+    fixture.destroy();
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });
