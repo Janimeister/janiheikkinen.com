@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './visualizer-fixture';
 
 test.describe('Pathfinding visualizer', () => {
   test.beforeEach(async ({ page }) => {
@@ -25,6 +25,7 @@ test.describe('Pathfinding visualizer', () => {
     await page.goto('/pathfinding');
     await page.getByLabel('Algorithm', { exact: true }).selectOption('astar');
     await page.getByRole('slider', { name: /^Speed:/ }).press('End');
+    await page.getByRole('button', { name: 'Clear grid', exact: true }).click();
     await page.getByRole('button', { name: 'Toggle wall', exact: true }).click();
     for (let row = 0; row < 10; row++) {
       await page.locator(`[data-cell="${row * 12 + 6}"]`).click();

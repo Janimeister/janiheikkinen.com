@@ -3,6 +3,8 @@ import {
   aStarSearch,
   breadthFirstSearch,
   dijkstraSearch,
+  gridNeighbours,
+  terrainCost,
   PATHFINDING_ALGORITHMS,
   type PathfindingInput,
   type PathResult,
@@ -77,6 +79,7 @@ describe('Weighted pathfinding', () => {
     expect(unweighted.cost).toBe(41);
     expect(weighted.path.length - 1).toBeGreaterThan(unweighted.path.length - 1);
     expect(weighted.cost).toBeLessThan(unweighted.cost!);
+    expect(weighted.cost).toBe(8);
   });
 
   it('A* matches Dijkstra optimal cost with weights and walls', () => {
@@ -104,6 +107,66 @@ describe('Weighted pathfinding', () => {
       expect(algorithm.category).toBe('pathfinding');
       expect(algorithm.descriptionKey).toContain('pathfinding.');
       expect(algorithm.requirements).toHaveLength(1);
+    }
+  });
+});
+
+// An independent Bellman-Ford oracle checks optimal costs, not a particular tie-broken path.
+describe('Pathfinding edge cases and optimality', () => {
+  for (const algorithm of PATHFINDING_ALGORITHMS) {
+    it(`${algorithm.id} handles equal and adjacent endpoints`, () => {
+      expect(runPath(algorithm.findPath(input(2, 3, 1, 1)))).toMatchObject({
+        found: true,
+        path: [1],
+        cost: 0,
+      });
+      expect(runPath(algorithm.findPath(input(2, 3, 1, 2)))).toMatchObject({
+        found: true,
+        path: [1, 2],
+        cost: 1,
+      });
+    });
+  }
+
+  it('matches independently relaxed costs on deterministic weighted grids', () => {
+    let seed = 731;
+    const random = () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    for (let sample = 0; sample < 20; sample++) {
+      const grid = withTerrain(input(4, 5, 0, 19), (terrain) => {
+        const choices: Terrain[] = ['normal', 'normal', 'medium', 'high', 'wall'];
+        for (let index = 1; index < 19; index++)
+          terrain[index] = choices[Math.floor(random() * choices.length)];
+      });
+      const costs = Array<number>(20).fill(Infinity);
+      costs[0] = 0;
+      for (let pass = 0; pass < 19; pass++) {
+        for (let from = 0; from < 20; from++) {
+          if (grid.terrain[from] === 'wall') continue;
+          for (const to of gridNeighbours(from, 4, 5)) {
+            if (grid.terrain[to] !== 'wall')
+              costs[to] = Math.min(costs[to], costs[from] + terrainCost(grid.terrain[to]));
+          }
+        }
+      }
+      for (const findPath of [dijkstraSearch, aStarSearch]) {
+        const result = runPath(findPath(grid));
+        expect(result.found).toBe(Number.isFinite(costs[19]));
+        expect(result.cost).toBe(Number.isFinite(costs[19]) ? costs[19] : null);
+        if (!result.found) continue;
+        expect(result.path[0]).toBe(0);
+        expect(result.path.at(-1)).toBe(19);
+        let actualCost = 0;
+        for (let index = 1; index < result.path.length; index++) {
+          const node = result.path[index];
+          expect(gridNeighbours(result.path[index - 1], 4, 5)).toContain(node);
+          expect(grid.terrain[node]).not.toBe('wall');
+          actualCost += terrainCost(grid.terrain[node]);
+        }
+        expect(actualCost).toBe(result.cost);
+      }
     }
   });
 });

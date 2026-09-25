@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './visualizer-fixture';
 import { expectBackLink } from './helpers';
 
 test.describe('Sorting', () => {

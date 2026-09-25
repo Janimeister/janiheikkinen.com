@@ -52,3 +52,11 @@ describe('Binary Search', () => {
     expect(SEARCH_ALGORITHMS[1].requirements).toContain('searching.sortedRequired');
   });
 });
+
+for (const algorithm of SEARCH_ALGORITHMS) {
+  it(`${algorithm.id} handles empty, absent singleton and duplicate inputs`, () => {
+    expect(runSearch(algorithm.search([], 1)).result).toEqual({ found: false, index: null });
+    expect(runSearch(algorithm.search([1], 2)).result).toEqual({ found: false, index: null });
+    expect(runSearch(algorithm.search([1, 1, 1], 1)).result).toEqual({ found: true, index: 0 });
+  });
+}
