@@ -41,7 +41,7 @@ export class VisualizationPlayback<Event, Result = void> {
   }
 
   startOrPause(): void {
-    if (this.status() === 'done') return;
+    if (!this.factory || this.status() === 'done') return;
     if (this.status() === 'running') {
       this.cancelTimer();
       this.stopClock();
@@ -54,7 +54,7 @@ export class VisualizationPlayback<Event, Result = void> {
   }
 
   step(): void {
-    if (this.status() === 'running' || this.status() === 'done') return;
+    if (!this.factory || this.status() === 'running' || this.status() === 'done') return;
     this.status.set('paused');
     this.advance();
   }
@@ -64,16 +64,23 @@ export class VisualizationPlayback<Event, Result = void> {
     this.stopClock();
     this.elapsedBeforeRun = 0;
     this.elapsedMs.set(0);
-    this.sequence = undefined;
+    this.closeSequence();
     this.status.set('ready');
   }
 
   destroy(): void {
     this.cancelPendingWork();
-    this.sequence = undefined;
+    this.closeSequence();
     this.factory = undefined;
     this.applyEvent = undefined;
     this.onComplete = undefined;
+    this.status.set('ready');
+  }
+
+  private closeSequence(): void {
+    // Cancelled generators do not produce a result, but their finally blocks must run.
+    this.sequence?.return(undefined as Result);
+    this.sequence = undefined;
   }
 
   private advance(): void {
