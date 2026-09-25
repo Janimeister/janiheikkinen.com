@@ -2,6 +2,21 @@
 
 Personal portfolio and dashboard site built with Angular 22, Tailwind CSS 4, and TypeScript.
 
+Live site: [janiheikkinen.com](https://janiheikkinen.com).
+
+## Getting Started
+
+Use **Node.js 24**, matching the GitHub Actions workflows, and npm. The `packageManager` field in [package.json](package.json) records the project's npm version.
+
+```bash
+git clone https://github.com/Janimeister/janiheikkinen.com.git
+cd janiheikkinen.com
+npm ci
+npm start
+```
+
+Open `http://localhost:4200/`. The development server automatically uses [proxy.conf.json](proxy.conf.json) for electricity API requests; no local API key is needed.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -84,6 +99,7 @@ Static UI copy is translated in the app. External content such as GitHub reposit
 | Weather | [Open-Meteo](https://open-meteo.com) | Free, no key required |
 | Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Dev: proxied via `proxy.conf.json`; Prod: routed through a Cloudflare Worker (`porssisahko-proxy.janimeister.workers.dev`) |
 | GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
+| Home | [Cat Facts](https://catfact.ninja) | Random cat fact in the hero section |
 
 ## ASCII Art Page
 
@@ -150,7 +166,7 @@ Open `http://localhost:4200/` in your browser. The app reloads automatically on 
 npx ng build
 ```
 
-Build artifacts are written to the `dist/` directory.
+Production browser assets are written to `dist/janiheikkinen-com/browser/`. A local production build uses the Worker URL in [src/environments/environment.prod.ts](src/environments/environment.prod.ts).
 
 ### Watch mode (development build)
 
@@ -174,20 +190,34 @@ npm run test:watch
 
 ### End-to-end tests
 
-Playwright tests cover navigation, page structure, and API data loading:
+Install the browser binaries and required system libraries once, then run the suite:
 
 ```bash
+npx playwright install --with-deps
 npx playwright test
 ```
 
-Tests run against a local dev server that Playwright starts automatically. HTML reports are written to `playwright-report/`.
+Tests cover navigation, page structure, API data loading, and the algorithm visualizers in Chromium, Firefox, and WebKit. Playwright starts the local development server automatically. HTML reports are written to `playwright-report/`.
 
 ### Accessibility tests
 
-Automated accessibility checks using axe-core scan every page against WCAG 2 AA standards:
+Automated accessibility checks using axe-core scan every page for WCAG 2.0 and 2.1 A/AA rule violations:
 
 ```bash
 npx playwright test e2e/accessibility.spec.ts
 ```
 
-These tests run as part of the full Playwright suite and validate color contrast, keyboard accessibility, ARIA attributes, and more.
+These checks run as part of the full Playwright suite. Navigation tests also exercise keyboard interaction and focus management; automated checks do not replace a manual accessibility review.
+
+## CI and Deployment
+
+[Tests](.github/workflows/test.yml) runs on pull requests to `main`, on manual dispatch, and when called by the deployment workflow. Its three jobs check the production build, Vitest unit tests, and Playwright end-to-end/accessibility tests. Failed browser runs upload the HTML report for seven days.
+
+[Deploy to GitHub Pages](.github/workflows/deploy.yml) runs on pushes to `main` or manual dispatch. It waits for all test jobs before building and deploying the site.
+
+For deployment, configure:
+
+- GitHub Pages to use **GitHub Actions** as its source.
+- A repository **variable** named `PORSSISAHKO_WORKER_URL` containing the electricity proxy's base URL, for example `https://porssisahko-proxy.janimeister.workers.dev`.
+
+The deployment build requires that variable and generates `src/environments/environment.prod.ts` from it. The Worker itself is managed outside this repository. The workflow builds with base href `/`, copies `index.html` to `404.html` for direct visits to client-side routes, and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
