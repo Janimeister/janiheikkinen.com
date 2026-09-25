@@ -109,7 +109,7 @@ test.describe('Explore navigation', () => {
   test('homepage cards expose all destinations and use normal links', async ({ page }) => {
     await page.goto('/');
     const directory = page.locator('app-home app-page-directory');
-    await expect(directory.getByRole('link')).toHaveCount(8);
+    await expect(directory.getByRole('link')).toHaveCount(10);
     await expect(directory.getByRole('heading', { level: 3 })).toHaveText([
       'Everyday',
       'Experiments',
@@ -124,7 +124,7 @@ test.describe('Explore navigation', () => {
   test('Surprise me opens a different experiment or game', async ({ page }) => {
     await page.getByRole('button', { name: 'Explore', exact: true }).click();
     await page.getByRole('button', { name: 'Surprise me', exact: true }).click();
-    await expect(page).toHaveURL(/\/(ascii|snake|pet)$/);
+    await expect(page).toHaveURL(/\/(ascii|sorting|searching|pathfinding|snake|pet)$/);
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 

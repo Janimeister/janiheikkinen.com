@@ -16,7 +16,7 @@ describe('Sorting playback', () => {
     vi.useRealTimers();
   });
 
-  it('pauses, steps, resets and completes both algorithms on the same input', () => {
+  it('pauses, steps, resets and completes all algorithms on the same input', () => {
     const page = TestBed.createComponent(SortingPageComponent).componentInstance;
     page.changeSize(5);
     const input = [...page.values()];
@@ -33,12 +33,32 @@ describe('Sorting playback', () => {
       expect(page.values()).toEqual(input);
       page.step();
       expect(page.status()).toBe('paused');
-      expect(page.comparisons()).toBe(1);
       page.toggle();
       vi.runAllTimers();
       expect(page.status()).toBe('done');
       expect(page.values()).toEqual([1, 2, 3, 4, 5]);
     }
+  });
+
+  it('shows insertion-prefix and Quick Sort pivot/partition cues as events are consumed', () => {
+    const page = TestBed.createComponent(SortingPageComponent).componentInstance;
+    page.changeSize(5);
+    page.selectAlgorithm('insertion');
+    page.step();
+    expect(page.insertionIndex()).toBe(1);
+    expect(page.prefixEnd()).toBe(0);
+    expect(page.sorted().size).toBe(0);
+    page.step();
+    expect(page.comparisons()).toBe(1);
+
+    page.selectAlgorithm('quick');
+    page.step();
+    expect(page.partition()).toEqual({ start: 0, end: 4 });
+    page.step();
+    expect(page.pivot()).toBe(4);
+    page.reset();
+    expect(page.pivot()).toBeNull();
+    expect(page.partition()).toBeNull();
   });
 
   it('measures playback across speed changes, excludes pauses and manual steps, and freezes at completion', () => {
@@ -115,5 +135,41 @@ describe('Sorting playback', () => {
     vi.advanceTimersByTime(5000);
     expect(page.elapsedMs()).toBe(stoppedTime);
     expect(page.comparisons()).toBe(0);
+  });
+  it('keeps the insertion key visible during shifts without marking a prefix final', () => {
+    const page = TestBed.createComponent(SortingPageComponent).componentInstance;
+    page.selectAlgorithm('insertion');
+    page.values.set([3, 2, 1]);
+    page.step(); // Select key 2.
+    page.step(); // Compare against held key.
+    page.step(); // Shift 3 right, move the insertion hole left.
+    expect(page.insertionIndex()).toBe(0);
+    expect(page.displayValue(0, page.values()[0])).toBe(2);
+    expect(page.shifting()).toEqual([1]);
+    expect(page.sorted().size).toBe(0);
+    page.step();
+    expect(page.finalInsertion()).toBe(0);
+    expect(page.shifting()).toEqual([]);
+    page.toggle();
+    vi.runAllTimers();
+    expect(page.values()).toEqual([1, 2, 3]);
+    expect(page.active()).toEqual([]);
+    expect(page.prefixEnd()).toBe(-1);
+  });
+
+  it('distinguishes Quick Sort swaps from comparisons and tracks the moved pivot', () => {
+    const page = TestBed.createComponent(SortingPageComponent).componentInstance;
+    page.selectAlgorithm('quick');
+    page.values.set([2, 1]);
+    page.step();
+    page.step();
+    expect(page.pivot()).toBe(1);
+    page.step();
+    expect(page.swapping()).toEqual([]);
+    page.step();
+    expect(page.swapping()).toEqual([0, 1]);
+    expect(page.pivot()).toBe(0);
+    page.reset();
+    expect(page.swapping()).toEqual([]);
   });
 });

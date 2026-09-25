@@ -6,6 +6,8 @@ import { API_TIMEOUT, expectSectionOrError, expectBackLink, expectAttribution } 
 /** Nav link labels and their expected route / page heading */
 const NAV_ROUTES = [
   { label: 'Sorting', path: '/sorting', heading: 'Sorting Algorithms' },
+  { label: 'Searching', path: '/searching', heading: 'Search Algorithms' },
+  { label: 'Pathfinding', path: '/pathfinding', heading: 'Pathfinding Algorithms' },
   { label: 'Weather', path: '/weather', heading: 'Weather Conditions' },
   { label: 'Electricity', path: '/electricity', heading: 'Electricity Prices' },
   { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
