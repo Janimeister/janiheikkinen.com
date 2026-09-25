@@ -113,18 +113,23 @@ import { VisualizerNavComponent } from '../visualization/visualizer-nav.componen
             <div
               class="bar"
               [class.comparing]="active().includes($index)"
+              [class.swapping]="swapping().includes($index)"
+              [class.prefix]="$index <= prefixEnd()"
               [class.partition]="isInPartition($index)"
               [class.pivot]="pivot() === $index"
               [class.sorted]="sorted().has($index) || status() === 'done'"
               [class.inserting]="insertionIndex() === $index"
               [class.shifting]="shifting().includes($index)"
               [class.final-insertion]="finalInsertion() === $index"
-              [style.height.%]="(value / size()) * 100"
+              [style.height.%]="(displayValue($index, value) / size()) * 100"
               [attr.data-value]="value"
               [attr.title]="barTitle($index, value)"
             >
               @if (size() <= 20) {
-                <span>{{ value }}</span>
+                <span>{{ displayValue($index, value) }}</span>
+              }
+              @if (swapping().includes($index)) {
+                <b class="swap-label">⇄</b>
               }
               @if (pivot() === $index) {
                 <b class="marker-label">P</b>
@@ -170,7 +175,12 @@ import { VisualizerNavComponent } from '../visualization/visualizer-nav.componen
             </div>
           </dl>
           <p class="text-sm text-text-secondary mt-2">{{ i18n.t('sorting.spaceHelp') }}</p>
-          <div class="overflow-x-auto mt-6">
+          <div
+            class="overflow-x-auto mt-6"
+            tabindex="0"
+            role="region"
+            [attr.aria-label]="i18n.t('sorting.complexity')"
+          >
             <table class="w-full text-left text-sm" data-testid="complexity-table">
               <caption class="text-left font-bold text-lg mb-3">
                 {{
@@ -264,6 +274,19 @@ import { VisualizerNavComponent } from '../visualization/visualizer-nav.componen
       background: var(--color-pop-pink);
       border-top: 6px solid var(--color-ink);
     }
+    .bar.swapping {
+      border-bottom: 6px double var(--color-ink);
+    }
+    .bar.prefix {
+      background: repeating-linear-gradient(0deg, var(--color-pop-sky) 0 7px, #edf5fa 7px 10px);
+    }
+    .swap-label {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 700;
+    }
     .bar.partition {
       outline: 2px dashed var(--color-ink);
       outline-offset: -4px;
@@ -346,6 +369,8 @@ export class SortingPageComponent implements OnDestroy {
   readonly elapsedMs = this.playback.elapsedMs;
   readonly values = signal<number[]>([]);
   readonly active = signal<readonly number[]>([]);
+  readonly swapping = signal<readonly number[]>([]);
+  readonly prefixEnd = signal(-1);
   readonly sorted = signal<ReadonlySet<number>>(new Set());
   readonly partition = signal<{ start: number; end: number } | null>(null);
   readonly pivot = signal<number | null>(null);
@@ -370,6 +395,13 @@ export class SortingPageComponent implements OnDestroy {
     this.playback.configure(
       () => this.algorithm().sort(this.values()),
       (event) => this.applyStep(event),
+      () => {
+        this.active.set([]);
+        this.swapping.set([]);
+        this.shifting.set([]);
+        this.finalInsertion.set(null);
+        this.prefixEnd.set(-1);
+      },
     );
     this.shuffle();
   }
@@ -405,6 +437,8 @@ export class SortingPageComponent implements OnDestroy {
     this.values.set([...this.original]);
     this.active.set([]);
     this.sorted.set(new Set());
+    this.swapping.set([]);
+    this.prefixEnd.set(-1);
     this.partition.set(null);
     this.pivot.set(null);
     this.insertionIndex.set(null);
@@ -428,21 +462,28 @@ export class SortingPageComponent implements OnDestroy {
     return range !== null && index >= range.start && index <= range.end;
   }
 
+  displayValue(index: number, value: number): number {
+    return this.insertionIndex() === index ? (this.insertionValue() ?? value) : value;
+  }
+
   barTitle(index: number, value: number): string {
     const state =
       this.pivot() === index
         ? this.i18n.t('sorting.pivotLabel')
         : this.insertionIndex() === index
           ? this.i18n.t('sorting.keyLabel')
-          : this.sorted().has(index) || this.status() === 'done'
-            ? this.i18n.t('sorting.sortedLabel')
-            : this.i18n.t('sorting.valueLabel');
-    return `${state}: ${value}`;
+          : index <= this.prefixEnd()
+            ? this.i18n.t('sorting.prefixLabel')
+            : this.sorted().has(index) || this.status() === 'done'
+              ? this.i18n.t('sorting.sortedLabel')
+              : this.i18n.t('sorting.valueLabel');
+    return `${state}: ${this.displayValue(index, value)}`;
   }
 
   private applyStep(step: SortStep): void {
-    if (step.type === 'compare') {
-      this.active.set(step.indices);
+    this.swapping.set([]);
+    if (step.type === 'compare' || step.type === 'compareInsertion') {
+      this.active.set(step.type === 'compare' ? step.indices : [step.index]);
       this.comparisons.update((count) => count + 1);
       this.shifting.set([]);
       return;
@@ -453,6 +494,7 @@ export class SortingPageComponent implements OnDestroy {
       [values[left], values[right]] = [values[right], values[left]];
       this.values.set(values);
       this.active.set(step.indices);
+      this.swapping.set(step.indices);
       this.writes.update((count) => count + 2);
       const pivot = this.pivot();
       if (pivot === left) this.pivot.set(right);
@@ -478,18 +520,25 @@ export class SortingPageComponent implements OnDestroy {
       this.insertionValue.set(step.value);
       this.finalInsertion.set(null);
       this.active.set([]);
-      this.sorted.set(new Set(Array.from({ length: step.prefixEnd + 1 }, (_, index) => index)));
+      this.shifting.set([]);
+      this.prefixEnd.set(step.prefixEnd);
+      return;
+    }
+    if (step.type === 'setPrefix') {
+      this.prefixEnd.set(step.end);
       return;
     }
     if (step.type === 'shift') {
       this.write(step.to, step.value);
       this.active.set([step.from, step.to]);
-      this.shifting.set([step.from, step.to]);
+      this.shifting.set([step.to]);
+      this.insertionIndex.set(step.from);
       return;
     }
     if (step.type === 'insert') {
       this.write(step.index, step.value);
       this.finalInsertion.set(step.index);
+      this.shifting.set([]);
       this.active.set([step.index]);
       this.insertionIndex.set(null);
       this.insertionValue.set(null);

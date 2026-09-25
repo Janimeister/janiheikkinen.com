@@ -7,6 +7,7 @@ for (const algorithm of SORTING_ALGORITHMS) {
       [],
       [1],
       [1, 2, 3],
+      [2, 2, 2, 2, 2],
       [1, 2, 3, 4, 5],
       [5, 4, 3, 2, 1],
       [3, 1, 3, -2, 0],
@@ -20,7 +21,7 @@ for (const algorithm of SORTING_ALGORITHMS) {
         const result = [...input];
         for (const step of algorithm.sort(input)) {
           const indices =
-            step.type === 'write' || step.type === 'insert'
+            step.type === 'write' || step.type === 'insert' || step.type === 'compareInsertion'
               ? [step.index]
               : step.type === 'shift'
                 ? [step.from, step.to]

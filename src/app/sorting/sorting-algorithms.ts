@@ -3,6 +3,8 @@ import type { AlgorithmMetadata, ComplexityCases } from '../visualization/algori
 /** Algorithms yield displayable events; the visualizer applies them to its own state. */
 export type SortStep =
   | { type: 'compare'; indices: readonly [number, number] }
+  | { type: 'compareInsertion'; index: number; value: number }
+  | { type: 'setPrefix'; end: number }
   | { type: 'swap'; indices: readonly [number, number] }
   | { type: 'write'; index: number; value: number }
   | { type: 'setPartition'; start: number; end: number }
@@ -48,7 +50,7 @@ export function* insertionSort(input: readonly number[]): Generator<SortStep, vo
     yield { type: 'selectInsertion', index, value, prefixEnd: index - 1 };
     let cursor = index - 1;
     while (cursor >= 0) {
-      yield { type: 'compare', indices: [cursor, index] };
+      yield { type: 'compareInsertion', index: cursor, value };
       if (values[cursor] <= value) break;
       values[cursor + 1] = values[cursor];
       yield { type: 'shift', from: cursor, to: cursor + 1, value: values[cursor] };
@@ -56,10 +58,7 @@ export function* insertionSort(input: readonly number[]): Generator<SortStep, vo
     }
     values[cursor + 1] = value;
     yield { type: 'insert', index: cursor + 1, value };
-    yield {
-      type: 'markSorted',
-      indices: Array.from({ length: index + 1 }, (_, sortedIndex) => sortedIndex),
-    };
+    yield { type: 'setPrefix', end: index };
   }
   yield { type: 'markSorted', indices: values.map((_, index) => index) };
 }
