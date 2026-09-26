@@ -15,8 +15,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: tests-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ !inputs.called-from-deploy }}
+  group: ${{ inputs['called-from-deploy'] && 'deploy-tests' || format('tests-{0}-{1}', github.event_name, github.event.pull_request.number || github.ref) }}
+  cancel-in-progress: ${{ !inputs['called-from-deploy'] }}
 
 env:
   NODE_VERSION: '24'
@@ -27,76 +27,104 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: package-lock.json
+
+      - name: Use the repository npm version
+        run: |
+          npm install --global "$(node -p 'require("./package.json").packageManager')"
+          node --version
+          npm --version
 
       - run: npm ci
 
       - name: Build
         run: npm run build
 
+
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: package-lock.json
+
+      - name: Use the repository npm version
+        run: |
+          npm install --global "$(node -p 'require("./package.json").packageManager')"
+          node --version
+          npm --version
 
       - run: npm ci
 
       - name: Run unit tests
         run: npm test
 
-  e2e:
-    name: E2E & Accessibility Tests
+  e2e-browsers:
+    name: E2E & Accessibility Tests (${{ matrix.browser }})
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: package-lock.json
 
+      - name: Use the repository npm version
+        run: |
+          npm install --global "$(node -p 'require("./package.json").packageManager')"
+          node --version
+          npm --version
+
       - run: npm ci
 
       - name: Install Playwright browsers
-        # Browsers first, without apt. `install-deps` shells out to apt-get, which
-        # stalls for the whole job budget when the runner's Ubuntu mirror is
-        # unreachable, so it is capped and non-fatal: the runner image already
-        # ships nearly all of the required shared libraries.
-        run: |
-          npx playwright install
-          timeout 5m npx playwright install-deps \
-            || echo "::warning::playwright install-deps timed out or failed; falling back to runner image libraries"
+        run: bash scripts/install-playwright.sh ${{ matrix.browser }}
 
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --project=${{ matrix.browser }}
 
       - name: Upload test report
-        if: failure()
-        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           if-no-files-found: ignore
           retention-days: 7
+
+  e2e:
+    name: E2E & Accessibility Tests
+    needs: e2e-browsers
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every browser to pass
+        env:
+          BROWSER_RESULT: ${{ needs.e2e-browsers.result }}
+        run: test "$BROWSER_RESULT" = success
