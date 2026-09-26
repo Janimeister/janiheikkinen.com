@@ -8,7 +8,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
-    "test:watch": "ng test"
+    "test:watch": "ng test",
+    "test:production": "playwright test --config=playwright.production.config.ts"
   },
   "private": true,
   "packageManager": "npm@11.19.0",

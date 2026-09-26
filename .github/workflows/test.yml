@@ -48,6 +48,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Add SPA fallback to the production build
+        run: cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
+
+      - name: Install Chromium for the production smoke test
+        run: bash scripts/install-playwright.sh chromium
+
+      - name: Smoke test the Pages artifact
+        run: npm run test:production
+
+      - name: Upload production smoke report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: production-smoke-build
+          path: playwright-production-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
 
   unit:
     name: Unit Tests

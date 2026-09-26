@@ -73,6 +73,21 @@ jobs:
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
 
+      - name: Install Chromium for the production smoke test
+        run: bash scripts/install-playwright.sh chromium
+
+      - name: Smoke test the Pages artifact
+        run: npm run test:production
+
+      - name: Upload production smoke report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: production-smoke-deploy
+          path: playwright-production-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
