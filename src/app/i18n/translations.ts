@@ -141,10 +141,10 @@ export const EN_TRANSLATIONS = {
   'searching.linearDescription':
     'Check values from left to right until the target is found or the list ends. It also works on unsorted data, though it may inspect every value.',
   'searching.binaryDescription':
-    'Compare with the middle value and discard half of the remaining range each time. This iterative version uses constant extra space and needs sorted input.',
+    'Compare with the middle value and discard half of the remaining range each time. The underlying iterative search needs sorted input, uses O(log n) inspections and keeps O(1) search state. For the animation, this generator also allocates arrays of eliminated indices, making event generation O(n) work and O(n) extra space in the worst case.',
   'searching.unsortedAllowed': 'Works on unsorted data; time O(n), space O(1).',
   'searching.sortedRequired':
-    'Requires sorted data; time O(log n), space O(1) for this iterative version.',
+    'Requires sorted data. The time and space shown describe the underlying search, excluding animation event generation.',
   'searching.ready': 'Ready',
   'searching.running': 'Searching…',
   'searching.paused': 'Paused',
@@ -658,10 +658,10 @@ export const FI_TRANSLATIONS = {
   'searching.linearDescription':
     'Tarkista luvut vasemmalta oikealle, kunnes kohde löytyy tai lista loppuu. Toimii myös lajittelemattomalla datalla, mutta voi tarkistaa jokaisen luvun.',
   'searching.binaryDescription':
-    'Vertaa keskimmäiseen lukuun ja hylkää puolet jäljellä olevasta alueesta kerrallaan. Tämä iteroiva versio käyttää vakion lisätilaa ja vaatii järjestetyn listan.',
+    'Vertaa keskimmäiseen lukuun ja hylkää puolet jäljellä olevasta alueesta kerrallaan. Varsinainen iteroiva haku vaatii järjestetyn syötteen, tekee O(log n) tarkistusta ja käyttää O(1) tilaa hakutilan ylläpitoon. Animaatiota varten generaattori luo lisäksi taulukoita hylätyistä indekseistä, joten animaatiotapahtumien tuottaminen vaatii pahimmillaan O(n) työtä ja O(n) lisätilaa.',
   'searching.unsortedAllowed': 'Toimii järjestämättömällä datalla; aika O(n), tila O(1).',
   'searching.sortedRequired':
-    'Vaatii järjestetyn datan; aika O(log n), tila O(1) tässä iteroivassa versiossa.',
+    'Vaatii järjestetyn datan. Esitetyt aika- ja tilavaativuudet kuvaavat varsinaista hakua ilman animaatiotapahtumien tuottamista.',
   'searching.ready': 'Valmis aloittamaan',
   'searching.running': 'Etsitään…',
   'searching.paused': 'Keskeytetty',
