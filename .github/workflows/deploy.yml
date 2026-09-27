@@ -32,15 +32,21 @@ jobs:
     env:
       PORSSISAHKO_WORKER_URL: ${{ vars.PORSSISAHKO_WORKER_URL }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: package-lock.json
+
+      - name: Use the repository npm version
+        run: |
+          npm install --global "$(node -p 'require("./package.json").packageManager')"
+          node --version
+          npm --version
 
       - run: npm ci
 
@@ -67,9 +73,24 @@ jobs:
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
 
-      - uses: actions/configure-pages@v6
+      - name: Install Chromium for the production smoke test
+        run: bash scripts/install-playwright.sh chromium
 
-      - uses: actions/upload-pages-artifact@v5
+      - name: Smoke test the Pages artifact
+        run: npm run test:production
+
+      - name: Upload production smoke report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: production-smoke-deploy
+          path: playwright-production-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist/janiheikkinen-com/browser
 
@@ -86,4 +107,4 @@ jobs:
       id-token: write
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
