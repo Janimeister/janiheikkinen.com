@@ -761,6 +761,18 @@ SOFTWARE.
 - **License:** MIT (open-source project)
 - **Notes:** Free public API providing random cat facts. See https://github.com/alexwohlbruck/cat-facts for the source repository.
 
+### HSL open data (Helsinki Region Transport / Digitransit)
+- **URL:** https://www.hsl.fi/en/hsl/open-data
+- **Usage:** Tram routes, route shapes and stop names and locations for the `/trams` map, taken from the HSL GTFS feed (https://infopalvelut.storage.hsldev.com/gtfs/hsl.zip) at build time and stored in `public/data/helsinki-trams.json`
+- **License:** [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
+- **Attribution:** © HSL / Digitransit
+
+### OpenStreetMap
+- **URL:** https://www.openstreetmap.org
+- **Usage:** Coastline, lakes, parks and place names for the `/trams` map, taken from the Overpass API (or the land polygons from https://osmdata.openstreetmap.de) at build time, simplified and stored in `public/data/helsinki-trams.json`
+- **License:** [Open Data Commons Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/)
+- **Attribution:** © OpenStreetMap contributors (https://www.openstreetmap.org/copyright)
+
 ---
 
 ## Fonts
@@ -779,4 +791,4 @@ SOFTWARE.
 
 ---
 
-*This file was last updated: August 2026*
+*This file was last updated: September 2026*

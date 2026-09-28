@@ -39,6 +39,7 @@ src/app/
 │   ├── home.component.ts        # Landing page
 │   ├── weather.component.ts     # Weather data (Open-Meteo API)
 │   ├── electricity.component.ts # Electricity prices (api.porssisahko.net)
+│   ├── trams.component.ts       # ASCII map of Helsinki's tram network
 │   ├── github.component.ts      # GitHub activity (GitHub REST API)
 │   ├── ascii.component.ts       # Procedural ASCII art generator
 │   ├── snake.component.ts       # Classic Snake game
@@ -58,6 +59,7 @@ src/app/
 ├── sorting/                  # Sorting algorithms, metadata and event generators
 ├── searching/                # Search algorithms and event generators
 ├── pathfinding/              # Weighted grid algorithms and event generators
+├── trams/                    # Tram map grid, ASCII rasteriser and map data types
 ├── visualization/            # Shared playback, metadata types and category nav
 ├── i18n/                    # Signal-based runtime translations
 ├── app.routes.ts            # Route definitions
@@ -100,6 +102,15 @@ Static UI copy is translated in the app. External content such as GitHub reposit
 | Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Dev: proxied via `proxy.conf.json`; Prod: routed through a Cloudflare Worker (`porssisahko-proxy.janimeister.workers.dev`) |
 | GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
 | Home | [Cat Facts](https://catfact.ninja) | Random cat fact in the hero section |
+| Trams | [HSL GTFS](https://www.hsl.fi/en/hsl/open-data) and [OpenStreetMap](https://www.openstreetmap.org) | Build time only, via `scripts/build-tram-map.mjs`; the page reads the committed `public/data/helsinki-trams.json` |
+
+## Tram Map Page
+
+The `/trams` page draws Helsinki's tram network in ASCII, following [docs/tram-tracker-plan.md](docs/tram-tracker-plan.md). This first milestone is the static map; live positions from HSL's HFP feed come next.
+
+- **Grid.** One character is 0.001° × 0.001° (about 55 m × 111 m in Helsinki), which matches a monospace cell's 1 : 2 shape, so there is no projection. The views are *City centre* (140 × 67), *Whole network* (0.0015° cells, 128 × 48) and *Compact* (60 × 40, the default on narrow screens, which scrolls sideways). The font size is fitted to the card from a measured character width.
+- **Layers.** Parks (`,`), sea and lakes (`~`), tracks filled with each line's colour (ink where several lines share a track, `+` where lines cross), stops (`o`) and district labels placed on free cells. Pure ASCII is the default because the web font's Google Fonts subsets have no box-drawing glyphs; the **Unicode** toggle switches to `─ │ ╱ ╲ ┼`.
+- **Map data.** `node scripts/build-tram-map.mjs` downloads the HSL GTFS feed (tram routes are `route_type` 0, which leaves out line 15; `stop_times.txt` is never unzipped), keeps the busiest shape per line plus any branches the other shapes add, and fetches coastline, lakes, parks and place names from Overpass with retries across mirrors. If Overpass is down it falls back to the osmdata.openstreetmap.de land polygons (sea only). Geometry is simplified to 10 m and rounded to 5 decimals. Downloads are cached in `.cache/tram-map/`; use `--refresh` to fetch again. Set `NODE_USE_ENV_PROXY=1` behind a proxy. Re-run it when the network changes, and commit the JSON.
 
 ## ASCII Art Page
 

@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test';
 for (const route of [
   { path: '/', status: 200, selector: 'app-hero h1', text: 'Jani Heikkinen' },
   { path: '/third-party-notices', status: 404, selector: 'h1', text: 'Third-Party Notices' },
+  // The committed map asset must ship with the build; live trams are never required.
+  { path: '/trams', status: 404, selector: '[data-testid="tram-map"]', text: 'KALLIO' },
 ]) {
   test(`Pages artifact boots at ${route.path}`, async ({ page, baseURL }) => {
     const errors: string[] = [];

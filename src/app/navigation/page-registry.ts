@@ -49,6 +49,15 @@ export const SITE_PAGES: readonly SitePage[] = [
       import('../pages/electricity.component').then((m) => m.ElectricityPageComponent),
   },
   {
+    path: 'trams',
+    title: 'Tram Map · Jani Heikkinen',
+    labelKey: 'trams.title',
+    descriptionKey: 'explore.tramsDescription',
+    keywordsKey: 'explore.tramsKeywords',
+    group: 'everyday',
+    loadComponent: () => import('../pages/trams.component').then((m) => m.TramsPageComponent),
+  },
+  {
     path: 'github',
     title: 'GitHub Profile · Jani Heikkinen',
     labelKey: 'github.title',

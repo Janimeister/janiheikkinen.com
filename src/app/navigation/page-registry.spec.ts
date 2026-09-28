@@ -37,6 +37,7 @@ describe('Page registry', () => {
     expect(findPageGroups('Everyday', en)[0].pages.map((page) => page.path)).toEqual([
       'weather',
       'electricity',
+      'trams',
     ]);
     expect(findPageGroups('LÄMPÖTILA', (key) => FI_TRANSLATIONS[key])[0].pages[0].path).toBe(
       'weather',

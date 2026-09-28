@@ -25,6 +25,21 @@
   --color-data-orange: #a85100;
   --color-data-orange-deep: #9c4a00;
   --color-data-blue: #1864ab;
+  /* Tram line fills for /trams, always with ink text (all ≥7.7:1 with ink) */
+  --color-line-1: #ffd43b;
+  --color-line-2: #ff90e8;
+  --color-line-3: #a8e84a;
+  --color-line-4: #74c0fc;
+  --color-line-5: #ffa94d;
+  --color-line-6: #b197fc;
+  --color-line-7: #63e6be;
+  --color-line-8: #ffa8a8;
+  --color-line-9: #e599f7;
+  --color-line-10: #91a7ff;
+  --color-line-11: #99e9f2;
+  --color-line-12: #fcc2d7;
+  --color-line-13: #8ce99a;
+  --color-line-h: #dee2e6;
 
   --font-display: "Archivo Black", "Space Grotesk", system-ui, sans-serif;
   --font-sans: "Space Grotesk", system-ui, sans-serif;
