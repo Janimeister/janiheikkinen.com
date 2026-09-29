@@ -5,7 +5,9 @@ map and the vehicles are drawn in ASCII. It gets its data from the Digitransit /
 **High-frequency positioning (HFP)** MQTT API and is limited to the Helsinki city tram network.
 Raide-Jokeri (line 15) is left out.
 
-> Status: plan only. Nothing is implemented yet.
+> Status: milestones 1 (static map) and 2 (live trams) are implemented. The live feed was
+> rechecked on **29 Sep 2026 at about 07:50 Helsinki time** (weekday morning peak) in Chromium,
+> with the site's own MQTT client (§6).
 >
 > The API facts below come from the official HFP documentation
 > ([source in HSLdevcom/digitransit-site](https://github.com/HSLdevcom/digitransit-site/blob/master/src/pages/en/developers/apis/5-realtime-api/vehicle-positions/high-frequency-positioning/index.md)).
@@ -89,8 +91,8 @@ From GTFS, cross-checked against live `route` values.
 | 1 … 10 | `1001` … `1010` | `1001H6` (desi `1H`) |
 | 11, 12 | `1011`, `1012` | Crown Bridges (Kruunusillat). In the timetable from **9 Nov 2026**, not running yet. |
 | 13 | `1013` | |
-| Variants | `1001H`, `1001T`, `1005T`, `1009N`, `1010B`, … | `H` suffix = runs to or from the depot, e.g. `1004H` "Munkkiniemi – Töölöntulli" |
-| H | `100H` | `100HA3`, `100HA5`, `100HE4` (desi `H`, depot runs to Ruskeasuo) |
+| Variants | `1001H`, `1001T`, `1005T`, `1009N`, `1010B`, … | `H` suffix = runs to or from the depot, e.g. `1004H` "Munkkiniemi – Töölöntulli". Live IDs can also contain a **space**: `1004 4`, `1005 4`, `1009 6` (*measured* 29 Sep) |
+| H | `100H` | `100HA3`, `100HA5`, `100HE4`, `100HC3`, `100HI5` (desi `H`, depot runs to Ruskeasuo) |
 | ~~15~~ | `2015` | **Excluded.** GTFS `route_type` is 900 (light rail), not 0, but HFP still reports it as `tram`. |
 
 **Rules:**
@@ -237,10 +239,27 @@ Subscribing to `/hfp/v2/journey/ongoing/vp/tram/#` for 60 s delivered:
 
 **Every message arrived exactly 4 times**, with identical topic and payload. This happened
 with every filter tried (`#`, explicit `+` levels, a single route, geohash filters).
-- We don't know whether this is the HSL broker cluster or the egress proxy in the test
-  environment. **Recheck in a real browser in milestone 2.**
-- Either way, **deduplicate on `oper/veh/tst`**. It's cheap, and it's needed in case the
-  duplicates are real.
+
+**Rechecked in a browser in milestone 2 (29 Sep, morning peak): still 4×.** Chromium, running the
+site's own `mqtt-lite.ts`, counted WebSocket frames through the DevTools protocol (what the
+DevTools *Messages* tab shows):
+
+| Subscription | Frames with PUBLISH | Unique | Copies | Trams |
+| --- | --- | --- | --- | --- |
+| All levels, 15 s | 6,515 | 1,634 | 1,621 of them exactly 4× (the rest cut off at the window edges) | 108 |
+| Levels 0–3 + `vjout`, 60 s | 1,796 | 452 | every `vp` 4×, every `vjout` **once** | 97 |
+| The `/trams` page itself, 25 s | 918 | 231 | 3.97× | 64 shown |
+
+- It's one MQTT session (one `CONNACK`, one `SUBACK`), and each copy is its own well-formed
+  WebSocket frame. Copies are interleaved with other trams' messages, arriving up to ~200 ms
+  apart. `vjout` messages are **not** duplicated. A proxy wouldn't treat MQTT topics
+  differently, so this points to the broker, perhaps one delivery per path through its
+  cluster.
+- The sandbox's egress proxy was still in the path: it couldn't tunnel Chromium's own
+  WebSocket, so a local byte relay carried the socket. Checking a normal browser's DevTools
+  (`/trams` → Network → WS → Messages) would rule the proxy out completely.
+- So **deduplicate on `oper/veh/tst`** (implemented in `hfp.ts`). Copies arrive within a
+  fraction of a second, so a window of the last few thousand keys is enough.
 
 Even without the duplication, that's about 29 kB/s or 100 MB per hour at evening load. Too
 much for a phone.
@@ -256,6 +275,7 @@ departure from a stop is included.
 | --- | --- | --- |
 | All levels `…/vp/tram/#` | 72.8 / s | 112.9 kB/s |
 | Levels 0–3 only (4 filters) | 5.0 / s | **7.8 kB/s (≈ 28 MB/h, ~7 MB/h if dups aren't real)** |
+| Levels 0–3 + `vjout`, weekday morning peak (*measured* 29 Sep) | 7.5 / s | 11.6 kB/s ≈ 42 MB/h. The dups are real, so that's what a phone downloads |
 | Single line `…/vp/tram/+/+/1004/#` | 5.7 / s | 8.8 kB/s |
 
 The *measured* level distribution for trams matches the docs:
@@ -275,6 +295,8 @@ The *measured* level distribution for trams matches the docs:
 /hfp/v2/journey/ongoing/vjout/tram/#
 ```
 - `vjout` means the vehicle signed off the journey, so we can remove it immediately.
+- Raide-Jokeri can't be filtered out by the broker, and it's a big share: **26 %** of the unique
+  level 0–3 messages at morning peak. The client drops it.
 - **Line filter active:** put the `route_id` in the filter, e.g.
   `/hfp/v2/journey/ongoing/vp/tram/+/+/1004/+/+/+/+/3/#`. That's one filter per line and
   level; MQTT allows many in one `SUBSCRIBE`. Base `route_id`s don't match variant IDs like
@@ -401,14 +423,13 @@ Each milestone is a separately shippable PR.
 | Is line 13 a tram in HFP? | Yes, `1013`, seen live. |
 | Can we cut bandwidth? | Yes. The geohash level 0–3 filter cuts it ~14× and matches the grid. |
 | Deadruns? | They need authorisation, so they're dropped. `H` depot journeys are visible as normal journeys. |
+| 4× duplicate delivery? | Still there in a browser (milestone 2, §6). Only `vp` is duplicated, not `vjout`, which points to the broker. Deduplicated. |
 
 **Still open**
-- **4× duplicate delivery.** Is it the broker or the test proxy? Check it in a browser's
-  DevTools during milestone 2. Deduplicate regardless.
 - **Overpass availability.** It was overloaded during the check. The generator needs
   retries, mirrors and a land-polygon fallback.
-- **Peak-hour load.** Measured in the evening with about 76 trams. Remeasure at weekday peak;
-  expect roughly 1.5×.
+- **Peak-hour load.** Weekday morning peak (29 Sep, 07:50) had 108 vehicles including line 15,
+  and 7.5 unique level 0–3 fixes per second, 1.5× the evening. Done unless it grows further.
 - **Lines 11 and 12.** They start on 9 Nov 2026. Confirm they appear in HFP as `tram` with
   `1011`/`1012`.
 - **Unicode box-drawing vs pure ASCII.** Decide during milestone 1, or offer a toggle.

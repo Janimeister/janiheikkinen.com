@@ -59,7 +59,7 @@ src/app/
 ├── sorting/                  # Sorting algorithms, metadata and event generators
 ├── searching/                # Search algorithms and event generators
 ├── pathfinding/              # Weighted grid algorithms and event generators
-├── trams/                    # Tram map grid, ASCII rasteriser and map data types
+├── trams/                    # Tram map grid, ASCII rasteriser, MQTT client, HFP parsing and live feed
 ├── visualization/            # Shared playback, metadata types and category nav
 ├── i18n/                    # Signal-based runtime translations
 ├── app.routes.ts            # Route definitions
@@ -103,13 +103,16 @@ Static UI copy is translated in the app. External content such as GitHub reposit
 | GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
 | Home | [Cat Facts](https://catfact.ninja) | Random cat fact in the hero section |
 | Trams | [HSL GTFS](https://www.hsl.fi/en/hsl/open-data) and [OpenStreetMap](https://www.openstreetmap.org) | Build time only, via `scripts/build-tram-map.mjs`; the page reads the committed `public/data/helsinki-trams.json` |
+| Trams (live) | [HSL High-frequency positioning](https://github.com/HSLdevcom/digitransit-site/blob/master/src/pages/en/developers/apis/5-realtime-api/vehicle-positions/high-frequency-positioning/index.md) | MQTT over WebSocket, `wss://mqtt.hsl.fi`, no key; the browser connects directly |
 
 ## Tram Map Page
 
-The `/trams` page draws Helsinki's tram network in ASCII, following [docs/tram-tracker-plan.md](docs/tram-tracker-plan.md). This first milestone is the static map; live positions from HSL's HFP feed come next.
+The `/trams` page draws Helsinki's tram network and its trams live in ASCII, following [docs/tram-tracker-plan.md](docs/tram-tracker-plan.md). Milestones 1 (static map) and 2 (live trams) are done; filters, selection details and smooth mode come next.
 
 - **Grid.** One character is 0.001° × 0.001° (about 55 m × 111 m in Helsinki), which matches a monospace cell's 1 : 2 shape, so there is no projection. The views are *City centre* (140 × 67), *Whole network* (0.0015° cells, 128 × 48) and *Compact* (60 × 40, the default on narrow screens, which scrolls sideways). The font size is fitted to the card from a measured character width.
 - **Layers.** Parks (`,`), sea and lakes (`~`), tracks filled with each line's colour (ink where several lines share a track, `+` where lines cross), stops (`o`) and district labels placed on free cells. Pure ASCII is the default because the web font's Google Fonts subsets have no box-drawing glyphs; the **Unicode** toggle switches to `─ │ ╱ ╲ ┼`.
+- **Live trams.** `src/app/trams/mqtt-lite.ts` is a small MQTT 3.1.1 client over WebSocket (CONNECT, SUBSCRIBE, QoS 0 PUBLISH, pings), so there's no MQTT dependency. The page subscribes only to HFP geohash levels 0–3, which fire when a tram enters another 0.001° cell, i.e. another character, cutting traffic about 14× compared with every position. The broker delivers every position four times, so messages are deduplicated on vehicle and timestamp; Raide-Jokeri (line 15), missing positions and trams outside the map are dropped. `TramFeedService` reconnects with backoff (1 s → 30 s), disconnects while the tab is hidden or the browser is offline, dims trams after 3 minutes without an update and drops them after 6. Trams are drawn on a second, transparent `<pre>` over the static map: the line number on ink in the line's colour, grey for depot runs and quiet trams, `*` where labels would overlap or touch.
+- **Full screen.** The **Full screen** button opens the map over the whole viewport (and the browser's own full screen where the Fullscreen API exists; iPhone Safari gets the overlay only). The map starts fitted to the screen, `−`/`+` zoom it, and it pans by scrolling. **Exit full screen**, `Esc` or leaving the browser's full screen closes it.
 - **Map data.** `node scripts/build-tram-map.mjs` downloads the HSL GTFS feed (tram routes are `route_type` 0, which leaves out line 15; `stop_times.txt` is never unzipped), keeps the busiest shape per line plus any branches the other shapes add, and fetches coastline, lakes, parks and place names from Overpass with retries across mirrors. If Overpass is down it falls back to the osmdata.openstreetmap.de land polygons (sea only). Geometry is simplified to 10 m and rounded to 5 decimals. Downloads are cached in `.cache/tram-map/`; use `--refresh` to fetch again. Set `NODE_USE_ENV_PROXY=1` behind a proxy. Re-run it when the network changes, and commit the JSON.
 
 ## ASCII Art Page
