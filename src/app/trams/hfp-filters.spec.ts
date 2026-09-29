@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { routeIdForLine, tramFilters } from './hfp-filters';
+import { ALL_LEVELS, routeIdForLine, tramFilters } from './hfp-filters';
 
 describe('HFP subscription filters', () => {
   it('subscribes to geohash levels 0–3 and sign-offs by default', () => {
@@ -25,6 +25,17 @@ describe('HFP subscription filters', () => {
       '/hfp/v2/journey/ongoing/vjout/tram/#',
     ]);
     expect(tramFilters([2], ['1004'])[0].split('/')[9]).toBe('1004');
+  });
+
+  it('takes every level with one wildcard in smooth mode', () => {
+    expect(tramFilters(ALL_LEVELS)).toEqual([
+      '/hfp/v2/journey/ongoing/vp/tram/+/+/+/+/+/+/+/+/#',
+      '/hfp/v2/journey/ongoing/vjout/tram/#',
+    ]);
+    expect(tramFilters(ALL_LEVELS, ['1004'])).toEqual([
+      '/hfp/v2/journey/ongoing/vp/tram/+/+/1004/+/+/+/+/+/#',
+      '/hfp/v2/journey/ongoing/vjout/tram/#',
+    ]);
   });
 
   it('keeps only the sign-offs when no line is chosen', () => {

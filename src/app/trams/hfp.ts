@@ -22,6 +22,11 @@ export interface HfpTopic {
   geohashLevel: number | null;
 }
 
+export interface LatLon {
+  lat: number;
+  lon: number;
+}
+
 /** The latest known state of one tram. */
 export interface TramState {
   key: string;
@@ -47,6 +52,10 @@ export interface TramState {
   /** When the message arrived here, epoch milliseconds. */
   receivedAt: number;
   depotRun: boolean;
+  /** Cells it passed on this trip, oldest first; the feed service keeps it (see tram-motion.ts). */
+  trail?: readonly LatLon[];
+  /** The fix before this one, to interpolate from. */
+  previous?: LatLon & { tst: number };
 }
 
 export type HfpEvent =

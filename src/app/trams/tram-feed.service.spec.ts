@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { encodeRemainingLength, encodeSubscribe, encodeUnsubscribe } from './mqtt-lite';
-import { tramFilters } from './hfp-filters';
+import { ALL_LEVELS, tramFilters } from './hfp-filters';
 import {
   DROP_MS,
   FLUSH_MS,
   HFP_SOCKET_FACTORY,
   isStale,
+  SMOOTH_DROP_MS,
+  SMOOTH_STALE_MS,
+  SMOOTH_TICK_MS,
   STALE_MS,
   TICK_MS,
   TramFeedService,
@@ -182,6 +185,46 @@ describe('TramFeedService', () => {
     expect(isStale(tram, feed.now())).toBe(true);
     expect(trams()).toHaveLength(1);
     vi.advanceTimersByTime(DROP_MS - STALE_MS + FLUSH_MS);
+    expect(trams()).toEqual([]);
+  });
+
+  it('keeps a trail of the cells a tram left, and the fix before, for interpolation', () => {
+    feed.start(BOX);
+    socket().accept();
+    send(vp(648, '2026-09-29T04:53:40.000Z', { lon: 24.9605 }));
+    send(vp(648, '2026-09-29T04:53:41.000Z', { lon: 24.9609 }));
+    send(vp(648, '2026-09-29T04:53:42.000Z', { lon: 24.9612 }));
+    vi.advanceTimersByTime(FLUSH_MS);
+    const [tram] = trams();
+    // The second fix was in the same cell as the first, so the trail has one point per cell.
+    expect(tram.trail).toEqual([{ lat: 60.167548, lon: 24.9609 }]);
+    expect(tram.previous).toEqual({
+      lat: 60.167548,
+      lon: 24.9609,
+      tst: Date.parse('2026-09-29T04:53:41.000Z'),
+    });
+  });
+
+  it('switches to every position in smooth mode, with quicker staleness', () => {
+    feed.start(BOX);
+    socket().accept();
+    feed.setSmooth(true);
+    expect(feed.smooth()).toBe(true);
+    expect(socket().sent.slice(-2)).toEqual([
+      encodeSubscribe(2, tramFilters(ALL_LEVELS).slice(0, -1)),
+      encodeUnsubscribe(3, tramFilters().slice(0, -1)),
+    ]);
+    feed.setSmooth(false);
+    expect(socket().sent.at(-2)).toEqual(encodeSubscribe(4, tramFilters().slice(0, -1)));
+    feed.setSmooth(true);
+
+    send(vp(648, '2026-09-29T04:53:45.256Z'));
+    vi.advanceTimersByTime(FLUSH_MS);
+    const [tram] = trams();
+    vi.advanceTimersByTime(SMOOTH_STALE_MS + SMOOTH_TICK_MS);
+    expect(isStale(tram, feed.now(), true)).toBe(true);
+    expect(isStale(tram, feed.now())).toBe(false);
+    vi.advanceTimersByTime(SMOOTH_DROP_MS - SMOOTH_STALE_MS + FLUSH_MS);
     expect(trams()).toEqual([]);
   });
 

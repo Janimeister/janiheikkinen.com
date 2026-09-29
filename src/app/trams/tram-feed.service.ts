@@ -8,8 +8,15 @@ import {
   parseHfpMessage,
   type TramState,
 } from './hfp';
-import { CELL_CHANGE_LEVELS, HFP_BROKER_URL, routeIdForLine, tramFilters } from './hfp-filters';
+import {
+  ALL_LEVELS,
+  CELL_CHANGE_LEVELS,
+  HFP_BROKER_URL,
+  routeIdForLine,
+  tramFilters,
+} from './hfp-filters';
 import { MqttLiteClient } from './mqtt-lite';
+import { followOn } from './tram-motion';
 import type { BBox } from './tram-map.model';
 
 export type FeedStatus = 'connecting' | 'live' | 'reconnecting' | 'offline' | 'paused';
@@ -30,6 +37,10 @@ export const TICK_MS = 15_000;
  */
 export const STALE_MS = 3 * 60_000;
 export const DROP_MS = 6 * 60_000;
+/** In smooth mode every tram reports about once a second, moving or not, so silence means more. */
+export const SMOOTH_TICK_MS = 5_000;
+export const SMOOTH_STALE_MS = 15_000;
+export const SMOOTH_DROP_MS = 60_000;
 export const MIN_BACKOFF_MS = 1_000;
 export const MAX_BACKOFF_MS = 30_000;
 
@@ -49,6 +60,7 @@ export class TramFeedService {
   private readonly vehiclesSignal = signal<ReadonlyMap<string, TramState>>(new Map());
   private readonly nowSignal = signal(Date.now());
   private readonly pausedSignal = signal(false);
+  private readonly smoothSignal = signal(false);
 
   readonly status = this.statusSignal.asReadonly();
   /** Trams by `oper/veh`, published at most every {@link FLUSH_MS}. */
@@ -56,6 +68,8 @@ export class TramFeedService {
   /** The clock staleness is judged against; ticks every {@link TICK_MS}. */
   readonly now = this.nowSignal.asReadonly();
   readonly paused = this.pausedSignal.asReadonly();
+  /** Every position instead of cell changes only. See {@link setSmooth}. */
+  readonly smooth = this.smoothSignal.asReadonly();
 
   private readonly trams = new Map<string, TramState>();
   private readonly dedupe = new Deduplicator();
@@ -93,8 +107,20 @@ export class TramFeedService {
     this.bbox = bbox;
     if (this.running) return;
     this.running = true;
-    this.tickTimer = setInterval(() => this.tick(), TICK_MS);
+    this.startTicking();
     this.reconsider();
+  }
+
+  /**
+   * Smooth mode subscribes to every position, about once a second per tram, instead of only the
+   * moves into another map cell. That's ~15× the data, so it's opt-in. Trams also go stale and
+   * drop much sooner, since a working tram is never quiet for long.
+   */
+  setSmooth(smooth: boolean): void {
+    if (smooth === this.smoothSignal()) return;
+    this.smoothSignal.set(smooth);
+    this.client?.setFilters(this.filters());
+    if (this.running) this.startTicking();
   }
 
   /**
@@ -180,14 +206,20 @@ export class TramFeedService {
     }, delay);
   }
 
+  private startTicking(): void {
+    clearInterval(this.tickTimer);
+    this.tickTimer = setInterval(() => this.tick(), this.smoothSignal() ? SMOOTH_TICK_MS : TICK_MS);
+  }
+
   private filters(): string[] {
-    if (this.lines === null) return tramFilters();
+    const levels = this.smoothSignal() ? ALL_LEVELS : CELL_CHANGE_LEVELS;
+    if (this.lines === null) return tramFilters(levels);
     const routeIds = new Set<string>();
     for (const line of [...this.lines].sort(compareLines)) {
       routeIds.add(routeIdForLine(line));
       for (const id of this.routeIds.get(line) ?? []) routeIds.add(id);
     }
-    return tramFilters(CELL_CHANGE_LEVELS, [...routeIds]);
+    return tramFilters(levels, [...routeIds]);
   }
 
   private follows(tram: TramState): boolean {
@@ -219,7 +251,7 @@ export class TramFeedService {
         // Messages can overtake each other; never replace a newer fix with an older one.
         const known = this.trams.get(tram.key);
         if (known && known.tst > tram.tst) return;
-        this.trams.set(tram.key, tram);
+        this.trams.set(tram.key, known ? followOn(known, tram) : tram);
       }
     }
     this.scheduleFlush();
@@ -236,9 +268,10 @@ export class TramFeedService {
   private tick(): void {
     const now = Date.now();
     this.nowSignal.set(now);
+    const dropAfter = this.smoothSignal() ? SMOOTH_DROP_MS : DROP_MS;
     let dropped = false;
     for (const [key, tram] of this.trams) {
-      if (now - tram.receivedAt > DROP_MS) {
+      if (now - tram.receivedAt > dropAfter) {
         this.trams.delete(key);
         dropped = true;
       }
@@ -247,6 +280,6 @@ export class TramFeedService {
   }
 }
 
-export function isStale(tram: TramState, now: number): boolean {
-  return now - tram.receivedAt > STALE_MS;
+export function isStale(tram: TramState, now: number, smooth = false): boolean {
+  return now - tram.receivedAt > (smooth ? SMOOTH_STALE_MS : STALE_MS);
 }

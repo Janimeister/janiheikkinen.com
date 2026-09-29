@@ -764,6 +764,7 @@ SOFTWARE.
 ### HSL open data (Helsinki Region Transport / Digitransit)
 - **URL:** https://www.hsl.fi/en/hsl/open-data
 - **Usage:** Tram routes, route shapes and stop names and locations for the `/trams` map, taken from the HSL GTFS feed (https://infopalvelut.storage.hsldev.com/gtfs/hsl.zip) at build time and stored in `public/data/helsinki-trams.json`
+- **Usage (live):** Real-time tram positions on the `/trams` page, streamed straight to the browser from HSL's High-frequency positioning (HFP) MQTT broker (`wss://mqtt.hsl.fi`, documented at https://github.com/HSLdevcom/digitransit-site/blob/master/src/pages/en/developers/apis/5-realtime-api/vehicle-positions/high-frequency-positioning/index.md). Nothing is stored or passed on
 - **License:** [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
 - **Attribution:** © HSL / Digitransit
 

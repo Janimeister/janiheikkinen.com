@@ -5,7 +5,9 @@ map and the vehicles are drawn in ASCII. It gets its data from the Digitransit /
 **High-frequency positioning (HFP)** MQTT API and is limited to the Helsinki city tram network.
 Raide-Jokeri (line 15) is left out.
 
-> Status: milestones 1 (static map), 2 (live trams) and 3 (interaction) are implemented. The live feed was
+> Status: milestones 1 (static map), 2 (live trams), 3 (interaction) and 4 (polish) are implemented.
+> One task is left from milestone 4: re-running the generator after the Crown Bridges timetable
+> starts on 9 Nov 2026 (§11). The live feed was
 > rechecked on **29 Sep 2026 at about 07:50 Helsinki time** (weekday morning peak) in Chromium,
 > with the site's own MQTT client (§6).
 >
@@ -115,8 +117,8 @@ From GTFS, cross-checked against live `route` values.
   handling.
 
 **Later**
-- A "smooth" mode with all geohash levels and interpolation (§6).
-- Trails and "follow this tram".
+- ~~A "smooth" mode with all geohash levels and interpolation (§6).~~ Done in milestone 4.
+- ~~Trails~~ (done in milestone 4) and "follow this tram".
 - A small ASCII departures board for a stop, using `arr`/`dep` events.
 
 **Out of scope:**
@@ -313,11 +315,16 @@ The *measured* level distribution for trams matches the docs:
     be trusted. The page says so under the chips.
 - **Smooth mode** (opt-in toggle, "uses ~15× more data"): subscribe to all levels and
   interpolate between fixes.
+  - *Implemented (milestone 4):* one filter per route with `+` in place of the level
+    (`…/vp/tram/+/+/+/+/+/+/+/+/#`), swapped on the live connection like a line filter change.
+    A tram glides from its previous fix to its latest over the time between them (only when
+    they're at most 3 s apart), so it runs one fix behind but never shows a place it hasn't been.
+    The overlay redraws every 500 ms while gliding. No gliding with `prefers-reduced-motion`.
 - **Stale handling:** in level-filtered mode, a tram standing still sends nothing. Waiting at
   a stop or a red light takes one to two minutes. So:
   - dim a tram after **3 min** without messages
   - drop it after **6 min**, or immediately on `vjout`
-  - in smooth mode, use 15 s and 60 s
+  - in smooth mode, use 15 s and 60 s (re-checked every 5 s instead of 15 s)
 
 ### MQTT client
 - **Recommended:** a tiny hand-written MQTT 3.1.1-over-WebSocket client
@@ -424,7 +431,21 @@ e2e/trams.spec.ts                     # Playwright
    In full screen the details take a row under the map, which refits, so they never cover a
    tram. Pause adds a `paused` status.
 4. **Polish.** Smooth mode, trails, presets, mobile tuning, README and notices, and the
-   GTFS re-run for lines 11 and 12 after 9 Nov 2026.
+   GTFS re-run for lines 11 and 12 after 9 Nov 2026. *Done, apart from the re-run:*
+   - Smooth mode as in §6, with a note under the controls about the data it uses.
+   - Trails: the feed service keeps the last 8 cells (0.001°) each tram left on its current trip
+     (`tram-motion.ts`). The overlay joins them with the rasteriser's `traceLine`, snaps each
+     cell to the tram's track and draws a `.` on the line's colour, under every label. Points more
+     than 4 cells apart aren't joined, and dimmed trams have no trail. On by default, except with
+     `prefers-reduced-motion`.
+   - Presets: the three from §5 stay. The chosen view, character set, smooth mode and trails are
+     remembered in `localStorage` (`trams-view`, read and written in `try`/`catch`).
+   - Mobile: smaller option buttons, and control groups that wrap as units, so the map starts
+     higher on a phone. Tap areas round each tram grow to 8 px on coarse pointers. Selecting a
+     tram scrolls its details into view.
+   - README and `THIRD-PARTY-NOTICES.md` describe the live HFP feed as well as the static data.
+   - The committed asset (GTFS 2026-09-26) already has lines 11 and 12, from the timetable that
+     starts on 9 Nov. Re-run the generator after that date in case the shapes change.
 
 Each milestone is a separately shippable PR.
 
@@ -447,5 +468,5 @@ Each milestone is a separately shippable PR.
 - **Peak-hour load.** Weekday morning peak (29 Sep, 07:50) had 108 vehicles including line 15,
   and 7.5 unique level 0–3 fixes per second, 1.5× the evening. Done unless it grows further.
 - **Lines 11 and 12.** They start on 9 Nov 2026. Confirm they appear in HFP as `tram` with
-  `1011`/`1012`.
+  `1011`/`1012`, and re-run `scripts/build-tram-map.mjs` in case the Crown Bridges shapes changed.
 - **Unicode box-drawing vs pure ASCII.** Decide during milestone 1, or offer a toggle.

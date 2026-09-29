@@ -1,7 +1,14 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { expectAttribution, expectBackLink } from './helpers';
-import { HFP_SAMPLE, HFP_SAMPLE_TRAMS, laterFix, mockHfpBroker, sampleFix } from './hfp-broker';
+import {
+  HFP_SAMPLE,
+  HFP_SAMPLE_TRAMS,
+  laterFix,
+  mockHfpBroker,
+  movedFix,
+  sampleFix,
+} from './hfp-broker';
 
 async function setUp(page: Page) {
   // The staggered entrance animations move cards after they've been still for their delay, so a
@@ -297,6 +304,69 @@ test.describe('Choosing lines and trams', () => {
     );
     // The H line has no button of its own: only "all lines" follows it.
     await expect(tram(page, '40/443')).toHaveCount(0);
+  });
+
+  test('draws trails behind moving trams when turned on', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    // A line 4 tram moves three cells east, one report per cell.
+    const start = sampleFix(648);
+    broker.publish([1, 2, 3].map((k) => movedFix(start, k, { lon: 0.001 * k })));
+
+    const overlay = page.getByTestId('tram-overlay');
+    const trails = page.getByTestId('tram-trails');
+    // Off with reduced motion, which these tests ask for.
+    await expect(trails).not.toBeChecked();
+    await expect(overlay.locator('.trail')).toHaveCount(0);
+
+    await trails.check();
+    await expect(overlay.locator('.trail.line-4').first()).toBeVisible();
+    await expect(page.locator('li', { hasText: 'Trail: where a tram was last' })).toBeVisible();
+    await expectNoAxeViolations(page);
+    await trails.uncheck();
+    await expect(overlay.locator('.trail')).toHaveCount(0);
+  });
+
+  test('subscribes to every position in smooth mode', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    const smooth = page.getByTestId('tram-smooth');
+    await expect(smooth).not.toBeChecked();
+    await expect(page.getByTestId('tram-smooth-note')).toHaveCount(0);
+
+    await smooth.check();
+    await broker.subscribed(2);
+    expect(broker.subscriptions[1]).toEqual(['/hfp/v2/journey/ongoing/vp/tram/+/+/+/+/+/+/+/+/#']);
+    await expect.poll(() => broker.unsubscriptions).toEqual([broker.subscriptions[0].slice(0, 4)]);
+    await expect(page.getByTestId('tram-smooth-note')).toContainText('15 times the data');
+    await expect(page.getByTestId('tram-count')).toHaveText(`Trams: ${HFP_SAMPLE_TRAMS}`);
+
+    await smooth.uncheck();
+    await broker.subscribed(3);
+    expect(broker.subscriptions[2]).toEqual(broker.subscriptions[0].slice(0, 4));
+  });
+
+  test('remembers the chosen view in this browser', async ({ page }) => {
+    const broker = await mockHfpBroker(page);
+    await page.goto('/trams');
+    await broker.subscribed();
+    await page.getByRole('button', { name: 'Whole network' }).click();
+    await page.getByRole('button', { name: 'Unicode' }).click();
+    await page.getByTestId('tram-smooth').check();
+
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Whole network' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByRole('button', { name: 'Unicode' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByTestId('tram-smooth')).toBeChecked();
+    await expect(page.getByTestId('tram-map').locator('.map-row')).toHaveCount(48);
   });
 
   test('shows the details of a selected tram', async ({ page }) => {

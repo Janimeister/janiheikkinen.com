@@ -475,6 +475,13 @@ export const EN_TRANSLATIONS = {
   'trams.minutesAgo': '{minutes} min ago',
   'trams.alsoHere': 'Also here:',
   'trams.unknown': 'Unknown',
+  'trams.motion': 'Motion:',
+  'trams.smooth': 'Smooth (≈15× data)',
+  'trams.trails': 'Trails',
+  'trams.smoothNote':
+    'Smooth mode receives every position, about once a second per tram: some 15 times the data, hundreds of megabytes an hour. Trams glide between positions and turn grey after 15 seconds without an update.',
+  'trams.legendTrail': 'Trail: where a tram was last',
+  'trams.legendDimmedSmooth': 'Depot run, or no update for 15 seconds',
 
   'snake.title': 'Snake Game',
   'snake.subtitle': 'Classic snake - use keyboard or swipe to play',
@@ -1063,6 +1070,13 @@ export const FI_TRANSLATIONS = {
   'trams.minutesAgo': '{minutes} min sitten',
   'trams.alsoHere': 'Samassa kohdassa myös:',
   'trams.unknown': 'Ei tiedossa',
+  'trams.motion': 'Liike:',
+  'trams.smooth': 'Sulava (≈15× dataa)',
+  'trams.trails': 'Jäljet',
+  'trams.smoothNote':
+    'Sulava tila vastaanottaa jokaisen sijainnin, noin kerran sekunnissa ratikkaa kohden: noin 15-kertaisesti dataa, satoja megatavuja tunnissa. Ratikat liukuvat sijainnista toiseen ja harmaantuvat, jos sijaintia ei tule 15 sekuntiin.',
+  'trams.legendTrail': 'Jälki: ratikan viimeisimmät sijainnit',
+  'trams.legendDimmedSmooth': 'Varikkoajo, tai ei sijaintia 15 sekuntiin',
 
   'snake.title': 'Matopeli',
   'snake.subtitle': 'Klassinen matopeli - pelaa näppäimistöllä tai pyyhkäisemällä',

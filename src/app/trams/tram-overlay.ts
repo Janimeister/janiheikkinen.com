@@ -1,6 +1,6 @@
-import { blankCells, type Cell, lineClass, SHARED_TRACK_CLASS } from './ascii-raster';
+import { blankCells, type Cell, lineClass, SHARED_TRACK_CLASS, traceLine } from './ascii-raster';
 import { type Grid, toCell } from './grid';
-import { lineOf, type TramState } from './hfp';
+import { type LatLon, lineOf, type TramState } from './hfp';
 
 /** One label on the overlay: a tram's line number, or `*` where several trams overlap. */
 export interface TramMarker {
@@ -20,6 +20,21 @@ export interface TramOverlay {
 }
 
 export const CLUSTER_GLYPH = '*';
+export const TRAIL_GLYPH = '.';
+/**
+ * Trail points further apart than this many cells aren't joined: the tram was quiet for a while
+ * (or the tab was hidden), and a straight line would cut across the map.
+ */
+export const MAX_TRAIL_GAP = 4;
+
+export interface OverlayOptions {
+  /** Dimmed trams are grey and leave no trail. Depot runs by default. */
+  isDim?: (tram: TramState) => boolean;
+  /** Where to draw a tram, e.g. interpolated. Its latest fix by default. */
+  position?: (tram: TramState) => LatLon;
+  /** Draw the cells each tram passed last, in its line's colour. */
+  trails?: boolean;
+}
 
 const NEIGHBOURS: readonly (readonly [number, number])[] = [
   [0, -1],
@@ -60,23 +75,30 @@ export function snapToTrack(
 /**
  * Stamps trams onto a transparent overlay the size of the grid. Each tram is its line number,
  * starting at its cell; trams whose labels would overlap or touch merge into one `*`. Older fixes
- * are drawn first.
+ * are drawn first. Trails go underneath every label.
  */
 export function renderTramOverlay(
   grid: Grid,
   base: readonly (readonly Cell[])[],
   trams: Iterable<TramState>,
-  isDim: (tram: TramState) => boolean = (tram) => tram.depotRun,
+  {
+    isDim = (tram) => tram.depotRun,
+    position = (tram) => tram,
+    trails = false,
+  }: OverlayOptions = {},
 ): TramOverlay {
   const sorted = [...trams].sort((a, b) => a.tst - b.tst);
   const markers: TramMarker[] = [];
   const owner = new Map<number, TramMarker>();
+  const cells = blankCells(grid);
   let count = 0;
 
   for (const tram of sorted) {
-    const at = toCell(grid, tram.lat, tram.lon);
+    const here = position(tram);
+    const at = toCell(grid, here.lat, here.lon);
     if (!at) continue;
     count++;
+    if (trails && tram.trail?.length && !isDim(tram)) drawTrail(grid, base, cells, tram, here);
     const snapped = snapToTrack(base, at.row, at.col, tram.desi);
     const text = tram.desi;
     const row = snapped.row;
@@ -108,7 +130,6 @@ export function renderTramOverlay(
     for (const key of span) owner.set(key, marker);
   }
 
-  const cells = blankCells(grid);
   for (const marker of markers) {
     // A cluster still owns the cells of the label it replaced, so later trams there join it.
     for (let i = 0; i < marker.text.length; i++) {
@@ -116,4 +137,30 @@ export function renderTramOverlay(
     }
   }
   return { cells, markers, count };
+}
+
+/** Marks the cells between a tram's trail points, snapped to its track like the tram itself. */
+function drawTrail(
+  grid: Grid,
+  base: readonly (readonly Cell[])[],
+  cells: Cell[][],
+  tram: TramState,
+  here: LatLon,
+): void {
+  const cls = `trail ${lineClass(lineOf(tram.desi))}`;
+  const points = [...tram.trail!, here];
+  for (let i = 1; i < points.length; i++) {
+    const a = toCell(grid, points[i - 1].lat, points[i - 1].lon);
+    const b = toCell(grid, points[i].lat, points[i].lon);
+    if (!a || !b || Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col)) > MAX_TRAIL_GAP)
+      continue;
+    const segment: [number, number][] = [
+      [points[i - 1].lon, points[i - 1].lat],
+      [points[i].lon, points[i].lat],
+    ];
+    traceLine(grid, segment, (row, col) => {
+      const at = snapToTrack(base, row, col, tram.desi);
+      cells[at.row][at.col] = { ch: TRAIL_GLYPH, cls };
+    });
+  }
 }
