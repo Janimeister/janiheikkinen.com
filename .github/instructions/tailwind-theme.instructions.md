@@ -20,6 +20,7 @@ applyTo: "src/styles.css"
 - Pop fills: `--color-pop-yellow` #ffd43b, `--color-pop-pink` #ff90e8, `--color-pop-lime` #a8e84a, `--color-pop-sky` #74c0fc, `--color-pop-orange` #ffa94d (always with ink text)
 - `--color-red-400`: overridden to #c92a2a so `text-red-400` errors keep AA contrast on cream
 - Semantic data colors (AA-safe on cream, card, card-hover): `--color-data-green` #287234 (`text-data-green`), `--color-data-orange` #a85100 (`text-data-orange`), `--color-data-orange-deep` #9c4a00 (`text-data-orange-deep`), `--color-data-blue` #1864ab (`text-data-blue`)
+- Tram line fills (`/trams` map tracks and legend, always with ink text, all ≥7.7:1): `--color-line-1` … `--color-line-13` (the five pops, then violet #b197fc, teal #63e6be, coral #ffa8a8, grape #e599f7, indigo #91a7ff, cyan #99e9f2, blush #fcc2d7, green #8ce99a), `--color-line-h` #dee2e6 for depot runs
 - Fonts: `--font-display` (Archivo Black), `--font-sans` (Space Grotesk), `--font-mono` (JetBrains Mono)
 - Shadows: `--shadow-brutal-sm` (3px), `--shadow-brutal` (5px), `--shadow-brutal-lg` (8px) — hard offset, no blur
 
