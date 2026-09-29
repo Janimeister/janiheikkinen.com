@@ -63,7 +63,7 @@ describe('Tram overlay', () => {
       tiny,
       base,
       [tram(2, 0, { key: 'a', desi: '1H', depotRun: true }), tram(2, 5, { key: 'b' })],
-      (t) => t.depotRun || t.key === 'b',
+      { isDim: (t) => t.depotRun || t.key === 'b' },
     );
     expect(overlay.cells[2][0]).toEqual({ ch: '1', cls: 'tram tram-dim' });
     expect(overlay.cells[2][5]).toEqual({ ch: '4', cls: 'tram tram-dim' });
@@ -112,6 +112,51 @@ describe('Tram overlay', () => {
     ]);
     expect(toText(overlay.cells).split('\n')[4]).toBe('        10');
     expect(overlay.count).toBe(1);
+  });
+
+  it('draws where the caller says, e.g. interpolated', () => {
+    const base = trackRow(2, 'line-shared');
+    const overlay = renderTramOverlay(tiny, base, [tram(2, 1)], {
+      position: (t) => ({ lat: t.lat, lon: t.lon + 0.005 }),
+    });
+    expect(toText(overlay.cells).split('\n')[2]).toBe('      4   ');
+  });
+
+  it('draws trails behind trams, on the track, under every label', () => {
+    const base = trackRow(2, 'line-4');
+    const at = (row: number, col: number) => ({
+      lat: (5 - row - 0.5) / 1000,
+      lon: (col + 0.5) / 1000,
+    });
+    const trams = [
+      // Came from the left along the track; one fix was a row off, and snaps back onto it.
+      tram(2, 5, { key: 'a', trail: [at(2, 1), at(1, 2), at(2, 3)] }),
+      tram(2, 8, { key: 'b', desi: '7', trail: [at(2, 5)] }),
+    ];
+    const overlay = renderTramOverlay(tiny, base, trams, { trails: true });
+    expect(toText(overlay.cells).split('\n')[2]).toBe(' ....4..7 ');
+    expect(overlay.cells[2][1]).toEqual({ ch: '.', cls: 'trail line-4' });
+    expect(overlay.cells[2][6]).toEqual({ ch: '.', cls: 'trail line-7' });
+    expect(toText(overlay.cells).split('\n')[1].trim()).toBe('');
+
+    // Off by default, and never for dimmed trams.
+    expect(toText(renderTramOverlay(tiny, base, trams).cells).split('\n')[2]).toBe('     4  7 ');
+    const dimmed = renderTramOverlay(tiny, base, trams, {
+      trails: true,
+      isDim: (t) => t.key === 'a',
+    });
+    expect(toText(dimmed.cells).split('\n')[2]).toBe('     4..7 ');
+  });
+
+  it('leaves gaps in a trail where the tram jumped', () => {
+    const base = trackRow(2, 'line-4');
+    const overlay = renderTramOverlay(
+      tiny,
+      base,
+      [tram(2, 9, { trail: [{ lat: 0.0025, lon: 0.0005 }] })],
+      { trails: true },
+    );
+    expect(toText(overlay.cells).split('\n')[2]).toBe('         4');
   });
 
   it('snaps a tram next to its track onto it, preferring its own line', () => {

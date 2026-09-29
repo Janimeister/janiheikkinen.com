@@ -9,6 +9,9 @@ export const HFP_BROKER_URL = 'wss://mqtt.hsl.fi:443/';
  */
 export const CELL_CHANGE_LEVELS: readonly number[] = [0, 1, 2, 3];
 
+/** Every position, about once a second per tram: for smooth mode, ~15× the data. */
+export const ALL_LEVELS = null;
+
 /**
  * The GTFS `route_id` of a line's normal trips: `4` → `1004`, `13` → `1013`, `H` → `100H`.
  * Variants carry a suffix (`1004H`, `100HA5`, even `1004 4`), which MQTT doesn't match with it.
@@ -18,19 +21,21 @@ export function routeIdForLine(line: string): string {
 }
 
 /**
- * Tram positions at the given geohash levels, plus `vjout` (the vehicle left its journey) so a
+ * Tram positions at the given geohash levels (or {@link ALL_LEVELS}), plus `vjout` (the vehicle left its journey) so a
  * tram can be removed straight away. Every filter ends in `/#`, because HSL may add topic levels.
  *
  * With `routeIds`, only those routes: one filter per route and level, all in one SUBSCRIBE. An
  * empty list leaves just the sign-offs.
  */
 export function tramFilters(
-  levels: readonly number[] = CELL_CHANGE_LEVELS,
+  levels: readonly number[] | typeof ALL_LEVELS = CELL_CHANGE_LEVELS,
   routeIds: readonly string[] | null = null,
 ): string[] {
   // Operator, vehicle, route, direction, headsign, start time and next stop, then the level.
   const positions = (routeId: string) =>
-    levels.map((level) => `/hfp/v2/journey/ongoing/vp/tram/+/+/${routeId}/+/+/+/+/${level}/#`);
+    (levels ?? ['+']).map(
+      (level) => `/hfp/v2/journey/ongoing/vp/tram/+/+/${routeId}/+/+/+/+/${level}/#`,
+    );
   return [
     ...(routeIds === null ? positions('+') : routeIds.flatMap(positions)),
     '/hfp/v2/journey/ongoing/vjout/tram/#',

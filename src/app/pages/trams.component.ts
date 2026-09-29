@@ -20,10 +20,11 @@ import type { TranslationKey } from '../i18n/translations';
 import { createGrid, defaultPreset, GRID_PRESETS, type PresetId } from '../trams/grid';
 import { ASCII_GLYPHS, lineClass, renderBaseMap, toRuns, UNICODE_GLYPHS } from '../trams/ascii-raster';
 import type { TramMapData } from '../trams/tram-map.model';
-import { CLUSTER_GLYPH, renderTramOverlay } from '../trams/tram-overlay';
+import { CLUSTER_GLYPH, renderTramOverlay, TRAIL_GLYPH } from '../trams/tram-overlay';
 import { isStale, TramFeedService, type FeedStatus } from '../trams/tram-feed.service';
 import { lineOf, type TramState } from '../trams/hfp';
 import { age, schedule, speedKmh, tramTargets } from '../trams/tram-details';
+import { interpolate } from '../trams/tram-motion';
 
 type GlyphMode = 'ascii' | 'unicode';
 
@@ -37,6 +38,18 @@ const GLYPH_OPTIONS: readonly { id: GlyphMode; labelKey: TranslationKey }[] = [
   { id: 'ascii', labelKey: 'trams.glyphsAscii' },
   { id: 'unicode', labelKey: 'trams.glyphsUnicode' },
 ];
+
+/** The view settings a visitor chose, remembered in this browser. */
+interface ViewPrefs {
+  preset?: PresetId;
+  glyphs?: GlyphMode;
+  smooth?: boolean;
+  trails?: boolean;
+}
+const PREFS_KEY = 'trams-view';
+
+/** How often gliding trams are redrawn in smooth mode: about as often as they report. */
+const FRAME_MS = 500;
 
 /** Padding plus border of the map `<pre>`, on each side. The characters start after it. */
 const PRE_INSET_PX = 12 + 2;
@@ -62,7 +75,8 @@ type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null;
 type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
 const LOADING_DOTS = Array.from({ length: 14 }, (_, row) => (row % 2 ? ' .' : '. ').repeat(36)).join('\n');
 
-const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform';
+// Smaller on phones, so the controls leave room for the map.
+const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semibold text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform';
 
 @Component({
   selector: 'app-trams-page',
@@ -90,27 +104,46 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
         <!-- Controls -->
         <div class="mb-6 animate-fade-slide-up stagger-1">
           <app-glow-card>
-            <div class="flex flex-wrap items-center gap-3">
-              <span class="text-sm font-semibold text-text-secondary mr-1 uppercase tracking-wider">{{ i18n.t('trams.view') }}</span>
-              @for (option of presetOptions; track option.id) {
-                <button type="button" (click)="chosenPreset.set(option.id)"
-                  [class]="optionClass(presetId() === option.id)"
-                  [attr.aria-pressed]="presetId() === option.id">
-                  {{ i18n.t(option.labelKey) }}
-                </button>
-              }
-              <span class="text-sm font-semibold text-text-secondary mr-1 sm:ml-auto uppercase tracking-wider">{{ i18n.t('trams.glyphs') }}</span>
-              @for (option of glyphOptions; track option.id) {
-                <button type="button" (click)="glyphMode.set(option.id)"
-                  [class]="optionClass(glyphMode() === option.id)"
-                  [attr.aria-pressed]="glyphMode() === option.id">
-                  {{ i18n.t(option.labelKey) }}
-                </button>
-              }
+            <!-- Each group wraps as a unit, so a label never ends a line on its own. -->
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="control-label">{{ i18n.t('trams.view') }}</span>
+                @for (option of presetOptions; track option.id) {
+                  <button type="button" (click)="choosePreset(option.id)"
+                    [class]="optionClass(presetId() === option.id)"
+                    [attr.aria-pressed]="presetId() === option.id">
+                    {{ i18n.t(option.labelKey) }}
+                  </button>
+                }
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="control-label">{{ i18n.t('trams.glyphs') }}</span>
+                @for (option of glyphOptions; track option.id) {
+                  <button type="button" (click)="chooseGlyphs(option.id)"
+                    [class]="optionClass(glyphMode() === option.id)"
+                    [attr.aria-pressed]="glyphMode() === option.id">
+                    {{ i18n.t(option.labelKey) }}
+                  </button>
+                }
+              </div>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span class="control-label">{{ i18n.t('trams.motion') }}</span>
+                <label class="toggle-label">
+                  <input type="checkbox" class="control-toggle" [checked]="feed.smooth()" (change)="onSmoothToggle($event)" data-testid="tram-smooth" />
+                  {{ i18n.t('trams.smooth') }}
+                </label>
+                <label class="toggle-label">
+                  <input type="checkbox" class="control-toggle" [checked]="trails()" (change)="onTrailsToggle($event)" data-testid="tram-trails" />
+                  {{ i18n.t('trams.trails') }}
+                </label>
+              </div>
             </div>
+            @if (feed.smooth()) {
+              <p class="text-sm text-text-secondary mt-2" data-testid="tram-smooth-note">{{ i18n.t('trams.smoothNote') }}</p>
+            }
             @if (lineChoices().length > 0) {
               <div class="flex flex-wrap items-center gap-2 mt-4" data-testid="tram-line-filter">
-                <span class="text-sm font-semibold text-text-secondary mr-1 uppercase tracking-wider">{{ i18n.t('trams.lines') }}</span>
+                <span class="control-label">{{ i18n.t('trams.lines') }}</span>
                 <button type="button" (click)="lineSelection.set(null)"
                   [class]="optionClass(lineSelection() === null)"
                   [attr.aria-pressed]="lineSelection() === null">
@@ -129,8 +162,8 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
                     {{ line }}
                   </button>
                 }
-                <label class="sm:ml-auto inline-flex items-center gap-2 text-sm font-semibold text-ink cursor-pointer">
-                  <input type="checkbox" class="depot-toggle" [checked]="showDepotRuns()" (change)="onDepotToggle($event)" />
+                <label class="sm:ml-auto toggle-label">
+                  <input type="checkbox" class="control-toggle" [checked]="showDepotRuns()" (change)="onDepotToggle($event)" />
                   {{ i18n.t('trams.showDepotRuns') }}
                 </label>
               </div>
@@ -171,8 +204,11 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
                 <li><span class="legend-glyph sea" aria-hidden="true">{{ glyphs().sea[0] }}</span> {{ i18n.t('trams.legendSea') }}</li>
                 <li><span class="legend-glyph park" aria-hidden="true">{{ glyphs().park }}</span> {{ i18n.t('trams.legendPark') }}</li>
                 <li><span class="legend-glyph tram line-4" aria-hidden="true">4</span> {{ i18n.t('trams.legendTram') }}</li>
-                <li><span class="legend-glyph tram tram-dim" aria-hidden="true">4</span> {{ i18n.t('trams.legendDimmed') }}</li>
+                <li><span class="legend-glyph tram tram-dim" aria-hidden="true">4</span> {{ i18n.t(feed.smooth() ? 'trams.legendDimmedSmooth' : 'trams.legendDimmed') }}</li>
                 <li><span class="legend-glyph tram tram-cluster" aria-hidden="true">{{ clusterGlyph }}</span> {{ i18n.t('trams.legendCluster') }}</li>
+                @if (trails()) {
+                  <li><span class="legend-glyph trail line-4" aria-hidden="true">{{ trailGlyph }}</span> {{ i18n.t('trams.legendTrail') }}</li>
+                }
               </ul>
             </app-glow-card>
           </div>
@@ -278,7 +314,7 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
           </div>
           <p class="sr-only" aria-live="polite" data-testid="tram-announcement">{{ announcement() }}</p>
           @if (selectedKey()) {
-            <div class="tram-details" data-testid="tram-details">
+            <div #detailsPanel class="tram-details" data-testid="tram-details">
               @if (details(); as d) {
                 <div class="flex items-start gap-3">
                   <span class="legend-chip" [class]="d.chipClass" aria-hidden="true">{{ d.desi }}</span>
@@ -341,6 +377,26 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
       white-space: pre;
     }
     .map-row { display: block; }
+    .control-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 0.25rem;
+    }
+    @media (min-width: 640px) {
+      .control-label { font-size: 0.875rem; }
+    }
+    .toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-ink);
+      cursor: pointer;
+    }
     .tram-probe {
       position: absolute;
       visibility: hidden;
@@ -402,6 +458,11 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
       color: var(--color-bg-card);
     }
     .tram-cluster { color: var(--color-pop-yellow); }
+    /* The track in the line's colour (the line-* class), dotted where the tram just was. */
+    .trail {
+      color: var(--color-ink);
+      font-weight: 700;
+    }
     .tram-targets {
       position: absolute;
       inset: 0;
@@ -423,6 +484,10 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
       position: absolute;
       inset: -3px;
     }
+    /* Fingers need more: a phone's cells are about 5 × 10 px. */
+    @media (pointer: coarse) {
+      .tram-target::before { inset: -8px; }
+    }
     .tram-target[aria-pressed='true'] {
       outline: 3px solid var(--color-accent-primary);
       outline-offset: 1px;
@@ -439,7 +504,7 @@ const OPTION_CLASS = 'px-3 py-1.5 text-sm font-semibold text-ink border-2 border
       border: 2px solid var(--color-ink);
       box-shadow: var(--shadow-brutal-sm);
     }
-    .depot-toggle {
+    .control-toggle {
       width: 1.125rem;
       height: 1.125rem;
       accent-color: var(--color-ink);
@@ -492,12 +557,15 @@ export class TramsPageComponent {
   private readonly probe = viewChild.required<ElementRef<HTMLElement>>('probe');
   private readonly enterButton = viewChild<ElementRef<HTMLButtonElement>>('enterButton');
   private readonly exitButton = viewChild<ElementRef<HTMLButtonElement>>('exitButton');
+  private readonly detailsPanel = viewChild<ElementRef<HTMLElement>>('detailsPanel');
+  private readonly prefs = this.loadPrefs();
 
   protected readonly presetOptions = PRESET_OPTIONS;
   protected readonly glyphOptions = GLYPH_OPTIONS;
   protected readonly loadingDots = LOADING_DOTS;
   protected readonly lineClass = lineClass;
   protected readonly clusterGlyph = CLUSTER_GLYPH;
+  protected readonly trailGlyph = TRAIL_GLYPH;
   protected readonly optionBase = OPTION_CLASS;
   protected readonly zoomSteps = ZOOM_STEPS;
   protected readonly preInset = PRE_INSET_PX;
@@ -508,8 +576,12 @@ export class TramsPageComponent {
   );
 
   /** null until the visitor picks a view; then the default follows the screen width. */
-  readonly chosenPreset = signal<PresetId | null>(null);
-  readonly glyphMode = signal<GlyphMode>('ascii');
+  readonly chosenPreset = signal<PresetId | null>(this.prefs.preset ?? null);
+  readonly glyphMode = signal<GlyphMode>(this.prefs.glyphs ?? 'ascii');
+  /** Trails are on unless the visitor turned them off, or asked for reduced motion. */
+  private readonly trailChoice = signal<boolean | null>(this.prefs.trails ?? null);
+  private readonly reducedMotion = signal(false);
+  readonly trails = computed(() => this.trailChoice() ?? !this.reducedMotion());
   /** The map fills the viewport, above the site's header, with a button to get back. */
   readonly fullscreen = signal(false);
   readonly zoomStep = signal(0);
@@ -523,6 +595,12 @@ export class TramsPageComponent {
   readonly announcement = signal('');
   /** Ticks every second while a tram is selected, for "updated 12 s ago". */
   private readonly clock = signal(Date.now());
+  /** Ticks every {@link FRAME_MS} while trams glide, in smooth mode. */
+  private readonly frame = signal(Date.now());
+  /** Smooth mode glides trams between fixes, except with reduced motion. */
+  private readonly gliding = computed(
+    () => this.feed.smooth() && !this.reducedMotion() && this.feed.status() === 'live',
+  );
   private readonly containerWidth = signal<number | null>(null);
   private readonly fullscreenSize = signal<{ width: number; height: number } | null>(null);
   /** Character width divided by font size, measured once the web font has loaded. */
@@ -565,12 +643,13 @@ export class TramsPageComponent {
     const base = this.baseMap();
     if (!base) return null;
     const now = this.feed.now();
-    return renderTramOverlay(
-      this.grid(),
-      base.cells,
-      this.shownTrams().values(),
-      (tram) => tram.depotRun || isStale(tram, now),
-    );
+    const smooth = this.feed.smooth();
+    const frame = this.gliding() ? this.frame() : null;
+    return renderTramOverlay(this.grid(), base.cells, this.shownTrams().values(), {
+      isDim: (tram) => tram.depotRun || isStale(tram, now, smooth),
+      position: frame === null ? undefined : (tram) => interpolate(tram, frame),
+      trails: this.trails(),
+    });
   });
   readonly overlayRows = computed(() => toRuns(this.overlay()?.cells ?? []));
 
@@ -643,6 +722,16 @@ export class TramsPageComponent {
   readonly lineHeight = computed(() => Math.round(this.fontSize() * this.charRatio() * 2 * 100) / 100);
 
   constructor() {
+    if (this.prefs.smooth) this.feed.setSmooth(true);
+
+    const motionQuery = this.document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (motionQuery) {
+      this.reducedMotion.set(motionQuery.matches);
+      const onMotionChange = (event: MediaQueryListEvent) => this.reducedMotion.set(event.matches);
+      motionQuery.addEventListener?.('change', onMotionChange);
+      this.destroyRef.onDestroy(() => motionQuery.removeEventListener?.('change', onMotionChange));
+    }
+
     afterNextRender(() => {
       this.measureCharacter();
       this.document.fonts?.ready.then(() => this.measureCharacter());
@@ -659,6 +748,13 @@ export class TramsPageComponent {
       if (this.mapData.hasValue()) this.feed.start(this.mapData.value().bbox);
     });
     effect(() => this.feed.setLines(this.lineSelection()));
+
+    effect((onCleanup) => {
+      if (!this.gliding()) return;
+      this.frame.set(Date.now());
+      const timer = setInterval(() => this.frame.set(Date.now()), FRAME_MS);
+      onCleanup(() => clearInterval(timer));
+    });
 
     effect((onCleanup) => {
       if (this.selectedKey() === null) return;
@@ -705,7 +801,7 @@ export class TramsPageComponent {
   }
 
   protected lineChipClass(line: string): string {
-    return `${OPTION_CLASS} min-w-10 font-mono ${this.follows(line) ? lineClass(line) : 'bg-bg-card line-through'}`;
+    return `${OPTION_CLASS} min-w-8 sm:min-w-10 font-mono ${this.follows(line) ? lineClass(line) : 'bg-bg-card line-through'}`;
   }
 
   protected chipClass(tram: TramState): string {
@@ -726,6 +822,56 @@ export class TramsPageComponent {
 
   protected onDepotToggle(event: Event): void {
     this.showDepotRuns.set((event.target as HTMLInputElement).checked);
+  }
+
+  choosePreset(preset: PresetId): void {
+    this.chosenPreset.set(preset);
+    this.savePrefs();
+  }
+
+  chooseGlyphs(glyphs: GlyphMode): void {
+    this.glyphMode.set(glyphs);
+    this.savePrefs();
+  }
+
+  protected onSmoothToggle(event: Event): void {
+    this.feed.setSmooth((event.target as HTMLInputElement).checked);
+    this.savePrefs();
+  }
+
+  protected onTrailsToggle(event: Event): void {
+    this.trailChoice.set((event.target as HTMLInputElement).checked);
+    this.savePrefs();
+  }
+
+  /** Storage can be missing or refuse (private windows, blocked site data); defaults do then. */
+  private loadPrefs(): ViewPrefs {
+    let stored: Partial<Record<keyof ViewPrefs, unknown>>;
+    try {
+      stored = JSON.parse(this.document.defaultView?.localStorage.getItem(PREFS_KEY) ?? '{}') ?? {};
+    } catch {
+      return {};
+    }
+    const prefs: ViewPrefs = {};
+    if (PRESET_OPTIONS.some((o) => o.id === stored.preset)) prefs.preset = stored.preset as PresetId;
+    if (GLYPH_OPTIONS.some((o) => o.id === stored.glyphs)) prefs.glyphs = stored.glyphs as GlyphMode;
+    if (typeof stored.smooth === 'boolean') prefs.smooth = stored.smooth;
+    if (typeof stored.trails === 'boolean') prefs.trails = stored.trails;
+    return prefs;
+  }
+
+  private savePrefs(): void {
+    const prefs: ViewPrefs = {
+      preset: this.chosenPreset() ?? undefined,
+      glyphs: this.glyphMode(),
+      smooth: this.feed.smooth(),
+      trails: this.trailChoice() ?? undefined,
+    };
+    try {
+      this.document.defaultView?.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    } catch {
+      // Not remembered, then.
+    }
   }
 
   togglePause(): void {
@@ -761,6 +907,15 @@ export class TramsPageComponent {
       return;
     }
     this.selectedKey.set(key);
+    // Under the map, the details can be off screen, especially on a phone.
+    afterNextRender(
+      () =>
+        this.detailsPanel()?.nativeElement.scrollIntoView?.({
+          block: 'nearest',
+          behavior: this.reducedMotion() ? 'auto' : 'smooth',
+        }),
+      { injector: this.injector },
+    );
     const tram = this.shownTrams().get(key);
     if (!tram) return;
     const unknown = this.i18n.t('trams.unknown');

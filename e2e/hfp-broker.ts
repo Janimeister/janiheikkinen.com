@@ -154,3 +154,17 @@ export function sampleFix(vehicle: number): HfpMessage {
   if (fixes.length === 0) throw new Error(`No position for vehicle ${vehicle} in the sample`);
   return fixes.at(-1)!;
 }
+
+/** A sample position, reported `seconds` later and moved by the given degrees. */
+export function movedFix(
+  message: HfpMessage,
+  seconds: number,
+  { lat = 0, lon = 0 }: { lat?: number; lon?: number },
+): HfpMessage {
+  const payload = JSON.parse(laterFix(message, seconds).payload) as {
+    VP: { lat: number; long: number };
+  };
+  payload.VP.lat = Math.round((payload.VP.lat + lat) * 1e6) / 1e6;
+  payload.VP.long = Math.round((payload.VP.long + lon) * 1e6) / 1e6;
+  return { topic: message.topic, payload: JSON.stringify(payload) };
+}
