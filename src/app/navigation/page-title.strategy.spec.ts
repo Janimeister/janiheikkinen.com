@@ -16,7 +16,11 @@ describe('PageTitleStrategy', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
-          { path: '', component: BlankComponent, data: { metaKey: 'meta.home' } satisfies PageMeta },
+          {
+            path: '',
+            component: BlankComponent,
+            data: { metaKey: 'meta.home' } satisfies PageMeta,
+          },
           {
             path: 'weather',
             component: BlankComponent,
@@ -25,7 +29,11 @@ describe('PageTitleStrategy', () => {
           {
             path: '**',
             component: BlankComponent,
-            data: { titleKey: 'notFound.title', metaKey: 'meta.home', noindex: true } satisfies PageMeta,
+            data: {
+              titleKey: 'notFound.title',
+              metaKey: 'meta.home',
+              noindex: true,
+            } satisfies PageMeta,
           },
         ]),
         { provide: TitleStrategy, useClass: PageTitleStrategy },
@@ -33,8 +41,10 @@ describe('PageTitleStrategy', () => {
     });
   });
 
-  const canonical = () => document.head.querySelector('link[rel="canonical"]')?.getAttribute('href');
-  const metaContent = (selector: string) => document.head.querySelector(selector)?.getAttribute('content');
+  const canonical = () =>
+    document.head.querySelector('link[rel="canonical"]')?.getAttribute('href');
+  const metaContent = (selector: string) =>
+    document.head.querySelector(selector)?.getAttribute('content');
 
   it('builds titles and canonical URLs', () => {
     expect(pageTitle(null)).toBe('Jani Heikkinen');

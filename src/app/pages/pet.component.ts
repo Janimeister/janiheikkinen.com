@@ -1,11 +1,4 @@
-import {
-  Component,
-  signal,
-  computed,
-  inject,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { Component, signal, computed, inject, OnDestroy, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormField, form, maxLength, required } from '@angular/forms/signals';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
@@ -33,19 +26,19 @@ interface Species {
   /** Emoji per life stage. Egg is shared across species (🥚). */
   readonly sprites: Readonly<Record<Exclude<LifeStage, 'egg' | 'ghost'>, string>>;
   readonly accent: string; // Tailwind text color class
-  readonly traitKey: TranslationKey;  // short personality description
+  readonly traitKey: TranslationKey; // short personality description
 }
 
 interface PetState {
   speciesId: string;
   name: string;
-  bornAt: number;      // ms epoch when hatched
-  lastTick: number;    // ms epoch of last stat update
-  hunger: number;      // 0..100 (0 = starving, 100 = full)
-  happiness: number;   // 0..100
-  energy: number;      // 0..100
+  bornAt: number; // ms epoch when hatched
+  lastTick: number; // ms epoch of last stat update
+  hunger: number; // 0..100 (0 = starving, 100 = full)
+  happiness: number; // 0..100
+  energy: number; // 0..100
   cleanliness: number; // 0..100
-  health: number;      // 0..100
+  health: number; // 0..100
   dead: boolean;
   asleep: boolean;
 }
@@ -110,23 +103,48 @@ const SPECIES: readonly Species[] = [
 ];
 
 const STORAGE_KEY = 'virtual-pet-v1';
-const TICK_MS = 1000;                 // update cadence
-const DECAY_PER_MINUTE = 4;           // stat point loss per minute (approx, per stat)
-const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returning users aren't wiped
+const TICK_MS = 1000; // update cadence
+const DECAY_PER_MINUTE = 4; // stat point loss per minute (approx, per stat)
+const MAX_OFFLINE_MINUTES = 60 * 8; // cap offline decay at 8 hours so returning users aren't wiped
 
 @Component({
   selector: 'app-pet-page',
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormField],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
-      <app-floating-orb class="hidden md:block absolute top-[10%] right-[10%] z-[1]" delay="0s" [size]="70" shape="circle" color="orange" rotate="4deg" />
-      <app-floating-orb class="hidden md:block absolute bottom-[20%] left-[12%] z-[1]" delay="2s" [size]="60" shape="square" color="pink" rotate="-7deg" />
+      <app-floating-orb
+        class="hidden md:block absolute top-[10%] right-[10%] z-[1]"
+        delay="0s"
+        [size]="70"
+        shape="circle"
+        color="orange"
+        rotate="4deg"
+      />
+      <app-floating-orb
+        class="hidden md:block absolute bottom-[20%] left-[12%] z-[1]"
+        delay="2s"
+        [size]="60"
+        shape="square"
+        color="pink"
+        rotate="-7deg"
+      />
 
       <div class="relative z-10 max-w-5xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <a
+            routerLink="/"
+            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
@@ -143,38 +161,55 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
               <app-glow-card>
                 <div class="flex flex-col items-center text-center gap-4 py-4">
                   <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-                    <h2 class="text-2xl font-bold" [class]="speciesAccent()" data-testid="pet-name">{{ p.name }}</h2>
-                    <span class="text-xs text-text-secondary uppercase tracking-wider" data-testid="pet-stage">
+                    <h2 class="text-2xl font-bold" [class]="speciesAccent()" data-testid="pet-name">
+                      {{ p.name }}
+                    </h2>
+                    <span
+                      class="text-xs text-text-secondary uppercase tracking-wider"
+                      data-testid="pet-stage"
+                    >
                       {{ stageLabel() }} · {{ ageLabel() }}
                     </span>
                   </div>
                   <p class="text-text-secondary text-sm -mt-2">{{ speciesTrait() }}</p>
 
                   <div class="relative w-full flex items-center justify-center py-6">
-                    <div class="text-8xl md:text-9xl select-none transition-transform duration-300"
-                         [class.animate-bob]="!p.dead && !p.asleep"
-                         [style.filter]="spriteFilter()"
-                         aria-hidden="true"
-                         data-testid="pet-sprite">
+                    <div
+                      class="text-8xl md:text-9xl select-none transition-transform duration-300"
+                      [class.animate-bob]="!p.dead && !p.asleep"
+                      [style.filter]="spriteFilter()"
+                      aria-hidden="true"
+                      data-testid="pet-sprite"
+                    >
                       {{ sprite() }}
                     </div>
                     @if (p.asleep) {
-                      <span class="absolute top-2 right-1/3 text-3xl animate-pulse" aria-hidden="true">💤</span>
+                      <span
+                        class="absolute top-2 right-1/3 text-3xl animate-pulse"
+                        aria-hidden="true"
+                        >💤</span
+                      >
                     }
                   </div>
 
-                  <p class="text-sm min-h-5" [class]="moodColorClass()" data-testid="pet-mood">{{ moodMessage() }}</p>
+                  <p class="text-sm min-h-5" [class]="moodColorClass()" data-testid="pet-mood">
+                    {{ moodMessage() }}
+                  </p>
 
                   @if (p.dead) {
-                    <button (click)="reset()"
-                            data-testid="pet-reset-btn"
-                            class="mt-2 px-6 py-2 bg-pop-sky border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all disabled:opacity-50">
+                    <button
+                      (click)="reset()"
+                      data-testid="pet-reset-btn"
+                      class="mt-2 px-6 py-2 bg-pop-sky border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all disabled:opacity-50"
+                    >
                       {{ i18n.t('pet.findNewEgg') }}
                     </button>
                   } @else {
-                    <button (click)="reset()"
-                            data-testid="pet-reset-btn"
-                            class="mt-2 px-4 py-2 bg-pop-orange border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold text-xs transition-all disabled:opacity-50">
+                    <button
+                      (click)="reset()"
+                      data-testid="pet-reset-btn"
+                      class="mt-2 px-4 py-2 bg-pop-orange border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold text-xs transition-all disabled:opacity-50"
+                    >
                       {{ i18n.t('pet.release') }}
                     </button>
                   }
@@ -186,7 +221,9 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
             <div class="lg:col-span-2 flex flex-col gap-5">
               <div class="animate-fade-slide-up stagger-2">
                 <app-glow-card>
-                  <h3 class="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">{{ i18n.t('pet.stats') }}</h3>
+                  <h3 class="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">
+                    {{ i18n.t('pet.stats') }}
+                  </h3>
                   <div class="flex flex-col gap-3" data-testid="pet-stats">
                     @for (stat of stats(); track stat.key) {
                       <div>
@@ -195,9 +232,11 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
                           <span class="text-text-primary font-mono">{{ stat.value }}</span>
                         </div>
                         <div class="h-3 bg-ink/10 border-2 border-ink overflow-hidden">
-                          <div class="h-full transition-all duration-300"
-                               [class]="stat.barClass"
-                               [style.width.%]="stat.value"></div>
+                          <div
+                            class="h-full transition-all duration-300"
+                            [class]="stat.barClass"
+                            [style.width.%]="stat.value"
+                          ></div>
                         </div>
                       </div>
                     }
@@ -207,36 +246,48 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
 
               <div class="animate-fade-slide-up stagger-3">
                 <app-glow-card>
-                  <h3 class="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">{{ i18n.t('pet.care') }}</h3>
+                  <h3 class="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">
+                    {{ i18n.t('pet.care') }}
+                  </h3>
                   <div class="grid grid-cols-2 gap-2">
-                    <button (click)="feed()"
-                            [disabled]="!canAct()"
-                            data-testid="pet-feed-btn"
-                            class="care-btn care-btn-amber">
+                    <button
+                      (click)="feed()"
+                      [disabled]="!canAct()"
+                      data-testid="pet-feed-btn"
+                      class="care-btn care-btn-amber"
+                    >
                       {{ i18n.t('pet.feed') }}
                     </button>
-                    <button (click)="play()"
-                            [disabled]="!canAct() || p.asleep"
-                            data-testid="pet-play-btn"
-                            class="care-btn care-btn-pink">
+                    <button
+                      (click)="play()"
+                      [disabled]="!canAct() || p.asleep"
+                      data-testid="pet-play-btn"
+                      class="care-btn care-btn-pink"
+                    >
                       {{ i18n.t('pet.play') }}
                     </button>
-                    <button (click)="clean()"
-                            [disabled]="!canAct()"
-                            data-testid="pet-clean-btn"
-                            class="care-btn care-btn-sky">
+                    <button
+                      (click)="clean()"
+                      [disabled]="!canAct()"
+                      data-testid="pet-clean-btn"
+                      class="care-btn care-btn-sky"
+                    >
                       {{ i18n.t('pet.clean') }}
                     </button>
-                    <button (click)="toggleSleep()"
-                            [disabled]="p.dead"
-                            data-testid="pet-sleep-btn"
-                            class="care-btn care-btn-indigo">
+                    <button
+                      (click)="toggleSleep()"
+                      [disabled]="p.dead"
+                      data-testid="pet-sleep-btn"
+                      class="care-btn care-btn-indigo"
+                    >
                       {{ p.asleep ? i18n.t('pet.wake') : i18n.t('pet.sleep') }}
                     </button>
-                    <button (click)="heal()"
-                            [disabled]="!canAct() || p.health >= 100"
-                            data-testid="pet-heal-btn"
-                            class="care-btn care-btn-emerald col-span-2">
+                    <button
+                      (click)="heal()"
+                      [disabled]="!canAct() || p.health >= 100"
+                      data-testid="pet-heal-btn"
+                      class="care-btn care-btn-emerald col-span-2"
+                    >
                       {{ i18n.t('pet.medicine') }}
                     </button>
                   </div>
@@ -248,14 +299,18 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
           <!-- Event log -->
           <div class="mt-5 animate-fade-slide-up stagger-4">
             <app-glow-card>
-              <h3 class="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">{{ i18n.t('pet.recentEvents') }}</h3>
+              <h3 class="text-sm font-semibold text-text-primary mb-3 uppercase tracking-wider">
+                {{ i18n.t('pet.recentEvents') }}
+              </h3>
               @if (eventLog().length === 0) {
                 <p class="text-text-secondary text-sm">{{ i18n.t('pet.noEvents') }}</p>
               } @else {
                 <ul class="flex flex-col gap-1 text-sm" data-testid="pet-log">
                   @for (entry of eventLog(); track entry.id) {
                     <li class="text-text-secondary">
-                      <span class="text-text-primary/70 font-mono text-xs mr-2">{{ formatEventTime(entry.timestamp) }}</span>
+                      <span class="text-text-primary/70 font-mono text-xs mr-2">{{
+                        formatEventTime(entry.timestamp)
+                      }}</span>
                       {{ entryMessage(entry) }}
                     </li>
                   }
@@ -267,27 +322,40 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
           <!-- No pet yet: show egg hatching card -->
           <div class="animate-fade-slide-up stagger-1">
             <app-glow-card>
-              <div class="flex flex-col items-center text-center py-8 gap-6" data-testid="pet-hatch">
+              <div
+                class="flex flex-col items-center text-center py-8 gap-6"
+                data-testid="pet-hatch"
+              >
                 <div class="text-8xl md:text-9xl select-none" aria-hidden="true">🥚</div>
                 <div>
-                  <h2 class="text-xl font-semibold text-text-primary mb-2">{{ i18n.t('pet.eggTitle') }}</h2>
+                  <h2 class="text-xl font-semibold text-text-primary mb-2">
+                    {{ i18n.t('pet.eggTitle') }}
+                  </h2>
                   <p class="text-text-secondary text-sm max-w-md">
                     {{ i18n.t('pet.eggBody') }}
                   </p>
                 </div>
                 <div class="w-full max-w-sm flex flex-col gap-3">
-                  <label for="pet-name" class="text-xs text-text-secondary uppercase tracking-wider text-left">{{ i18n.t('pet.name') }}</label>
-                  <input id="pet-name"
-                         type="text"
-                         [formField]="nameForm.name"
-                         [attr.placeholder]="i18n.t('pet.namePlaceholder')"
-                         [attr.aria-invalid]="nameForm.name().invalid() && nameForm.name().touched()"
-                         data-testid="pet-name-input"
-                         class="w-full px-4 py-2.5 bg-bg-card border-2 border-ink text-ink placeholder:text-text-secondary focus:outline-none focus:shadow-brutal-sm transition-all" />
-                  <button (click)="hatch()"
-                          [disabled]="!canHatch()"
-                          data-testid="pet-hatch-btn"
-                          class="px-8 py-3 bg-pop-pink border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                  <label
+                    for="pet-name"
+                    class="text-xs text-text-secondary uppercase tracking-wider text-left"
+                    >{{ i18n.t('pet.name') }}</label
+                  >
+                  <input
+                    id="pet-name"
+                    type="text"
+                    [formField]="nameForm.name"
+                    [attr.placeholder]="i18n.t('pet.namePlaceholder')"
+                    [attr.aria-invalid]="nameForm.name().invalid() && nameForm.name().touched()"
+                    data-testid="pet-name-input"
+                    class="w-full px-4 py-2.5 bg-bg-card border-2 border-ink text-ink placeholder:text-text-secondary focus:outline-none focus:shadow-brutal-sm transition-all"
+                  />
+                  <button
+                    (click)="hatch()"
+                    [disabled]="!canHatch()"
+                    data-testid="pet-hatch-btn"
+                    class="px-8 py-3 bg-pop-pink border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     {{ i18n.t('pet.hatch') }}
                   </button>
                 </div>
@@ -299,7 +367,9 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
         <!-- Instructions -->
         <div class="mt-5 animate-fade-slide-up stagger-4">
           <app-glow-card>
-            <h2 class="text-lg font-semibold text-text-primary mb-3">{{ i18n.t('pet.howToPlay') }}</h2>
+            <h2 class="text-lg font-semibold text-text-primary mb-3">
+              {{ i18n.t('pet.howToPlay') }}
+            </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-text-secondary">
               <ul class="space-y-1 list-disc list-inside">
                 <li>{{ i18n.t('pet.instructionRandom') }}</li>
@@ -340,12 +410,25 @@ const MAX_OFFLINE_MINUTES = 60 * 8;   // cap offline decay at 8 hours so returni
       transform: translate(1px, 1px);
       box-shadow: 1px 1px 0 var(--color-ink);
     }
-    .care-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .care-btn-amber   { background: var(--color-pop-orange); }
-    .care-btn-pink    { background: var(--color-pop-pink); }
-    .care-btn-sky     { background: var(--color-pop-sky); }
-    .care-btn-indigo  { background: var(--color-pop-yellow); }
-    .care-btn-emerald { background: var(--color-pop-lime); }
+    .care-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .care-btn-amber {
+      background: var(--color-pop-orange);
+    }
+    .care-btn-pink {
+      background: var(--color-pop-pink);
+    }
+    .care-btn-sky {
+      background: var(--color-pop-sky);
+    }
+    .care-btn-indigo {
+      background: var(--color-pop-yellow);
+    }
+    .care-btn-emerald {
+      background: var(--color-pop-lime);
+    }
   `,
 })
 export class PetPageComponent implements OnInit, OnDestroy {
@@ -354,7 +437,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
   // ── State ─────────────────────────────────────────────────────────
   protected readonly pet = signal<PetState | null>(null);
   private readonly nameModel = signal({ name: '' });
-  protected readonly nameForm = form(this.nameModel, name => {
+  protected readonly nameForm = form(this.nameModel, (name) => {
     required(name.name);
     maxLength(name.name, 16);
   });
@@ -384,8 +467,8 @@ export class PetPageComponent implements OnInit, OnDestroy {
   }
 
   // ── Derived view data ─────────────────────────────────────────────
-  protected readonly canHatch = computed(() =>
-    this.nameForm.name().valid() && this.nameModel().name.trim().length > 0
+  protected readonly canHatch = computed(
+    () => this.nameForm.name().valid() && this.nameModel().name.trim().length > 0,
   );
   protected readonly canAct = computed(() => {
     const p = this.pet();
@@ -395,7 +478,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
   protected readonly species = computed<Species | null>(() => {
     const p = this.pet();
     if (!p) return null;
-    return SPECIES.find(s => s.id === p.speciesId) ?? SPECIES[0];
+    return SPECIES.find((s) => s.id === p.speciesId) ?? SPECIES[0];
   });
 
   protected readonly speciesAccent = computed(() => this.species()?.accent ?? 'text-text-primary');
@@ -467,7 +550,8 @@ export class PetPageComponent implements OnInit, OnDestroy {
     if (p.cleanliness < 20) return this.i18n.t('pet.moodDirty', { name: p.name });
     if (p.energy < 20) return this.i18n.t('pet.moodExhausted', { name: p.name });
     if (p.happiness < 20) return this.i18n.t('pet.moodLonely', { name: p.name });
-    if (p.hunger > 80 && p.happiness > 70 && p.cleanliness > 70) return this.i18n.t('pet.moodThriving', { name: p.name });
+    if (p.hunger > 80 && p.happiness > 70 && p.cleanliness > 70)
+      return this.i18n.t('pet.moodThriving', { name: p.name });
     return this.i18n.t('pet.moodOkay', { name: p.name });
   });
 
@@ -485,11 +569,41 @@ export class PetPageComponent implements OnInit, OnDestroy {
     const p = this.pet();
     if (!p) return [];
     return [
-      { key: 'hunger',      label: this.i18n.t('pet.statHunger'),      icon: '🍽️', value: Math.round(p.hunger),      barClass: this.barClass('hunger') },
-      { key: 'happiness',   label: this.i18n.t('pet.statHappiness'),   icon: '😊', value: Math.round(p.happiness),   barClass: this.barClass('happiness') },
-      { key: 'energy',      label: this.i18n.t('pet.statEnergy'),      icon: '⚡',  value: Math.round(p.energy),      barClass: this.barClass('energy') },
-      { key: 'cleanliness', label: this.i18n.t('pet.statCleanliness'), icon: '🫧', value: Math.round(p.cleanliness), barClass: this.barClass('cleanliness') },
-      { key: 'health',      label: this.i18n.t('pet.statHealth'),      icon: '❤️', value: Math.round(p.health),      barClass: this.barClass('health') },
+      {
+        key: 'hunger',
+        label: this.i18n.t('pet.statHunger'),
+        icon: '🍽️',
+        value: Math.round(p.hunger),
+        barClass: this.barClass('hunger'),
+      },
+      {
+        key: 'happiness',
+        label: this.i18n.t('pet.statHappiness'),
+        icon: '😊',
+        value: Math.round(p.happiness),
+        barClass: this.barClass('happiness'),
+      },
+      {
+        key: 'energy',
+        label: this.i18n.t('pet.statEnergy'),
+        icon: '⚡',
+        value: Math.round(p.energy),
+        barClass: this.barClass('energy'),
+      },
+      {
+        key: 'cleanliness',
+        label: this.i18n.t('pet.statCleanliness'),
+        icon: '🫧',
+        value: Math.round(p.cleanliness),
+        barClass: this.barClass('cleanliness'),
+      },
+      {
+        key: 'health',
+        label: this.i18n.t('pet.statHealth'),
+        icon: '❤️',
+        value: Math.round(p.health),
+        barClass: this.barClass('health'),
+      },
     ];
   });
 
@@ -529,10 +643,18 @@ export class PetPageComponent implements OnInit, OnDestroy {
     this.persist();
   }
 
-  protected feed()  { this.applyAction('feed'); }
-  protected play()  { this.applyAction('play'); }
-  protected clean() { this.applyAction('clean'); }
-  protected heal()  { this.applyAction('heal'); }
+  protected feed() {
+    this.applyAction('feed');
+  }
+  protected play() {
+    this.applyAction('play');
+  }
+  protected clean() {
+    this.applyAction('clean');
+  }
+  protected heal() {
+    this.applyAction('heal');
+  }
 
   protected toggleSleep() {
     const p = this.pet();
@@ -583,7 +705,11 @@ export class PetPageComponent implements OnInit, OnDestroy {
     this.pet.set(null);
     this.nameModel.set({ name: '' });
     this.eventLog.set([]);
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
   }
 
   // ── Tick loop ────────────────────────────────────────────────────
@@ -595,7 +721,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     // If the system clock moved backwards, reset lastTick to now so
     // stat decay doesn't freeze until the clock catches up again.
     if (now < p.lastTick) {
-      this.pet.update(s => s ? { ...s, lastTick: now, bornAt: Math.min(s.bornAt, now) } : s);
+      this.pet.update((s) => (s ? { ...s, lastTick: now, bornAt: Math.min(s.bornAt, now) } : s));
       return;
     }
     const elapsedMs = now - p.lastTick;
@@ -609,17 +735,22 @@ export class PetPageComponent implements OnInit, OnDestroy {
     const next: PetState = {
       ...p,
       lastTick: now,
-      hunger:      clamp(p.hunger      - decay),
-      happiness:   clamp(p.happiness   - decay * (p.asleep ? 0.5 : 1)),
-      energy:      clamp(p.energy      + energyDelta),
+      hunger: clamp(p.hunger - decay),
+      happiness: clamp(p.happiness - decay * (p.asleep ? 0.5 : 1)),
+      energy: clamp(p.energy + energyDelta),
       cleanliness: clamp(p.cleanliness - decay * 0.6),
     };
 
     // Health effects from critical stats
-    const critical = [next.hunger, next.cleanliness, next.happiness].filter(v => v <= 0).length;
+    const critical = [next.hunger, next.cleanliness, next.happiness].filter((v) => v <= 0).length;
     if (critical > 0) {
       next.health = clamp(next.health - critical * decay * 0.5);
-    } else if (next.hunger > 60 && next.cleanliness > 60 && next.happiness > 60 && next.energy > 40) {
+    } else if (
+      next.hunger > 60 &&
+      next.cleanliness > 60 &&
+      next.happiness > 60 &&
+      next.energy > 40
+    ) {
       // Gentle passive recovery when well cared for
       next.health = clamp(next.health + minutes * 1);
     }
@@ -647,14 +778,54 @@ export class PetPageComponent implements OnInit, OnDestroy {
 
   private triggerRandomEvent(pet: PetState) {
     const events: readonly { messageKey: TranslationKey; apply: (p: PetState) => void }[] = [
-      { messageKey: 'pet.randomSnack',   apply: p => { p.hunger = clamp(p.hunger + 10); } },
-      { messageKey: 'pet.randomDream',   apply: p => { p.happiness = clamp(p.happiness + 8); } },
-      { messageKey: 'pet.randomMud',     apply: p => { p.cleanliness = clamp(p.cleanliness - 12); } },
-      { messageKey: 'pet.randomEnergy',  apply: p => { p.energy = clamp(p.energy + 15); } },
-      { messageKey: 'pet.randomHiccups', apply: p => { p.happiness = clamp(p.happiness - 4); } },
-      { messageKey: 'pet.randomFriend',  apply: p => { p.happiness = clamp(p.happiness + 12); } },
-      { messageKey: 'pet.randomSneeze',  apply: p => { p.health = clamp(p.health - 3); } },
-      { messageKey: 'pet.randomTrick',   apply: p => { p.happiness = clamp(p.happiness + 6); } },
+      {
+        messageKey: 'pet.randomSnack',
+        apply: (p) => {
+          p.hunger = clamp(p.hunger + 10);
+        },
+      },
+      {
+        messageKey: 'pet.randomDream',
+        apply: (p) => {
+          p.happiness = clamp(p.happiness + 8);
+        },
+      },
+      {
+        messageKey: 'pet.randomMud',
+        apply: (p) => {
+          p.cleanliness = clamp(p.cleanliness - 12);
+        },
+      },
+      {
+        messageKey: 'pet.randomEnergy',
+        apply: (p) => {
+          p.energy = clamp(p.energy + 15);
+        },
+      },
+      {
+        messageKey: 'pet.randomHiccups',
+        apply: (p) => {
+          p.happiness = clamp(p.happiness - 4);
+        },
+      },
+      {
+        messageKey: 'pet.randomFriend',
+        apply: (p) => {
+          p.happiness = clamp(p.happiness + 12);
+        },
+      },
+      {
+        messageKey: 'pet.randomSneeze',
+        apply: (p) => {
+          p.health = clamp(p.health - 3);
+        },
+      },
+      {
+        messageKey: 'pet.randomTrick',
+        apply: (p) => {
+          p.happiness = clamp(p.happiness + 6);
+        },
+      },
     ];
     const ev = events[Math.floor(Math.random() * events.length)];
     ev.apply(pet);
@@ -662,13 +833,26 @@ export class PetPageComponent implements OnInit, OnDestroy {
   }
 
   // ── Event log ────────────────────────────────────────────────────
-  private logEvent(key: TranslationKey, params: Record<string, string | number> = {}, speciesNameKey?: TranslationKey) {
-    const entry: EventLogEntry = { id: ++this.logSeq, timestamp: Date.now(), key, params, speciesNameKey };
-    this.eventLog.update(list => [entry, ...list].slice(0, 8));
+  private logEvent(
+    key: TranslationKey,
+    params: Record<string, string | number> = {},
+    speciesNameKey?: TranslationKey,
+  ) {
+    const entry: EventLogEntry = {
+      id: ++this.logSeq,
+      timestamp: Date.now(),
+      key,
+      params,
+      speciesNameKey,
+    };
+    this.eventLog.update((list) => [entry, ...list].slice(0, 8));
   }
 
   protected formatEventTime(timestamp: number): string {
-    return new Date(timestamp).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
+    return new Date(timestamp).toLocaleTimeString(this.i18n.locale(), {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   protected entryMessage(entry: EventLogEntry): string {
@@ -682,38 +866,49 @@ export class PetPageComponent implements OnInit, OnDestroy {
   private persist() {
     const p = this.pet();
     if (!p) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+    } catch {
+      /* ignore */
+    }
   }
 
   private loadFromStorage() {
     let raw: string | null = null;
-    try { raw = localStorage.getItem(STORAGE_KEY); } catch { raw = null; }
+    try {
+      raw = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      raw = null;
+    }
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as Partial<PetState>;
       if (!parsed || typeof parsed !== 'object') return;
-      if (!parsed.speciesId || !SPECIES.some(s => s.id === parsed.speciesId)) return;
+      if (!parsed.speciesId || !SPECIES.some((s) => s.id === parsed.speciesId)) return;
       // Sanitize
       const now = Date.now();
       const persistedBornAt =
         typeof parsed.bornAt === 'number' && Number.isFinite(parsed.bornAt) ? parsed.bornAt : now;
       const persistedLastTick =
-        typeof parsed.lastTick === 'number' && Number.isFinite(parsed.lastTick) ? parsed.lastTick : now;
+        typeof parsed.lastTick === 'number' && Number.isFinite(parsed.lastTick)
+          ? parsed.lastTick
+          : now;
       const lastTick = Math.min(persistedLastTick, now);
       const bornAt = Math.min(persistedBornAt, lastTick);
 
       const pet: PetState = {
         speciesId: parsed.speciesId,
-        name: typeof parsed.name === 'string' && parsed.name.trim()
-          ? parsed.name.trim().slice(0, 16)
-          : 'Pet',
+        name:
+          typeof parsed.name === 'string' && parsed.name.trim()
+            ? parsed.name.trim().slice(0, 16)
+            : 'Pet',
         bornAt,
         lastTick,
-        hunger:      clamp(asNumber(parsed.hunger, 80)),
-        happiness:   clamp(asNumber(parsed.happiness, 80)),
-        energy:      clamp(asNumber(parsed.energy, 80)),
+        hunger: clamp(asNumber(parsed.hunger, 80)),
+        happiness: clamp(asNumber(parsed.happiness, 80)),
+        energy: clamp(asNumber(parsed.energy, 80)),
         cleanliness: clamp(asNumber(parsed.cleanliness, 80)),
-        health:      clamp(asNumber(parsed.health, 100)),
+        health: clamp(asNumber(parsed.health, 100)),
         dead: !!parsed.dead,
         asleep: !!parsed.asleep,
       };

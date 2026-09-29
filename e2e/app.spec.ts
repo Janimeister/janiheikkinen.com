@@ -80,7 +80,11 @@ test.describe('Language Settings', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => {
-      try { localStorage.removeItem('app-language'); } catch { /* ignore */ }
+      try {
+        localStorage.removeItem('app-language');
+      } catch {
+        /* ignore */
+      }
     });
     await page.reload();
   });
@@ -233,7 +237,16 @@ test.describe('ASCII Page', () => {
   });
 
   test('displays algorithm selector buttons', async ({ page }) => {
-    const algorithms = ['Plasma', 'Mandelbrot', 'Waves', 'Galaxy', 'Terrain', 'Coral Bloom', 'Wind Lines', 'Island Contours'];
+    const algorithms = [
+      'Plasma',
+      'Mandelbrot',
+      'Waves',
+      'Galaxy',
+      'Terrain',
+      'Coral Bloom',
+      'Wind Lines',
+      'Island Contours',
+    ];
     for (const algo of algorithms) {
       await expect(page.locator('button', { hasText: algo })).toBeVisible();
     }
@@ -262,7 +275,7 @@ test.describe('ASCII Page', () => {
     // Art should be regenerated and remain non-whitespace after switching
     await expect(pre).toHaveText(/\S/, { timeout: 15_000 });
     await expect
-      .poll(async () => ((await pre.textContent())?.trim() ?? ''), { timeout: 15_000 })
+      .poll(async () => (await pre.textContent())?.trim() ?? '', { timeout: 15_000 })
       .not.toBe(initialArt);
   });
 });
@@ -313,7 +326,10 @@ test.describe('Snake Page', () => {
     await expect(page.locator('[data-testid="snake-start-btn"]')).not.toBeVisible();
 
     await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'hidden',
+      });
       document.dispatchEvent(new Event('visibilitychange'));
     });
     await expect(page.getByText('Paused', { exact: true })).toBeVisible();
@@ -332,7 +348,11 @@ test.describe('Virtual Pet Page', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any persisted pet so each test starts from the hatching screen.
     await page.addInitScript(() => {
-      try { localStorage.removeItem('virtual-pet-v1'); } catch { /* ignore */ }
+      try {
+        localStorage.removeItem('virtual-pet-v1');
+      } catch {
+        /* ignore */
+      }
     });
     await page.goto('/pet');
   });
@@ -363,7 +383,13 @@ test.describe('Virtual Pet Page', () => {
 
     // Stats and care action buttons are present
     await expect(page.locator('[data-testid="pet-stats"]')).toBeVisible();
-    for (const id of ['pet-feed-btn', 'pet-play-btn', 'pet-clean-btn', 'pet-sleep-btn', 'pet-heal-btn']) {
+    for (const id of [
+      'pet-feed-btn',
+      'pet-play-btn',
+      'pet-clean-btn',
+      'pet-sleep-btn',
+      'pet-heal-btn',
+    ]) {
       await expect(page.locator(`[data-testid="${id}"]`)).toBeVisible();
     }
   });

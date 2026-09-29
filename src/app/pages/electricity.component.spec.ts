@@ -7,7 +7,13 @@ import { ElectricityPageComponent } from './electricity.component';
 function twoDaysOfPrices(firstDay: Date) {
   const prices = [];
   for (let i = 0; i < 192; i++) {
-    const start = new Date(firstDay.getFullYear(), firstDay.getMonth(), firstDay.getDate(), 0, i * 15);
+    const start = new Date(
+      firstDay.getFullYear(),
+      firstDay.getMonth(),
+      firstDay.getDate(),
+      0,
+      i * 15,
+    );
     const end = new Date(start.getTime() + 15 * 60_000 - 1);
     prices.push({
       price: i === 5 ? -0.5 : 1 + (i % 20),

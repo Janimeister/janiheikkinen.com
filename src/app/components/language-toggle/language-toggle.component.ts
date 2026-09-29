@@ -14,7 +14,8 @@ import type { Language } from '../../i18n/translations';
           [attr.aria-label]="language.nativeName"
           [attr.aria-pressed]="i18n.isLanguage(language.code)"
           [attr.title]="language.nativeName"
-          [attr.data-testid]="'language-' + language.code">
+          [attr.data-testid]="'language-' + language.code"
+        >
           {{ language.label }}
         </button>
       }

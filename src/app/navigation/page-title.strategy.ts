@@ -1,7 +1,11 @@
 import { DOCUMENT } from '@angular/common';
 import { effect, inject, Injectable, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { type ActivatedRouteSnapshot, type RouterStateSnapshot, TitleStrategy } from '@angular/router';
+import {
+  type ActivatedRouteSnapshot,
+  type RouterStateSnapshot,
+  TitleStrategy,
+} from '@angular/router';
 import { LanguageService } from '../i18n/language.service';
 import { canonicalUrl, pageTitle, type PageMeta } from './page-registry';
 

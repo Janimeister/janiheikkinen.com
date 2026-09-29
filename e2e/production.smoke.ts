@@ -12,7 +12,10 @@ for (const route of [
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('response', (response) => {
-      if (['script', 'stylesheet', 'font'].includes(response.request().resourceType()) && !response.ok()) {
+      if (
+        ['script', 'stylesheet', 'font'].includes(response.request().resourceType()) &&
+        !response.ok()
+      ) {
         errors.push(`Asset failed: ${response.status()} ${response.url()}`);
       }
     });

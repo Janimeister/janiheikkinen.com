@@ -231,7 +231,7 @@ These checks run as part of the full Playwright suite. Navigation tests also exe
 
 ## CI and Deployment
 
-[Tests](.github/workflows/test.yml) runs on pull requests to `main`, on manual dispatch, and when called by the deployment workflow. It checks the production build, Vitest unit tests, and Playwright end-to-end/accessibility tests. Browser and production smoke reports are retained for seven days.
+[Tests](.github/workflows/test.yml) runs on pull requests to `main`, on manual dispatch, and when called by the deployment workflow. It checks formatting (`npm run format:check`; `npm run format` fixes it), the production build, Vitest unit tests, and Playwright end-to-end/accessibility tests. Browser and production smoke reports are retained for seven days.
 
 CI uses Node.js 24 and installs the exact npm version declared in `package.json` (`npm@11.19.0`). Actions are pinned to reviewed commit SHAs and updated through Dependabot. Playwright rejects focused (`test.only`) tests in CI and uploads HTML reports for every completed, non-cancelled run, including successful retries.
 

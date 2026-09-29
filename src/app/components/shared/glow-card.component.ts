@@ -14,7 +14,10 @@ import { Component, input } from '@angular/core';
       border-radius: 0;
       padding: 1.5rem;
       box-shadow: var(--shadow-brutal);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
       position: relative;
       overflow: hidden;
     }
@@ -23,7 +26,7 @@ import { Component, input } from '@angular/core';
       background: var(--color-bg-card-hover);
       box-shadow: var(--shadow-brutal-lg);
     }
-  `
+  `,
 })
 export class GlowCardComponent {
   extraClass = input('');

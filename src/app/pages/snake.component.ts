@@ -29,14 +29,39 @@ interface Point {
   },
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
-      <app-floating-orb class="hidden md:block absolute top-[12%] right-[12%] z-[1]" delay="0s" [size]="65" shape="square" color="lime" rotate="-6deg" />
-      <app-floating-orb class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]" delay="3s" [size]="55" shape="circle" color="yellow" rotate="5deg" />
+      <app-floating-orb
+        class="hidden md:block absolute top-[12%] right-[12%] z-[1]"
+        delay="0s"
+        [size]="65"
+        shape="square"
+        color="lime"
+        rotate="-6deg"
+      />
+      <app-floating-orb
+        class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]"
+        delay="3s"
+        [size]="55"
+        shape="circle"
+        color="yellow"
+        rotate="5deg"
+      />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <a
+            routerLink="/"
+            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
@@ -49,19 +74,32 @@ interface Point {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6 animate-fade-slide-up stagger-1">
           <app-glow-card>
             <div class="text-center">
-              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">{{ i18n.t('snake.score') }}</div>
-              <div class="text-3xl font-bold text-ink font-mono" data-testid="snake-score">{{ score() }}</div>
+              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">
+                {{ i18n.t('snake.score') }}
+              </div>
+              <div class="text-3xl font-bold text-ink font-mono" data-testid="snake-score">
+                {{ score() }}
+              </div>
             </div>
           </app-glow-card>
           <app-glow-card>
             <div class="text-center">
-              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">{{ i18n.t('snake.highScore') }}</div>
-              <div class="text-3xl font-bold text-accent-light font-mono" data-testid="snake-highscore">{{ highScore() }}</div>
+              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">
+                {{ i18n.t('snake.highScore') }}
+              </div>
+              <div
+                class="text-3xl font-bold text-accent-light font-mono"
+                data-testid="snake-highscore"
+              >
+                {{ highScore() }}
+              </div>
             </div>
           </app-glow-card>
           <app-glow-card>
             <div class="text-center">
-              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">{{ i18n.t('snake.speed') }}</div>
+              <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">
+                {{ i18n.t('snake.speed') }}
+              </div>
               <div class="text-3xl font-bold text-accent-secondary font-mono">{{ speed() }}</div>
             </div>
           </app-glow-card>
@@ -71,25 +109,31 @@ interface Point {
         <div class="animate-fade-slide-up stagger-2">
           <app-glow-card>
             <div class="flex flex-col items-center">
-              <div class="border-2 border-ink shadow-brutal bg-bg-card p-1 max-w-full overflow-hidden">
-                <canvas #gameCanvas
-                        data-testid="snake-canvas"
-                        class="block touch-none max-w-full"
-                        [width]="canvasWidth()"
-                        [height]="canvasHeight()"
-                        [style.width.px]="displayWidth()"
-                        [style.height.px]="displayHeight()"
-                        (touchstart)="onTouchStart($event)"
-                        (touchend)="onTouchEnd($event)">
+              <div
+                class="border-2 border-ink shadow-brutal bg-bg-card p-1 max-w-full overflow-hidden"
+              >
+                <canvas
+                  #gameCanvas
+                  data-testid="snake-canvas"
+                  class="block touch-none max-w-full"
+                  [width]="canvasWidth()"
+                  [height]="canvasHeight()"
+                  [style.width.px]="displayWidth()"
+                  [style.height.px]="displayHeight()"
+                  (touchstart)="onTouchStart($event)"
+                  (touchend)="onTouchEnd($event)"
+                >
                 </canvas>
               </div>
 
               <!-- Game state overlays -->
               @if (gameState() === 'idle') {
                 <div class="mt-6 text-center">
-                  <button (click)="startGame()"
-                          data-testid="snake-start-btn"
-                          class="px-8 py-3 bg-pop-lime border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50">
+                  <button
+                    (click)="startGame()"
+                    data-testid="snake-start-btn"
+                    class="px-8 py-3 bg-pop-lime border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50"
+                  >
                     {{ i18n.t('snake.startGame') }}
                   </button>
                   <p class="text-text-secondary text-sm mt-3">{{ i18n.t('snake.controlHint') }}</p>
@@ -97,31 +141,50 @@ interface Point {
               }
               @if (gameState() === 'over') {
                 <div class="mt-6 text-center">
-                  <p class="text-red-400 text-lg font-semibold mb-2" data-testid="snake-game-over">{{ i18n.t('snake.gameOver') }}</p>
-                  <p class="text-text-secondary text-sm mb-4">{{ i18n.t('snake.finalScore', { score: score() }) }}</p>
-                  <button (click)="startGame()"
-                          data-testid="snake-restart-btn"
-                          class="px-8 py-3 bg-pop-orange border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50">
+                  <p class="text-red-400 text-lg font-semibold mb-2" data-testid="snake-game-over">
+                    {{ i18n.t('snake.gameOver') }}
+                  </p>
+                  <p class="text-text-secondary text-sm mb-4">
+                    {{ i18n.t('snake.finalScore', { score: score() }) }}
+                  </p>
+                  <button
+                    (click)="startGame()"
+                    data-testid="snake-restart-btn"
+                    class="px-8 py-3 bg-pop-orange border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50"
+                  >
                     {{ i18n.t('snake.playAgain') }}
                   </button>
                 </div>
               }
               @if (gameState() === 'won') {
                 <div class="mt-6 text-center">
-                  <p class="text-accent-light text-lg font-semibold mb-2" data-testid="snake-game-won">{{ i18n.t('snake.youWin') }}</p>
-                  <p class="text-text-secondary text-sm mb-4">{{ i18n.t('snake.perfectScore', { score: score() }) }}</p>
-                  <button (click)="startGame()"
-                          data-testid="snake-restart-btn"
-                          class="px-8 py-3 bg-pop-yellow border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50">
+                  <p
+                    class="text-accent-light text-lg font-semibold mb-2"
+                    data-testid="snake-game-won"
+                  >
+                    {{ i18n.t('snake.youWin') }}
+                  </p>
+                  <p class="text-text-secondary text-sm mb-4">
+                    {{ i18n.t('snake.perfectScore', { score: score() }) }}
+                  </p>
+                  <button
+                    (click)="startGame()"
+                    data-testid="snake-restart-btn"
+                    class="px-8 py-3 bg-pop-yellow border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50"
+                  >
                     {{ i18n.t('snake.playAgain') }}
                   </button>
                 </div>
               }
               @if (gameState() === 'paused') {
                 <div class="mt-6 text-center">
-                  <p class="text-accent-secondary text-lg font-semibold mb-2">{{ i18n.t('snake.paused') }}</p>
-                  <button (click)="resumeGame()"
-                          class="px-8 py-3 bg-pop-sky border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50">
+                  <p class="text-accent-secondary text-lg font-semibold mb-2">
+                    {{ i18n.t('snake.paused') }}
+                  </p>
+                  <button
+                    (click)="resumeGame()"
+                    class="px-8 py-3 bg-pop-sky border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press font-semibold transition-all text-lg disabled:opacity-50"
+                  >
                     {{ i18n.t('snake.resume') }}
                   </button>
                 </div>
@@ -133,29 +196,103 @@ interface Point {
         <!-- Mobile D-Pad Controls -->
         <div class="mt-6 animate-fade-slide-up stagger-3 md:hidden">
           <app-glow-card>
-            <div class="flex flex-col items-center gap-2" role="group" [attr.aria-label]="i18n.t('snake.directionalControls')">
-              <button (click)="setDirection('UP')" class="dpad-btn w-16 h-16" [attr.aria-label]="i18n.t('snake.moveUp')">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+            <div
+              class="flex flex-col items-center gap-2"
+              role="group"
+              [attr.aria-label]="i18n.t('snake.directionalControls')"
+            >
+              <button
+                (click)="setDirection('UP')"
+                class="dpad-btn w-16 h-16"
+                [attr.aria-label]="i18n.t('snake.moveUp')"
+              >
+                <svg
+                  class="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                </svg>
               </button>
               <div class="flex gap-2">
-                <button (click)="setDirection('LEFT')" class="dpad-btn w-16 h-16" [attr.aria-label]="i18n.t('snake.moveLeft')">
-                  <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                <button
+                  (click)="setDirection('LEFT')"
+                  class="dpad-btn w-16 h-16"
+                  [attr.aria-label]="i18n.t('snake.moveLeft')"
+                >
+                  <svg
+                    class="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
                 </button>
-                <button (click)="handlePausePlay()"
-                        class="dpad-btn w-16 h-16 dpad-btn-center"
-                        [attr.aria-label]="gameState() === 'playing' ? i18n.t('snake.pauseGame') : i18n.t('snake.startGame')">
+                <button
+                  (click)="handlePausePlay()"
+                  class="dpad-btn w-16 h-16 dpad-btn-center"
+                  [attr.aria-label]="
+                    gameState() === 'playing'
+                      ? i18n.t('snake.pauseGame')
+                      : i18n.t('snake.startGame')
+                  "
+                >
                   @if (gameState() === 'playing') {
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6"/></svg>
+                    <svg
+                      class="w-8 h-8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6" />
+                    </svg>
                   } @else {
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/></svg>
+                    <svg
+                      class="w-8 h-8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z" />
+                    </svg>
                   }
                 </button>
-                <button (click)="setDirection('RIGHT')" class="dpad-btn w-16 h-16" [attr.aria-label]="i18n.t('snake.moveRight')">
-                  <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                <button
+                  (click)="setDirection('RIGHT')"
+                  class="dpad-btn w-16 h-16"
+                  [attr.aria-label]="i18n.t('snake.moveRight')"
+                >
+                  <svg
+                    class="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
-              <button (click)="setDirection('DOWN')" class="dpad-btn w-16 h-16" [attr.aria-label]="i18n.t('snake.moveDown')">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              <button
+                (click)="setDirection('DOWN')"
+                class="dpad-btn w-16 h-16"
+                [attr.aria-label]="i18n.t('snake.moveDown')"
+              >
+                <svg
+                  class="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
             </div>
           </app-glow-card>
@@ -164,7 +301,9 @@ interface Point {
         <!-- Instructions -->
         <div class="mt-6 animate-fade-slide-up stagger-4">
           <app-glow-card>
-            <h2 class="text-lg font-semibold text-text-primary mb-3">{{ i18n.t('snake.howToPlay') }}</h2>
+            <h2 class="text-lg font-semibold text-text-primary mb-3">
+              {{ i18n.t('snake.howToPlay') }}
+            </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-text-secondary">
               <div>
                 <h3 class="text-text-primary font-medium mb-1">{{ i18n.t('snake.desktop') }}</h3>
@@ -233,7 +372,11 @@ export class SnakePageComponent implements OnDestroy {
   gameState = signal<'idle' | 'playing' | 'paused' | 'over' | 'won'>('idle');
   score = signal(0);
   highScore = signal(this.loadHighScore());
-  private static readonly SPEED_TIERS: readonly { minScore: number; level: number; interval: number }[] = [
+  private static readonly SPEED_TIERS: readonly {
+    minScore: number;
+    level: number;
+    interval: number;
+  }[] = [
     { minScore: 50, level: 5, interval: 70 },
     { minScore: 30, level: 4, interval: 90 },
     { minScore: 15, level: 3, interval: 110 },
@@ -243,7 +386,10 @@ export class SnakePageComponent implements OnDestroy {
 
   private readonly speedTier = computed(() => {
     const s = this.score();
-    return SnakePageComponent.SPEED_TIERS.find(t => s >= t.minScore) ?? SnakePageComponent.SPEED_TIERS.at(-1)!;
+    return (
+      SnakePageComponent.SPEED_TIERS.find((t) => s >= t.minScore) ??
+      SnakePageComponent.SPEED_TIERS.at(-1)!
+    );
   });
 
   speed = computed(() => this.speedTier().level);
@@ -312,8 +458,12 @@ export class SnakePageComponent implements OnDestroy {
     const target = event.target instanceof Element ? event.target : null;
 
     // Never take keys from text fields, and leave Enter and Space to the focused link or button.
-    if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;
-    if ((key === 'Enter' || key === ' ') && target?.closest('a[href], button, [role="button"]')) return;
+    if (
+      target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')
+    )
+      return;
+    if ((key === 'Enter' || key === ' ') && target?.closest('a[href], button, [role="button"]'))
+      return;
 
     // Start/restart with Enter
     if (key === 'Enter' && (state === 'idle' || state === 'over' || state === 'won')) {
@@ -323,7 +473,10 @@ export class SnakePageComponent implements OnDestroy {
     }
 
     // Pause/resume with Space or P
-    if ((key === ' ' || key === 'p' || key === 'P') && (state === 'playing' || state === 'paused')) {
+    if (
+      (key === ' ' || key === 'p' || key === 'P') &&
+      (state === 'playing' || state === 'paused')
+    ) {
       event.preventDefault();
       if (state === 'playing') this.pauseGame();
       else this.resumeGame();
@@ -333,8 +486,18 @@ export class SnakePageComponent implements OnDestroy {
     if (state !== 'playing') return;
 
     const dirMap: Record<string, Direction> = {
-      ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT',
-      w: 'UP', W: 'UP', s: 'DOWN', S: 'DOWN', a: 'LEFT', A: 'LEFT', d: 'RIGHT', D: 'RIGHT',
+      ArrowUp: 'UP',
+      ArrowDown: 'DOWN',
+      ArrowLeft: 'LEFT',
+      ArrowRight: 'RIGHT',
+      w: 'UP',
+      W: 'UP',
+      s: 'DOWN',
+      S: 'DOWN',
+      a: 'LEFT',
+      A: 'LEFT',
+      d: 'RIGHT',
+      D: 'RIGHT',
     };
 
     const dir = dirMap[key];
@@ -382,7 +545,7 @@ export class SnakePageComponent implements OnDestroy {
     const totalCells = this.COLS * this.ROWS;
     if (this.snake.length >= totalCells) return false;
 
-    const occupied = new Set(this.snake.map(s => s.y * this.COLS + s.x));
+    const occupied = new Set(this.snake.map((s) => s.y * this.COLS + s.x));
     const free: Point[] = [];
     for (let y = 0; y < this.ROWS; y++) {
       for (let x = 0; x < this.COLS; x++) {
@@ -401,10 +564,18 @@ export class SnakePageComponent implements OnDestroy {
     const newHead: Point = { ...head };
 
     switch (this.direction) {
-      case 'UP': newHead.y--; break;
-      case 'DOWN': newHead.y++; break;
-      case 'LEFT': newHead.x--; break;
-      case 'RIGHT': newHead.x++; break;
+      case 'UP':
+        newHead.y--;
+        break;
+      case 'DOWN':
+        newHead.y++;
+        break;
+      case 'LEFT':
+        newHead.x--;
+        break;
+      case 'RIGHT':
+        newHead.x++;
+        break;
     }
 
     // Wall collision
@@ -418,7 +589,7 @@ export class SnakePageComponent implements OnDestroy {
 
     // Self collision — exclude tail when not eating, since it will move away
     const checkSegments = eatsFood ? this.snake : this.snake.slice(0, -1);
-    if (checkSegments.some(s => s.x === newHead.x && s.y === newHead.y)) {
+    if (checkSegments.some((s) => s.x === newHead.x && s.y === newHead.y)) {
       this.endGame();
       return;
     }
@@ -426,7 +597,7 @@ export class SnakePageComponent implements OnDestroy {
     this.snake.unshift(newHead);
 
     if (eatsFood) {
-      this.score.update(s => s + 1);
+      this.score.update((s) => s + 1);
       if (!this.placeFood()) {
         this.winGame();
         return;

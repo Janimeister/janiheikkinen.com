@@ -5,18 +5,19 @@ import { LanguageService } from '../../i18n/language.service';
   selector: 'app-cookie-notice',
   template: `
     @if (visible()) {
-      <aside
-        class="fixed bottom-0 inset-x-0 z-50 p-4 md:p-6"
-        aria-labelledby="privacy-note-title"
-      >
+      <aside class="fixed bottom-0 inset-x-0 z-50 p-4 md:p-6" aria-labelledby="privacy-note-title">
         <div class="max-w-3xl mx-auto bg-bg-card border-2 border-ink p-5 shadow-brutal">
           <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div class="flex-1">
               <h2 id="privacy-note-title" class="text-sm font-bold text-text-primary mb-1.5">
                 {{ i18n.t('cookie.title') }}
               </h2>
-              <p class="text-xs text-text-secondary leading-relaxed">{{ i18n.t('cookie.storage') }}</p>
-              <p class="text-xs text-text-secondary leading-relaxed mt-1">{{ i18n.t('cookie.services') }}</p>
+              <p class="text-xs text-text-secondary leading-relaxed">
+                {{ i18n.t('cookie.storage') }}
+              </p>
+              <p class="text-xs text-text-secondary leading-relaxed mt-1">
+                {{ i18n.t('cookie.services') }}
+              </p>
             </div>
             <button
               type="button"

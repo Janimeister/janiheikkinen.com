@@ -32,7 +32,9 @@ describe('LanguageService', () => {
   it('interpolates translation parameters', () => {
     const service = TestBed.inject(LanguageService);
 
-    expect(service.t('weather.noResults', { location: 'Tampere' })).toBe('No results found for "Tampere".');
+    expect(service.t('weather.noResults', { location: 'Tampere' })).toBe(
+      'No results found for "Tampere".',
+    );
   });
 
   it('loads a stored language before it is ready', async () => {

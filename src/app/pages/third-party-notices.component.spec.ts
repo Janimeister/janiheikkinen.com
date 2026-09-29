@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ThirdPartyNoticesComponent, splitTrailingPunctuation } from './third-party-notices.component';
+import {
+  ThirdPartyNoticesComponent,
+  splitTrailingPunctuation,
+} from './third-party-notices.component';
 import { LanguageService } from '../i18n/language.service';
 
 describe('ThirdPartyNoticesComponent', () => {
@@ -52,7 +55,9 @@ describe('ThirdPartyNoticesComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('a[href="/"]')?.textContent).toContain('Takaisin etusivulle');
-    expect(compiled.querySelector('h1')?.textContent).toContain('Kolmansien osapuolten ilmoitukset');
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Kolmansien osapuolten ilmoitukset',
+    );
   });
 
   it('should show loading state initially', () => {
@@ -65,9 +70,7 @@ describe('ThirdPartyNoticesComponent', () => {
 
   it('should render markdown content after loading', async () => {
     const sampleMd = '## Test Section\n\n- **Item:** value\n\n```\nLicense text\n```';
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(sampleMd, { status: 200 }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(sampleMd, { status: 200 }));
 
     const fixture = TestBed.createComponent(ThirdPartyNoticesComponent);
     fixture.detectChanges();
@@ -87,9 +90,7 @@ describe('ThirdPartyNoticesComponent', () => {
   });
 
   it('should show error state on fetch failure', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response('', { status: 500 }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 500 }));
 
     const fixture = TestBed.createComponent(ThirdPartyNoticesComponent);
     fixture.detectChanges();
@@ -106,9 +107,7 @@ describe('ThirdPartyNoticesComponent', () => {
 
   it('should escape HTML in markdown to prevent XSS', async () => {
     const maliciousMd = '## Safe\n\n- <script>alert("xss")</script>';
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(maliciousMd, { status: 200 }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(maliciousMd, { status: 200 }));
 
     const fixture = TestBed.createComponent(ThirdPartyNoticesComponent);
     fixture.detectChanges();
@@ -133,10 +132,14 @@ describe('ThirdPartyNoticesComponent', () => {
 
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect((fixture.nativeElement as HTMLElement).querySelector('.notices-content a')).toBeTruthy();
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('.notices-content a'),
+      ).toBeTruthy();
     });
 
-    const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.notices-content a')];
+    const links = [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll('.notices-content a'),
+    ];
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
       'https://example.org/feed.zip',
       'https://example.org/wiki/A_(b)',

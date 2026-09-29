@@ -1,3 +1,3 @@
 export const environment = {
-  workerUrl: '/api/porssisahko'
+  workerUrl: '/api/porssisahko',
 };

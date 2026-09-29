@@ -1,5 +1,10 @@
 import { Routes } from '@angular/router';
-import { NOT_FOUND_PAGE, NOTICES_PAGE, SITE_PAGES, type PageMeta } from './navigation/page-registry';
+import {
+  NOT_FOUND_PAGE,
+  NOTICES_PAGE,
+  SITE_PAGES,
+  type PageMeta,
+} from './navigation/page-registry';
 
 export const routes: Routes = [
   ...SITE_PAGES.map(({ path, titleKey, metaKey, loadComponent }) => ({

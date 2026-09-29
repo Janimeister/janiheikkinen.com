@@ -1,4 +1,13 @@
-import { Component, computed, signal, ElementRef, inject, afterRenderEffect, viewChild, DestroyRef } from '@angular/core';
+import {
+  Component,
+  computed,
+  signal,
+  ElementRef,
+  inject,
+  afterRenderEffect,
+  viewChild,
+  DestroyRef,
+} from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { RouterLink } from '@angular/router';
@@ -27,14 +36,39 @@ function localDateKey(d: Date): string {
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <!-- Decorative shapes -->
-      <app-floating-orb class="hidden md:block absolute top-[10%] left-[15%] z-[1]" delay="1s" [size]="70" shape="triangle" color="orange" rotate="-8deg" />
-      <app-floating-orb class="hidden md:block absolute bottom-[30%] right-[8%] z-[1]" delay="4s" [size]="50" shape="square" color="pink" rotate="5deg" />
+      <app-floating-orb
+        class="hidden md:block absolute top-[10%] left-[15%] z-[1]"
+        delay="1s"
+        [size]="70"
+        shape="triangle"
+        color="orange"
+        rotate="-8deg"
+      />
+      <app-floating-orb
+        class="hidden md:block absolute bottom-[30%] right-[8%] z-[1]"
+        delay="4s"
+        [size]="50"
+        shape="square"
+        color="pink"
+        rotate="5deg"
+      />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <a
+            routerLink="/"
+            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
@@ -45,7 +79,7 @@ function localDateKey(d: Date): string {
 
         @if (priceData.isLoading()) {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            @for (i of [1,2,3]; track i) {
+            @for (i of [1, 2, 3]; track i) {
               <app-glow-card>
                 <div class="animate-pulse space-y-3">
                   <div class="h-6 bg-ink/10 w-1/2"></div>
@@ -65,12 +99,16 @@ function localDateKey(d: Date): string {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl" aria-hidden="true">⚡</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.currentPrice') }}</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">
+                    {{ i18n.t('electricity.currentPrice') }}
+                  </h2>
                 </div>
                 @if (currentPrice() !== null) {
                   <div class="flex items-baseline gap-3 mb-2">
-                    <span class="text-6xl md:text-7xl font-bold font-[JetBrains_Mono,monospace]"
-                          [class]="priceColor(currentPrice()!)">
+                    <span
+                      class="text-6xl md:text-7xl font-bold font-[JetBrains_Mono,monospace]"
+                      [class]="priceColor(currentPrice()!)"
+                    >
                       {{ currentPrice()!.toFixed(2) }}
                     </span>
                     <span class="text-2xl text-text-secondary">c/kWh</span>
@@ -79,8 +117,13 @@ function localDateKey(d: Date): string {
                     {{ i18n.t('electricity.vatNotice', { range: currentTimeRange() }) }}
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 border-2 border-ink shadow-brutal-sm" [class]="priceBgColor(currentPrice()!)"></span>
-                    <span class="text-sm" [class]="priceColor(currentPrice()!)">{{ priceLevel(currentPrice()!) }}</span>
+                    <span
+                      class="w-3 h-3 border-2 border-ink shadow-brutal-sm"
+                      [class]="priceBgColor(currentPrice()!)"
+                    ></span>
+                    <span class="text-sm" [class]="priceColor(currentPrice()!)">{{
+                      priceLevel(currentPrice()!)
+                    }}</span>
                   </div>
                 } @else {
                   <p class="text-text-secondary">{{ i18n.t('electricity.noCurrentPrice') }}</p>
@@ -91,29 +134,49 @@ function localDateKey(d: Date): string {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl" aria-hidden="true">📊</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.todayStats') }}</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">
+                    {{ i18n.t('electricity.todayStats') }}
+                  </h2>
                 </div>
                 @if (todayStats(); as stats) {
                   <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.average') }}</span>
-                      <span class="text-sm font-semibold" [class]="priceColor(stats.avg)">{{ stats.avg.toFixed(2) }} c/kWh</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('electricity.average')
+                      }}</span>
+                      <span class="text-sm font-semibold" [class]="priceColor(stats.avg)"
+                        >{{ stats.avg.toFixed(2) }} c/kWh</span
+                      >
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.lowest') }}</span>
-                      <span class="text-sm font-semibold text-data-green">{{ stats.min.toFixed(2) }} c/kWh</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('electricity.lowest')
+                      }}</span>
+                      <span class="text-sm font-semibold text-data-green"
+                        >{{ stats.min.toFixed(2) }} c/kWh</span
+                      >
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.highest') }}</span>
-                      <span class="text-sm font-semibold text-red-400">{{ stats.max.toFixed(2) }} c/kWh</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('electricity.highest')
+                      }}</span>
+                      <span class="text-sm font-semibold text-red-400"
+                        >{{ stats.max.toFixed(2) }} c/kWh</span
+                      >
                     </div>
                     <hr class="border-t-2 border-ink" />
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.cheapestSlot') }}</span>
-                      <span class="text-sm font-medium text-data-green">{{ stats.cheapestSlot }}</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('electricity.cheapestSlot')
+                      }}</span>
+                      <span class="text-sm font-medium text-data-green">{{
+                        stats.cheapestSlot
+                      }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.priciestSlot') }}</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('electricity.priciestSlot')
+                      }}</span>
                       <span class="text-sm font-medium text-red-400">{{ stats.priciestSlot }}</span>
                     </div>
                   </div>
@@ -129,34 +192,55 @@ function localDateKey(d: Date): string {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl" aria-hidden="true">📈</span>
-                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.priceChart') }}</h2>
+                <h2 class="text-lg font-semibold text-text-primary">
+                  {{ i18n.t('electricity.priceChart') }}
+                </h2>
               </div>
               <div class="flex">
                 <!-- Y-axis (outside scroll container) -->
                 <div class="flex flex-col justify-between h-48 pr-1.5 shrink-0 mt-8">
                   @for (tick of yAxisTicks(); track $index) {
-                    <span class="text-[9px] text-text-secondary leading-none text-right font-mono">{{ tick }}</span>
+                    <span
+                      class="text-[9px] text-text-secondary leading-none text-right font-mono"
+                      >{{ tick }}</span
+                    >
                   }
                 </div>
                 <!-- Scrollable chart -->
-                <div class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.priceChartRegion')" #chartScroller (click)="activeBarIdx.set(null)">
+                <div
+                  class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4"
+                  tabindex="0"
+                  role="region"
+                  [attr.aria-label]="i18n.t('electricity.priceChartRegion')"
+                  #chartScroller
+                  (click)="activeBarIdx.set(null)"
+                >
                   <div [style.min-width.px]="chartBars().length * 10" class="pt-8">
                     <div class="flex items-end gap-0.5 h-48">
                       @for (bar of chartBars(); track bar.start; let i = $index) {
-                        <button type="button"
-                                class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer"
-                                (click)="onBarClick($event, i)"
-                                [attr.data-current]="bar.isCurrent || null"
-                                [attr.aria-label]="bar.label + ': ' + bar.price.toFixed(2) + ' c/kWh'"
-                                [attr.aria-pressed]="activeBarIdx() === i">
-                          <div class="absolute bottom-full mb-1 bg-bg-card border-2 border-ink shadow-brutal-sm px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
-                               [style.opacity]="activeBarIdx() === i ? 1 : null">
+                        <button
+                          type="button"
+                          class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer"
+                          (click)="onBarClick($event, i)"
+                          [attr.data-current]="bar.isCurrent || null"
+                          [attr.aria-label]="bar.label + ': ' + bar.price.toFixed(2) + ' c/kWh'"
+                          [attr.aria-pressed]="activeBarIdx() === i"
+                        >
+                          <div
+                            class="absolute bottom-full mb-1 bg-bg-card border-2 border-ink shadow-brutal-sm px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                            [style.opacity]="activeBarIdx() === i ? 1 : null"
+                          >
                             {{ bar.label }}: {{ bar.price.toFixed(2) }} c/kWh
                           </div>
-                          <div class="w-full transition-all duration-300"
-                               [class]="bar.isCurrent ? 'bg-accent-primary border-2 border-ink' : bar.colorClass"
-                               [style.height.%]="bar.heightPct">
-                          </div>
+                          <div
+                            class="w-full transition-all duration-300"
+                            [class]="
+                              bar.isCurrent
+                                ? 'bg-accent-primary border-2 border-ink'
+                                : bar.colorClass
+                            "
+                            [style.height.%]="bar.heightPct"
+                          ></div>
                         </button>
                       }
                     </div>
@@ -164,7 +248,11 @@ function localDateKey(d: Date): string {
                     <div class="flex mt-1">
                       @for (bar of chartBars(); track bar.start; let i = $index) {
                         @if (i % 12 === 0) {
-                          <div class="text-[9px] text-text-secondary" [class.font-bold]="bar.startsDay" [style.width.%]="(12 / chartBars().length) * 100">
+                          <div
+                            class="text-[9px] text-text-secondary"
+                            [class.font-bold]="bar.startsDay"
+                            [style.width.%]="(12 / chartBars().length) * 100"
+                          >
                             {{ bar.axisLabel }}
                           </div>
                         }
@@ -174,12 +262,25 @@ function localDateKey(d: Date): string {
                 </div>
               </div>
               <!-- Legend -->
-              <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-xs text-text-secondary">
-                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-sky"></span> &lt; 0 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-lime"></span> 0–5 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-yellow"></span> 5–10 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-red-400"></span> &gt; 10 c/kWh</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-accent-primary"></span> {{ i18n.t('electricity.currentLegend') }}</span>
+              <div
+                class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-xs text-text-secondary"
+              >
+                <span class="flex items-center gap-1"
+                  ><span class="w-3 h-2 border-2 border-ink bg-pop-sky"></span> &lt; 0 c/kWh</span
+                >
+                <span class="flex items-center gap-1"
+                  ><span class="w-3 h-2 border-2 border-ink bg-pop-lime"></span> 0–5 c/kWh</span
+                >
+                <span class="flex items-center gap-1"
+                  ><span class="w-3 h-2 border-2 border-ink bg-pop-yellow"></span> 5–10 c/kWh</span
+                >
+                <span class="flex items-center gap-1"
+                  ><span class="w-3 h-2 border-2 border-ink bg-red-400"></span> &gt; 10 c/kWh</span
+                >
+                <span class="flex items-center gap-1"
+                  ><span class="w-3 h-2 border-2 border-ink bg-accent-primary"></span>
+                  {{ i18n.t('electricity.currentLegend') }}</span
+                >
               </div>
             </app-glow-card>
           </div>
@@ -189,15 +290,24 @@ function localDateKey(d: Date): string {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl" aria-hidden="true">📋</span>
-                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.allPrices') }}</h2>
+                <h2 class="text-lg font-semibold text-text-primary">
+                  {{ i18n.t('electricity.allPrices') }}
+                </h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.allPricesRegion')">
+              <div
+                class="overflow-x-auto -mx-4 px-4"
+                tabindex="0"
+                role="region"
+                [attr.aria-label]="i18n.t('electricity.allPricesRegion')"
+              >
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="text-text-secondary border-b-2 border-ink">
                       <th class="text-left py-2 pr-4">{{ i18n.t('electricity.time') }}</th>
                       <th class="text-right py-2 pr-4">{{ i18n.t('electricity.price') }}</th>
-                      <th class="text-left py-2 hidden md:table-cell">{{ i18n.t('electricity.level') }}</th>
+                      <th class="text-left py-2 hidden md:table-cell">
+                        {{ i18n.t('electricity.level') }}
+                      </th>
                       <th class="text-left py-2">{{ i18n.t('electricity.bar') }}</th>
                     </tr>
                   </thead>
@@ -205,26 +315,43 @@ function localDateKey(d: Date): string {
                     @for (row of priceTable(); track row.start) {
                       @if (row.dayLabel) {
                         <tr class="border-b-2 border-ink bg-pop-yellow/40">
-                          <th colspan="4" scope="colgroup" class="text-left py-2 font-semibold text-text-primary">{{ row.dayLabel }}</th>
+                          <th
+                            colspan="4"
+                            scope="colgroup"
+                            class="text-left py-2 font-semibold text-text-primary"
+                          >
+                            {{ row.dayLabel }}
+                          </th>
                         </tr>
                       }
-                      <tr class="border-b-2 border-ink transition-colors"
-                          [class]="row.isCurrent ? 'bg-bg-card-hover' : 'hover:bg-bg-card-hover'">
+                      <tr
+                        class="border-b-2 border-ink transition-colors"
+                        [class]="row.isCurrent ? 'bg-bg-card-hover' : 'hover:bg-bg-card-hover'"
+                      >
                         <td class="py-2 pr-4 font-mono text-text-primary">
                           {{ row.hour }}
                           @if (row.isCurrent) {
-                            <span class="ml-1 text-[10px] text-accent-light font-sans">{{ i18n.t('electricity.now') }}</span>
+                            <span class="ml-1 text-[10px] text-accent-light font-sans">{{
+                              i18n.t('electricity.now')
+                            }}</span>
                           }
                         </td>
-                        <td class="py-2 pr-4 text-right font-mono font-semibold" [class]="priceColor(row.price)">
+                        <td
+                          class="py-2 pr-4 text-right font-mono font-semibold"
+                          [class]="priceColor(row.price)"
+                        >
                           {{ row.price.toFixed(2) }}
                         </td>
-                        <td class="py-2 hidden md:table-cell text-text-secondary">{{ priceLevel(row.price) }}</td>
+                        <td class="py-2 hidden md:table-cell text-text-secondary">
+                          {{ priceLevel(row.price) }}
+                        </td>
                         <td class="py-2">
                           <div class="w-full h-3 bg-bg-card border-2 border-ink overflow-hidden">
-                            <div class="h-full transition-all" [class]="priceBgColor(row.price)"
-                                 [style.width.%]="row.barPct">
-                            </div>
+                            <div
+                              class="h-full transition-all"
+                              [class]="priceBgColor(row.price)"
+                              [style.width.%]="row.barPct"
+                            ></div>
                           </div>
                         </td>
                       </tr>
@@ -238,8 +365,12 @@ function localDateKey(d: Date): string {
 
         <!-- Attribution -->
         <div class="mt-6 text-center">
-          <a href="https://porssisahko.net" target="_blank" rel="noopener noreferrer"
-             class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
+          <a
+            href="https://porssisahko.net"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors"
+          >
             {{ i18n.t('electricity.attribution') }}
           </a>
         </div>
@@ -265,10 +396,11 @@ export class ElectricityPageComponent {
     afterRenderEffect(() => {
       const bars = this.chartBars();
       const scroller = this.chartScroller()?.nativeElement;
-      if (centred || !scroller || !bars.some(b => b.isCurrent)) return;
+      if (centred || !scroller || !bars.some((b) => b.isCurrent)) return;
       const currentBar = scroller.querySelector('[data-current]') as HTMLElement | null;
       if (currentBar) {
-        const scrollLeft = currentBar.offsetLeft - scroller.clientWidth / 2 + currentBar.offsetWidth / 2;
+        const scrollLeft =
+          currentBar.offsetLeft - scroller.clientWidth / 2 + currentBar.offsetWidth / 2;
         scroller.scrollTo({ left: scrollLeft, behavior: 'instant' });
         centred = true;
       }
@@ -284,14 +416,14 @@ export class ElectricityPageComponent {
     const data = this.priceData.hasValue() ? this.priceData.value() : undefined;
     if (!data?.prices?.length) return [];
     return [...data.prices].sort(
-      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
     );
   });
 
   private currentIdx = computed(() => {
     const prices = this.sortedPrices();
     const now = this.nowTick();
-    return prices.findIndex(p => {
+    return prices.findIndex((p) => {
       const start = new Date(p.startDate).getTime();
       const end = new Date(p.endDate).getTime();
       return now >= start && now < end;
@@ -315,15 +447,15 @@ export class ElectricityPageComponent {
     const prices = this.sortedPrices();
     if (!prices.length) return null;
     const today = localDateKey(new Date(this.nowTick()));
-    const todayPrices = prices.filter(p => localDateKey(new Date(p.startDate)) === today);
+    const todayPrices = prices.filter((p) => localDateKey(new Date(p.startDate)) === today);
     if (!todayPrices.length) return null;
 
-    const vals = todayPrices.map(p => p.price);
+    const vals = todayPrices.map((p) => p.price);
     const avg = vals.reduce((s, v) => s + v, 0) / vals.length;
     const minVal = Math.min(...vals);
     const maxVal = Math.max(...vals);
-    const cheapest = todayPrices.find(p => p.price === minVal)!;
-    const priciest = todayPrices.find(p => p.price === maxVal)!;
+    const cheapest = todayPrices.find((p) => p.price === minVal)!;
+    const priciest = todayPrices.find((p) => p.price === maxVal)!;
 
     return {
       avg,
@@ -337,14 +469,15 @@ export class ElectricityPageComponent {
   private chartMax = computed(() => {
     const prices = this.sortedPrices();
     if (!prices.length) return 1;
-    return Math.ceil(Math.max(...prices.map(p => p.price), 1));
+    return Math.ceil(Math.max(...prices.map((p) => p.price), 1));
   });
 
   yAxisTicks = computed(() => {
     const max = this.chartMax();
     const tickCount = 5;
-    return Array.from({ length: tickCount }, (_, i) =>
-      +((max * (tickCount - 1 - i)) / (tickCount - 1)).toFixed(1)
+    return Array.from(
+      { length: tickCount },
+      (_, i) => +((max * (tickCount - 1 - i)) / (tickCount - 1)).toFixed(1),
     );
   });
 
@@ -357,7 +490,8 @@ export class ElectricityPageComponent {
     return prices.map((p, i) => {
       const start = new Date(p.startDate);
       const time = this.formatTime(start);
-      const startsDay = i === 0 || localDateKey(new Date(prices[i - 1].startDate)) !== localDateKey(start);
+      const startsDay =
+        i === 0 || localDateKey(new Date(prices[i - 1].startDate)) !== localDateKey(start);
       return {
         start: p.startDate,
         label: `${this.shortDate(start)} ${time}`,
@@ -375,7 +509,7 @@ export class ElectricityPageComponent {
     const prices = this.sortedPrices();
     if (!prices.length) return [];
     const curIdx = this.currentIdx();
-    const maxP = Math.max(...prices.map(p => Math.abs(p.price)), 1);
+    const maxP = Math.max(...prices.map((p) => Math.abs(p.price)), 1);
 
     return prices.map((p, i) => {
       const day = localDateKey(new Date(p.startDate));
@@ -430,7 +564,11 @@ export class ElectricityPageComponent {
   }
 
   private shortDate(date: Date): string {
-    return date.toLocaleDateString(this.i18n.locale(), { weekday: 'short', day: 'numeric', month: 'numeric' });
+    return date.toLocaleDateString(this.i18n.locale(), {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'numeric',
+    });
   }
 
   /** Today, Tomorrow, or the date for any other day. */
@@ -440,6 +578,10 @@ export class ElectricityPageComponent {
     const key = localDateKey(date);
     if (key === localDateKey(now)) return this.i18n.t('common.today');
     if (key === localDateKey(tomorrow)) return this.i18n.t('electricity.tomorrow');
-    return date.toLocaleDateString(this.i18n.locale(), { weekday: 'long', day: 'numeric', month: 'numeric' });
+    return date.toLocaleDateString(this.i18n.locale(), {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'numeric',
+    });
   }
 }

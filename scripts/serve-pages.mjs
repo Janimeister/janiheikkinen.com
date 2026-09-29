@@ -5,11 +5,21 @@ import { resolve, sep, extname } from 'node:path';
 
 const root = resolve(process.argv[2]);
 const types = {
-  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png',
-  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
-  '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2',
-  '.xml': 'application/xml', '.txt': 'text/plain', '.md': 'text/markdown',
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.xml': 'application/xml',
+  '.txt': 'text/plain',
+  '.md': 'text/markdown',
 };
 // Like Pages: a directory serves its index.html, and `/weather` serves `weather.html`.
 async function pagesFile(file) {
@@ -46,7 +56,9 @@ createServer(async (request, response) => {
       status = 404;
     }
     const body = await readFile(file);
-    response.writeHead(status, { 'Content-Type': types[extname(file)] ?? 'application/octet-stream' });
+    response.writeHead(status, {
+      'Content-Type': types[extname(file)] ?? 'application/octet-stream',
+    });
     response.end(body);
   } catch {
     response.writeHead(500).end();

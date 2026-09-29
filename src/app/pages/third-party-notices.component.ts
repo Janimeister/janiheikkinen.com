@@ -12,7 +12,10 @@ import { LanguageService } from '../i18n/language.service';
   template: `
     <div class="min-h-screen pt-24 pb-16 px-6">
       <div class="max-w-4xl mx-auto">
-        <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
+        <a
+          routerLink="/"
+          class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+        >
           ← {{ i18n.t('common.backToHome') }}
         </a>
 
@@ -30,9 +33,10 @@ import { LanguageService } from '../i18n/language.service';
         } @else if (noticesResource.error()) {
           <p class="text-red-400">{{ i18n.t('thirdParty.loadError') }}</p>
         } @else {
-          <div class="notices-content animate-fade-slide-up stagger-1"
-               [innerHTML]="renderedHtml()">
-          </div>
+          <div
+            class="notices-content animate-fade-slide-up stagger-1"
+            [innerHTML]="renderedHtml()"
+          ></div>
         }
       </div>
     </div>
@@ -248,7 +252,11 @@ export class ThirdPartyNoticesComponent {
         }
         let content = line.slice(2);
         // Collect continuation lines (indented)
-        while (i + 1 < lines.length && lines[i + 1].startsWith('  ') && !lines[i + 1].trimStart().startsWith('- ')) {
+        while (
+          i + 1 < lines.length &&
+          lines[i + 1].startsWith('  ') &&
+          !lines[i + 1].trimStart().startsWith('- ')
+        ) {
           i++;
           content += ' ' + lines[i].trim();
         }
@@ -263,7 +271,14 @@ export class ThirdPartyNoticesComponent {
         inList = false;
       }
       let para = line;
-      while (i + 1 < lines.length && lines[i + 1].trim() !== '' && !lines[i + 1].startsWith('#') && !lines[i + 1].startsWith('-') && !lines[i + 1].startsWith('```') && !/^-{3,}$/.test(lines[i + 1].trim())) {
+      while (
+        i + 1 < lines.length &&
+        lines[i + 1].trim() !== '' &&
+        !lines[i + 1].startsWith('#') &&
+        !lines[i + 1].startsWith('-') &&
+        !lines[i + 1].startsWith('```') &&
+        !/^-{3,}$/.test(lines[i + 1].trim())
+      ) {
         i++;
         para += ' ' + lines[i];
       }
@@ -284,7 +299,10 @@ export class ThirdPartyNoticesComponent {
     // Inline code
     result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
     // Links [text](url)
-    result = result.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    result = result.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+    );
     // Bare URLs, skipping the ones already inside a link's href or text
     result = result.replace(/(?<!="|">)https?:\/\/[^\s<,]+/g, (match) => {
       const [url, trailing] = splitTrailingPunctuation(match);

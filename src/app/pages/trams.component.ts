@@ -18,7 +18,13 @@ import { FloatingOrbComponent } from '../components/shared/floating-orb.componen
 import { LanguageService } from '../i18n/language.service';
 import type { TranslationKey } from '../i18n/translations';
 import { createGrid, defaultPreset, GRID_PRESETS, type PresetId } from '../trams/grid';
-import { ASCII_GLYPHS, lineClass, renderBaseMap, toRuns, UNICODE_GLYPHS } from '../trams/ascii-raster';
+import {
+  ASCII_GLYPHS,
+  lineClass,
+  renderBaseMap,
+  toRuns,
+  UNICODE_GLYPHS,
+} from '../trams/ascii-raster';
 import type { TramMapData } from '../trams/tram-map.model';
 import { CLUSTER_GLYPH, renderTramOverlay, TRAIL_GLYPH } from '../trams/tram-overlay';
 import { isStale, TramFeedService, type FeedStatus } from '../trams/tram-feed.service';
@@ -71,12 +77,18 @@ const STATUS: Readonly<Record<FeedStatus, { labelKey: TranslationKey; cls: strin
 
 const NO_LINES: ReadonlySet<string> = new Set();
 
-type FullscreenDocument = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => Promise<void> };
+type FullscreenDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+};
 type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
-const LOADING_DOTS = Array.from({ length: 14 }, (_, row) => (row % 2 ? ' .' : '. ').repeat(36)).join('\n');
+const LOADING_DOTS = Array.from({ length: 14 }, (_, row) =>
+  (row % 2 ? ' .' : '. ').repeat(36),
+).join('\n');
 
 // Smaller on phones, so the controls leave room for the map.
-const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semibold text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform';
+const OPTION_CLASS =
+  'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semibold text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform';
 
 @Component({
   selector: 'app-trams-page',
@@ -85,14 +97,40 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
   host: { '(document:keydown.escape)': 'onEscape()' },
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">
-      <app-floating-orb class="hidden md:block absolute top-[12%] right-[10%] z-[1]" delay="0s" [size]="60" shape="circle" color="lime" rotate="6deg" />
-      <app-floating-orb class="hidden md:block absolute bottom-[20%] left-[6%] z-[1]" delay="2.5s" [size]="50" shape="square" color="sky" rotate="-4deg" />
+      <app-floating-orb
+        class="hidden md:block absolute top-[12%] right-[10%] z-[1]"
+        delay="0s"
+        [size]="60"
+        shape="circle"
+        color="lime"
+        rotate="6deg"
+      />
+      <app-floating-orb
+        class="hidden md:block absolute bottom-[20%] left-[6%] z-[1]"
+        delay="2.5s"
+        [size]="50"
+        shape="square"
+        color="sky"
+        rotate="-4deg"
+      />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <a
+            routerLink="/"
+            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-3 leading-tight">
@@ -109,9 +147,12 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
               <div class="flex flex-wrap items-center gap-2">
                 <span class="control-label">{{ i18n.t('trams.view') }}</span>
                 @for (option of presetOptions; track option.id) {
-                  <button type="button" (click)="choosePreset(option.id)"
+                  <button
+                    type="button"
+                    (click)="choosePreset(option.id)"
                     [class]="optionClass(presetId() === option.id)"
-                    [attr.aria-pressed]="presetId() === option.id">
+                    [attr.aria-pressed]="presetId() === option.id"
+                  >
                     {{ i18n.t(option.labelKey) }}
                   </button>
                 }
@@ -119,9 +160,12 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
               <div class="flex flex-wrap items-center gap-2">
                 <span class="control-label">{{ i18n.t('trams.glyphs') }}</span>
                 @for (option of glyphOptions; track option.id) {
-                  <button type="button" (click)="chooseGlyphs(option.id)"
+                  <button
+                    type="button"
+                    (click)="chooseGlyphs(option.id)"
                     [class]="optionClass(glyphMode() === option.id)"
-                    [attr.aria-pressed]="glyphMode() === option.id">
+                    [attr.aria-pressed]="glyphMode() === option.id"
+                  >
                     {{ i18n.t(option.labelKey) }}
                   </button>
                 }
@@ -129,41 +173,69 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
               <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span class="control-label">{{ i18n.t('trams.motion') }}</span>
                 <label class="toggle-label">
-                  <input type="checkbox" class="control-toggle" [checked]="feed.smooth()" (change)="onSmoothToggle($event)" data-testid="tram-smooth" />
+                  <input
+                    type="checkbox"
+                    class="control-toggle"
+                    [checked]="feed.smooth()"
+                    (change)="onSmoothToggle($event)"
+                    data-testid="tram-smooth"
+                  />
                   {{ i18n.t('trams.smooth') }}
                 </label>
                 <label class="toggle-label">
-                  <input type="checkbox" class="control-toggle" [checked]="trails()" (change)="onTrailsToggle($event)" data-testid="tram-trails" />
+                  <input
+                    type="checkbox"
+                    class="control-toggle"
+                    [checked]="trails()"
+                    (change)="onTrailsToggle($event)"
+                    data-testid="tram-trails"
+                  />
                   {{ i18n.t('trams.trails') }}
                 </label>
               </div>
             </div>
             @if (feed.smooth()) {
-              <p class="text-sm text-text-secondary mt-2" data-testid="tram-smooth-note">{{ i18n.t('trams.smoothNote') }}</p>
+              <p class="text-sm text-text-secondary mt-2" data-testid="tram-smooth-note">
+                {{ i18n.t('trams.smoothNote') }}
+              </p>
             }
             @if (lineChoices().length > 0) {
               <div class="flex flex-wrap items-center gap-2 mt-4" data-testid="tram-line-filter">
                 <span class="control-label">{{ i18n.t('trams.lines') }}</span>
-                <button type="button" (click)="lineSelection.set(null)"
+                <button
+                  type="button"
+                  (click)="lineSelection.set(null)"
                   [class]="optionClass(lineSelection() === null)"
-                  [attr.aria-pressed]="lineSelection() === null">
+                  [attr.aria-pressed]="lineSelection() === null"
+                >
                   {{ i18n.t('trams.allLines') }}
                 </button>
-                <button type="button" (click)="lineSelection.set(noLines)"
+                <button
+                  type="button"
+                  (click)="lineSelection.set(noLines)"
                   [class]="optionClass(lineSelection()?.size === 0)"
-                  [attr.aria-pressed]="lineSelection()?.size === 0">
+                  [attr.aria-pressed]="lineSelection()?.size === 0"
+                >
                   {{ i18n.t('trams.noLines') }}
                 </button>
                 @for (line of lineChoices(); track line) {
-                  <button type="button" (click)="toggleLine(line)"
+                  <button
+                    type="button"
+                    (click)="toggleLine(line)"
                     [class]="lineChipClass(line)"
                     [attr.aria-pressed]="follows(line)"
-                    [attr.aria-label]="i18n.t('trams.line', { line })">
+                    [attr.aria-label]="i18n.t('trams.line', { line })"
+                  >
                     {{ line }}
                   </button>
                 }
                 <label class="sm:ml-auto toggle-label">
-                  <input type="checkbox" class="control-toggle" [checked]="showDepotRuns()" (change)="onDepotToggle($event)" />
+                  <input
+                    type="checkbox"
+                    class="control-toggle"
+                    [checked]="showDepotRuns()"
+                    (change)="onDepotToggle($event)"
+                  />
                   {{ i18n.t('trams.showDepotRuns') }}
                 </label>
               </div>
@@ -195,19 +267,55 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
               <h2 class="text-lg font-semibold mb-3">{{ i18n.t('trams.legend') }}</h2>
               <ul class="flex flex-wrap gap-2 font-mono text-sm">
                 @for (desi of map.lines; track desi) {
-                  <li class="legend-chip" [class]="lineClass(desi)" [attr.aria-label]="i18n.t('trams.line', { line: desi })">{{ desi }}</li>
+                  <li
+                    class="legend-chip"
+                    [class]="lineClass(desi)"
+                    [attr.aria-label]="i18n.t('trams.line', { line: desi })"
+                  >
+                    {{ desi }}
+                  </li>
                 }
               </ul>
               <ul class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-text-secondary">
-                <li><span class="legend-glyph line-shared" aria-hidden="true">{{ glyphs().track.h }}</span> {{ i18n.t('trams.legendShared') }}</li>
-                <li><span class="legend-glyph stop" aria-hidden="true">{{ glyphs().stop }}</span> {{ i18n.t('trams.legendStop') }}</li>
-                <li><span class="legend-glyph sea" aria-hidden="true">{{ glyphs().sea[0] }}</span> {{ i18n.t('trams.legendSea') }}</li>
-                <li><span class="legend-glyph park" aria-hidden="true">{{ glyphs().park }}</span> {{ i18n.t('trams.legendPark') }}</li>
-                <li><span class="legend-glyph tram line-4" aria-hidden="true">4</span> {{ i18n.t('trams.legendTram') }}</li>
-                <li><span class="legend-glyph tram tram-dim" aria-hidden="true">4</span> {{ i18n.t(feed.smooth() ? 'trams.legendDimmedSmooth' : 'trams.legendDimmed') }}</li>
-                <li><span class="legend-glyph tram tram-cluster" aria-hidden="true">{{ clusterGlyph }}</span> {{ i18n.t('trams.legendCluster') }}</li>
+                <li>
+                  <span class="legend-glyph line-shared" aria-hidden="true">{{
+                    glyphs().track.h
+                  }}</span>
+                  {{ i18n.t('trams.legendShared') }}
+                </li>
+                <li>
+                  <span class="legend-glyph stop" aria-hidden="true">{{ glyphs().stop }}</span>
+                  {{ i18n.t('trams.legendStop') }}
+                </li>
+                <li>
+                  <span class="legend-glyph sea" aria-hidden="true">{{ glyphs().sea[0] }}</span>
+                  {{ i18n.t('trams.legendSea') }}
+                </li>
+                <li>
+                  <span class="legend-glyph park" aria-hidden="true">{{ glyphs().park }}</span>
+                  {{ i18n.t('trams.legendPark') }}
+                </li>
+                <li>
+                  <span class="legend-glyph tram line-4" aria-hidden="true">4</span>
+                  {{ i18n.t('trams.legendTram') }}
+                </li>
+                <li>
+                  <span class="legend-glyph tram tram-dim" aria-hidden="true">4</span>
+                  {{ i18n.t(feed.smooth() ? 'trams.legendDimmedSmooth' : 'trams.legendDimmed') }}
+                </li>
+                <li>
+                  <span class="legend-glyph tram tram-cluster" aria-hidden="true">{{
+                    clusterGlyph
+                  }}</span>
+                  {{ i18n.t('trams.legendCluster') }}
+                </li>
                 @if (trails()) {
-                  <li><span class="legend-glyph trail line-4" aria-hidden="true">{{ trailGlyph }}</span> {{ i18n.t('trams.legendTrail') }}</li>
+                  <li>
+                    <span class="legend-glyph trail line-4" aria-hidden="true">{{
+                      trailGlyph
+                    }}</span>
+                    {{ i18n.t('trams.legendTrail') }}
+                  </li>
                 }
               </ul>
             </app-glow-card>
@@ -216,23 +324,56 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
 
         <!-- Notes and attribution -->
         <div class="animate-fade-slide-up stagger-4 text-sm text-text-secondary space-y-2">
-          <p>{{ i18n.t('trams.liveNote') }}
-            @if (mapData.hasValue()) { {{ i18n.t('trams.dataVersion', { version: mapData.value().gtfsVersion }) }} }
+          <p>
+            {{ i18n.t('trams.liveNote') }}
+            @if (mapData.hasValue()) {
+              {{ i18n.t('trams.dataVersion', { version: mapData.value().gtfsVersion }) }}
+            }
           </p>
           <p>
             {{ i18n.t('trams.attributionHsl') }}:
-            <a href="https://www.hsl.fi/en/hsl/open-data" target="_blank" rel="noopener noreferrer" class="text-accent-light underline">© HSL / Digitransit</a>
-            (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-accent-light underline">CC BY 4.0</a>).
-            {{ i18n.t('trams.attributionOsm') }}:
-            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="text-accent-light underline">© {{ i18n.t('trams.osmContributors') }}</a>
-            (<a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener noreferrer" class="text-accent-light underline">ODbL</a>).
+            <a
+              href="https://www.hsl.fi/en/hsl/open-data"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent-light underline"
+              >© HSL / Digitransit</a
+            >
+            (<a
+              href="https://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent-light underline"
+              >CC BY 4.0</a
+            >). {{ i18n.t('trams.attributionOsm') }}:
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent-light underline"
+              >© {{ i18n.t('trams.osmContributors') }}</a
+            >
+            (<a
+              href="https://opendatacommons.org/licenses/odbl/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent-light underline"
+              >ODbL</a
+            >).
           </p>
         </div>
       </div>
 
       @if (fullscreen()) {
-        <div #dialog class="tram-fullscreen" role="dialog" aria-modal="true" [attr.aria-label]="i18n.t('trams.fullscreenLabel')" data-testid="tram-fullscreen"
-          (keydown)="trapFocus($event, dialog)">
+        <div
+          #dialog
+          class="tram-fullscreen"
+          role="dialog"
+          aria-modal="true"
+          [attr.aria-label]="i18n.t('trams.fullscreenLabel')"
+          data-testid="tram-fullscreen"
+          (keydown)="trapFocus($event, dialog)"
+        >
           <ng-container [ngTemplateOutlet]="toolbar" />
           <div #fullscreenArea class="flex-1 min-h-0">
             <ng-container [ngTemplateOutlet]="mapView" />
@@ -246,31 +387,93 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
     <ng-template #toolbar>
       <div class="flex flex-wrap items-center gap-2 mb-3">
         <span class="status-badge" [class]="status().cls" role="status" data-testid="tram-status">
-          <span class="status-dot" [class.animate-pulse]="feed.status() !== 'live' && feed.status() !== 'paused'" aria-hidden="true"></span>
+          <span
+            class="status-dot"
+            [class.animate-pulse]="feed.status() !== 'live' && feed.status() !== 'paused'"
+            aria-hidden="true"
+          ></span>
           {{ i18n.t(status().labelKey) }}
         </span>
-        <span class="text-sm font-semibold text-text-secondary" data-testid="tram-count">{{ i18n.t('trams.tramCount', { count: shownTrams().size }) }}</span>
-        <button type="button" (click)="togglePause()" class="inline-flex items-center gap-2 bg-bg-card {{ optionBase }}">
+        <span class="text-sm font-semibold text-text-secondary" data-testid="tram-count">{{
+          i18n.t('trams.tramCount', { count: shownTrams().size })
+        }}</span>
+        <button
+          type="button"
+          (click)="togglePause()"
+          class="inline-flex items-center gap-2 bg-bg-card {{ optionBase }}"
+        >
           @if (feed.paused()) {
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 4l13 8-13 8z" />
+            </svg>
             {{ i18n.t('trams.resume') }}
           } @else {
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+            </svg>
             {{ i18n.t('trams.pause') }}
           }
         </button>
         @if (fullscreen()) {
           <span class="ml-auto inline-flex gap-2">
-            <button type="button" (click)="zoomBy(-1)" [disabled]="zoomStep() === 0" [attr.aria-label]="i18n.t('trams.zoomOut')" class="zoom-button {{ optionBase }}">−</button>
-            <button type="button" (click)="zoomBy(1)" [disabled]="zoomStep() === zoomSteps.length - 1" [attr.aria-label]="i18n.t('trams.zoomIn')" class="zoom-button {{ optionBase }}">+</button>
+            <button
+              type="button"
+              (click)="zoomBy(-1)"
+              [disabled]="zoomStep() === 0"
+              [attr.aria-label]="i18n.t('trams.zoomOut')"
+              class="zoom-button {{ optionBase }}"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              (click)="zoomBy(1)"
+              [disabled]="zoomStep() === zoomSteps.length - 1"
+              [attr.aria-label]="i18n.t('trams.zoomIn')"
+              class="zoom-button {{ optionBase }}"
+            >
+              +
+            </button>
           </span>
-          <button #exitButton type="button" (click)="exitFullscreen()" class="inline-flex items-center gap-2 bg-pop-yellow {{ optionBase }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+          <button
+            #exitButton
+            type="button"
+            (click)="exitFullscreen()"
+            class="inline-flex items-center gap-2 bg-pop-yellow {{ optionBase }}"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
             {{ i18n.t('trams.exitFullscreen') }}
           </button>
         } @else {
-          <button #enterButton type="button" (click)="enterFullscreen()" class="ml-auto inline-flex items-center gap-2 bg-bg-card {{ optionBase }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          <button
+            #enterButton
+            type="button"
+            (click)="enterFullscreen()"
+            class="ml-auto inline-flex items-center gap-2 bg-bg-card {{ optionBase }}"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+              />
+            </svg>
             {{ i18n.t('trams.fullscreen') }}
           </button>
         }
@@ -284,27 +487,60 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
         <div [class]="fullscreen() ? 'flex flex-col h-full' : ''">
           <!-- In full screen the map fits the space the details leave, so they never cover a tram. -->
           <div #mapFit [class]="fullscreen() ? 'flex-1 min-h-0' : ''">
-            <div [class]="fullscreen() ? 'overflow-auto h-full' : 'overflow-x-auto'" tabindex="0" role="region" [attr.aria-label]="i18n.t('trams.mapRegion')" data-testid="tram-map-region">
+            <div
+              [class]="fullscreen() ? 'overflow-auto h-full' : 'overflow-x-auto'"
+              tabindex="0"
+              role="region"
+              [attr.aria-label]="i18n.t('trams.mapRegion')"
+              data-testid="tram-map-region"
+            >
               <div class="relative w-max" [class.mx-auto]="fullscreen()">
-                <pre class="tram-map" role="img" data-testid="tram-map" [style.font-size.px]="fontSize()" [style.line-height.px]="lineHeight()"
-                  [attr.aria-label]="i18n.t('trams.mapLabel', { lines: map.lines.length, stops: map.stopCount }) + ' ' + i18n.t('trams.mapTrams', { count: overlay()?.count ?? 0 })">@for (row of rows(); track $index) {<span class="map-row">@for (run of row; track $index) {<span [class]="run.cls">{{ run.text }}</span>}</span>}</pre>
-                <pre class="tram-map tram-overlay" aria-hidden="true" data-testid="tram-overlay" [style.font-size.px]="fontSize()" [style.line-height.px]="lineHeight()">@for (row of overlayRows(); track $index) {<span class="map-row">@for (run of row; track $index) {<span [class]="run.cls">{{ run.text }}</span>}</span>}</pre>
+                <pre
+                  class="tram-map"
+                  role="img"
+                  data-testid="tram-map"
+                  [style.font-size.px]="fontSize()"
+                  [style.line-height.px]="lineHeight()"
+                  [attr.aria-label]="
+                    i18n.t('trams.mapLabel', { lines: map.lines.length, stops: map.stopCount }) +
+                    ' ' +
+                    i18n.t('trams.mapTrams', { count: overlay()?.count ?? 0 })
+                  "
+                >@for (row of rows(); track $index) {<span class="map-row">@for (run of row; track $index) {<span [class]="run.cls">{{ run.text }}</span>}</span>}</pre>
+                <pre
+                  class="tram-map tram-overlay"
+                  aria-hidden="true"
+                  data-testid="tram-overlay"
+                  [style.font-size.px]="fontSize()"
+                  [style.line-height.px]="lineHeight()"
+                >@for (row of overlayRows(); track $index) {<span class="map-row">@for (run of row; track $index) {<span [class]="run.cls">{{ run.text }}</span>}</span>}</pre>
                 <!-- One invisible button over each tram: the map's click targets and, for keyboards and screen readers, its list of trams. -->
-                <nav class="tram-targets" [attr.aria-label]="i18n.t('trams.tramList')" [style.font-size.px]="fontSize()" (keydown)="moveFocus($event)" data-testid="tram-list">
+                <nav
+                  class="tram-targets"
+                  [attr.aria-label]="i18n.t('trams.tramList')"
+                  [style.font-size.px]="fontSize()"
+                  (keydown)="moveFocus($event)"
+                  data-testid="tram-list"
+                >
                   @for (group of tramGroups(); track group.line) {
                     <ul [attr.aria-label]="i18n.t('trams.line', { line: group.line })">
                       @for (target of group.targets; track target.tram.key) {
-                        <li><button type="button" class="tram-target"
-                          [style.left]="'calc(' + preInset + 'px + ' + target.col + 'ch)'"
-                          [style.top.px]="preInset + target.row * lineHeight()"
-                          [style.width.ch]="target.width"
-                          [style.height.px]="lineHeight()"
-                          [attr.tabindex]="target.tram.key === rovingKey() ? 0 : -1"
-                          [attr.aria-pressed]="target.tram.key === selectedKey()"
-                          [attr.aria-label]="tramName(target.tram)"
-                          [attr.data-tram-key]="target.tram.key"
-                          (focus)="focusedKey.set(target.tram.key)"
-                          (click)="select(target.tram.key)"></button></li>
+                        <li>
+                          <button
+                            type="button"
+                            class="tram-target"
+                            [style.left]="'calc(' + preInset + 'px + ' + target.col + 'ch)'"
+                            [style.top.px]="preInset + target.row * lineHeight()"
+                            [style.width.ch]="target.width"
+                            [style.height.px]="lineHeight()"
+                            [attr.tabindex]="target.tram.key === rovingKey() ? 0 : -1"
+                            [attr.aria-pressed]="target.tram.key === selectedKey()"
+                            [attr.aria-label]="tramName(target.tram)"
+                            [attr.data-tram-key]="target.tram.key"
+                            (focus)="focusedKey.set(target.tram.key)"
+                            (click)="select(target.tram.key)"
+                          ></button>
+                        </li>
                       }
                     </ul>
                   }
@@ -312,31 +548,65 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
               </div>
             </div>
           </div>
-          <p class="sr-only" aria-live="polite" data-testid="tram-announcement">{{ announcement() }}</p>
+          <p class="sr-only" aria-live="polite" data-testid="tram-announcement">
+            {{ announcement() }}
+          </p>
           @if (selectedKey()) {
             <div #detailsPanel class="tram-details" data-testid="tram-details">
               @if (details(); as d) {
                 <div class="flex items-start gap-3">
-                  <span class="legend-chip" [class]="d.chipClass" aria-hidden="true">{{ d.desi }}</span>
-                  <h2 class="text-lg font-semibold leading-tight" [attr.aria-label]="d.name">{{ d.headsign }}</h2>
+                  <span class="legend-chip" [class]="d.chipClass" aria-hidden="true">{{
+                    d.desi
+                  }}</span>
+                  <h2 class="text-lg font-semibold leading-tight" [attr.aria-label]="d.name">
+                    {{ d.headsign }}
+                  </h2>
                   @if (d.depotRun) {
-                    <span class="text-xs font-semibold uppercase tracking-wider border-2 border-ink px-1.5 py-0.5">{{ i18n.t('trams.depotRun') }}</span>
+                    <span
+                      class="text-xs font-semibold uppercase tracking-wider border-2 border-ink px-1.5 py-0.5"
+                      >{{ i18n.t('trams.depotRun') }}</span
+                    >
                   }
                   <ng-container [ngTemplateOutlet]="closeButton" />
                 </div>
                 <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 mt-3 text-sm">
-                  <div><dt class="text-text-secondary">{{ i18n.t('trams.speed') }}</dt><dd class="font-semibold" data-testid="tram-speed">{{ d.speed ?? '—' }}</dd></div>
-                  <div><dt class="text-text-secondary">{{ i18n.t('trams.schedule') }}</dt><dd class="font-semibold" data-testid="tram-schedule">{{ d.schedule ?? '—' }}</dd></div>
-                  <div><dt class="text-text-secondary">{{ i18n.t('trams.doors') }}</dt><dd class="font-semibold">{{ d.doors }}</dd></div>
-                  <div class="col-span-2 sm:col-span-2"><dt class="text-text-secondary">{{ i18n.t('trams.nextStop') }}</dt><dd class="font-semibold" data-testid="tram-next-stop">{{ d.nextStop ?? '—' }}</dd></div>
-                  <div><dt class="text-text-secondary">{{ i18n.t('trams.updated') }}</dt><dd class="font-semibold" data-testid="tram-updated">{{ d.updated }}</dd></div>
+                  <div>
+                    <dt class="text-text-secondary">{{ i18n.t('trams.speed') }}</dt>
+                    <dd class="font-semibold" data-testid="tram-speed">{{ d.speed ?? '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-text-secondary">{{ i18n.t('trams.schedule') }}</dt>
+                    <dd class="font-semibold" data-testid="tram-schedule">
+                      {{ d.schedule ?? '—' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-text-secondary">{{ i18n.t('trams.doors') }}</dt>
+                    <dd class="font-semibold">{{ d.doors }}</dd>
+                  </div>
+                  <div class="col-span-2 sm:col-span-2">
+                    <dt class="text-text-secondary">{{ i18n.t('trams.nextStop') }}</dt>
+                    <dd class="font-semibold" data-testid="tram-next-stop">
+                      {{ d.nextStop ?? '—' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-text-secondary">{{ i18n.t('trams.updated') }}</dt>
+                    <dd class="font-semibold" data-testid="tram-updated">{{ d.updated }}</dd>
+                  </div>
                 </dl>
                 @if (companions().length > 0) {
                   <div class="flex flex-wrap items-center gap-2 mt-3 text-sm">
                     <span class="text-text-secondary">{{ i18n.t('trams.alsoHere') }}</span>
                     @for (other of companions(); track other.key) {
-                      <button type="button" (click)="select(other.key)" [attr.aria-label]="tramName(other)"
-                        class="font-mono {{ optionBase }} {{ chipClass(other) }}">{{ other.desi }}</button>
+                      <button
+                        type="button"
+                        (click)="select(other.key)"
+                        [attr.aria-label]="tramName(other)"
+                        class="font-mono {{ optionBase }} {{ chipClass(other) }}"
+                      >
+                        {{ other.desi }}
+                      </button>
                     }
                   </div>
                 }
@@ -353,13 +623,29 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
         </div>
       } @else {
         <p role="status" class="sr-only">{{ i18n.t('trams.loading') }}</p>
-        <pre class="tram-map animate-pulse text-text-secondary" aria-hidden="true">{{ loadingDots }}</pre>
+        <pre class="tram-map animate-pulse text-text-secondary" aria-hidden="true">{{
+          loadingDots
+        }}</pre>
       }
     </ng-template>
 
     <ng-template #closeButton>
-      <button type="button" (click)="closeDetails()" [attr.aria-label]="i18n.t('trams.closeDetails')" class="ml-auto shrink-0 bg-bg-card {{ optionBase }}">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+      <button
+        type="button"
+        (click)="closeDetails()"
+        [attr.aria-label]="i18n.t('trams.closeDetails')"
+        class="ml-auto shrink-0 bg-bg-card {{ optionBase }}"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
+        </svg>
       </button>
     </ng-template>
   `,
@@ -376,7 +662,9 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
       width: max-content;
       white-space: pre;
     }
-    .map-row { display: block; }
+    .map-row {
+      display: block;
+    }
     .control-label {
       font-size: 0.75rem;
       font-weight: 600;
@@ -386,7 +674,9 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
       margin-right: 0.25rem;
     }
     @media (min-width: 640px) {
-      .control-label { font-size: 0.875rem; }
+      .control-label {
+        font-size: 0.875rem;
+      }
     }
     .toggle-label {
       display: inline-flex;
@@ -406,9 +696,17 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
       top: 0;
       left: 0;
     }
-    .sea { color: var(--color-data-blue); }
-    .park { color: var(--color-data-green); }
-    .stop, .label, .line-shared { font-weight: 700; }
+    .sea {
+      color: var(--color-data-blue);
+    }
+    .park {
+      color: var(--color-data-green);
+    }
+    .stop,
+    .label,
+    .line-shared {
+      font-weight: 700;
+    }
     .legend-chip {
       min-width: 2.25rem;
       padding: 0.125rem 0.5rem;
@@ -424,22 +722,68 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
       font-family: var(--font-mono);
       color: var(--color-ink);
     }
-    .legend-glyph.sea { color: var(--color-data-blue); }
-    .legend-glyph.park { color: var(--color-data-green); }
-    .line-1 { --line: var(--color-line-1); background: var(--line); }
-    .line-2 { --line: var(--color-line-2); background: var(--line); }
-    .line-3 { --line: var(--color-line-3); background: var(--line); }
-    .line-4 { --line: var(--color-line-4); background: var(--line); }
-    .line-5 { --line: var(--color-line-5); background: var(--line); }
-    .line-6 { --line: var(--color-line-6); background: var(--line); }
-    .line-7 { --line: var(--color-line-7); background: var(--line); }
-    .line-8 { --line: var(--color-line-8); background: var(--line); }
-    .line-9 { --line: var(--color-line-9); background: var(--line); }
-    .line-10 { --line: var(--color-line-10); background: var(--line); }
-    .line-11 { --line: var(--color-line-11); background: var(--line); }
-    .line-12 { --line: var(--color-line-12); background: var(--line); }
-    .line-13 { --line: var(--color-line-13); background: var(--line); }
-    .line-h { --line: var(--color-line-h); background: var(--line); }
+    .legend-glyph.sea {
+      color: var(--color-data-blue);
+    }
+    .legend-glyph.park {
+      color: var(--color-data-green);
+    }
+    .line-1 {
+      --line: var(--color-line-1);
+      background: var(--line);
+    }
+    .line-2 {
+      --line: var(--color-line-2);
+      background: var(--line);
+    }
+    .line-3 {
+      --line: var(--color-line-3);
+      background: var(--line);
+    }
+    .line-4 {
+      --line: var(--color-line-4);
+      background: var(--line);
+    }
+    .line-5 {
+      --line: var(--color-line-5);
+      background: var(--line);
+    }
+    .line-6 {
+      --line: var(--color-line-6);
+      background: var(--line);
+    }
+    .line-7 {
+      --line: var(--color-line-7);
+      background: var(--line);
+    }
+    .line-8 {
+      --line: var(--color-line-8);
+      background: var(--line);
+    }
+    .line-9 {
+      --line: var(--color-line-9);
+      background: var(--line);
+    }
+    .line-10 {
+      --line: var(--color-line-10);
+      background: var(--line);
+    }
+    .line-11 {
+      --line: var(--color-line-11);
+      background: var(--line);
+    }
+    .line-12 {
+      --line: var(--color-line-12);
+      background: var(--line);
+    }
+    .line-13 {
+      --line: var(--color-line-13);
+      background: var(--line);
+    }
+    .line-h {
+      --line: var(--color-line-h);
+      background: var(--line);
+    }
     .tram-overlay {
       position: absolute;
       inset: 0;
@@ -457,7 +801,9 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
       background: var(--color-text-secondary);
       color: var(--color-bg-card);
     }
-    .tram-cluster { color: var(--color-pop-yellow); }
+    .tram-cluster {
+      color: var(--color-pop-yellow);
+    }
     /* The track in the line's colour (the line-* class), dotted where the tram just was. */
     .trail {
       color: var(--color-ink);
@@ -469,7 +815,11 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
       font-family: var(--font-mono);
       pointer-events: none;
     }
-    .tram-targets ul { margin: 0; padding: 0; list-style: none; }
+    .tram-targets ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
     .tram-target {
       position: absolute;
       padding: 0;
@@ -486,7 +836,9 @@ const OPTION_CLASS = 'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semi
     }
     /* Fingers need more: a phone's cells are about 5 × 10 px. */
     @media (pointer: coarse) {
-      .tram-target::before { inset: -8px; }
+      .tram-target::before {
+        inset: -8px;
+      }
     }
     .tram-target[aria-pressed='true'] {
       outline: 3px solid var(--color-accent-primary);
@@ -571,8 +923,8 @@ export class TramsPageComponent {
   protected readonly preInset = PRE_INSET_PX;
   protected readonly noLines = NO_LINES;
 
-  readonly mapData = httpResource<TramMapData>(() =>
-    new URL('data/helsinki-trams.json', this.document.baseURI).href,
+  readonly mapData = httpResource<TramMapData>(
+    () => new URL('data/helsinki-trams.json', this.document.baseURI).href,
   );
 
   /** null until the visitor picks a view; then the default follows the screen width. */
@@ -611,15 +963,20 @@ export class TramsPageComponent {
    */
   private nativeFullscreen = false;
 
-  readonly presetId = computed(() => this.chosenPreset() ?? defaultPreset(this.containerWidth() ?? 1024));
+  readonly presetId = computed(
+    () => this.chosenPreset() ?? defaultPreset(this.containerWidth() ?? 1024),
+  );
   readonly grid = computed(() => createGrid(GRID_PRESETS[this.presetId()]));
-  readonly glyphs = computed(() => (this.glyphMode() === 'unicode' ? UNICODE_GLYPHS : ASCII_GLYPHS));
+  readonly glyphs = computed(() =>
+    this.glyphMode() === 'unicode' ? UNICODE_GLYPHS : ASCII_GLYPHS,
+  );
   readonly status = computed(() => STATUS[this.feed.status()]);
   readonly lineChoices = computed(() =>
     this.mapData.hasValue() ? this.mapData.value().lines.map((line) => line.desi) : [],
   );
   private readonly stopNames = computed(
-    () => new Map(this.mapData.hasValue() ? this.mapData.value().stops.map((s) => [s.id, s.name]) : []),
+    () =>
+      new Map(this.mapData.hasValue() ? this.mapData.value().stops.map((s) => [s.id, s.name]) : []),
   );
 
   /** The feed only carries the chosen lines; depot runs are hidden here. */
@@ -634,7 +991,9 @@ export class TramsPageComponent {
 
   // The static layers are rendered once per data, preset and glyph set, never per frame.
   readonly baseMap = computed(() =>
-    this.mapData.hasValue() ? renderBaseMap(this.mapData.value(), this.grid(), this.glyphs()) : null,
+    this.mapData.hasValue()
+      ? renderBaseMap(this.mapData.value(), this.grid(), this.glyphs())
+      : null,
   );
   readonly rows = computed(() => toRuns(this.baseMap()?.cells ?? []));
 
@@ -653,10 +1012,14 @@ export class TramsPageComponent {
   });
   readonly overlayRows = computed(() => toRuns(this.overlay()?.cells ?? []));
 
-  readonly tramGroups = computed(() => tramTargets(this.overlay()?.markers ?? [], this.shownTrams()));
+  readonly tramGroups = computed(() =>
+    tramTargets(this.overlay()?.markers ?? [], this.shownTrams()),
+  );
   /** Only one tram button is in the Tab order; the arrow keys move between them. */
   readonly rovingKey = computed(() => {
-    const keys = new Set(this.tramGroups().flatMap((group) => group.targets.map((t) => t.tram.key)));
+    const keys = new Set(
+      this.tramGroups().flatMap((group) => group.targets.map((t) => t.tram.key)),
+    );
     const preferred = [this.focusedKey(), this.selectedKey()].find((key) => key && keys.has(key));
     return preferred ?? keys.values().next().value ?? null;
   });
@@ -719,7 +1082,9 @@ export class TramsPageComponent {
     return Math.floor(Math.min(MAX_FONT_PX, Math.max(MIN_FONT_PX, fitted)) * 100) / 100;
   });
   /** A cell is exactly twice as tall as it is wide, like 0.001° of latitude vs. longitude. */
-  readonly lineHeight = computed(() => Math.round(this.fontSize() * this.charRatio() * 2 * 100) / 100);
+  readonly lineHeight = computed(
+    () => Math.round(this.fontSize() * this.charRatio() * 2 * 100) / 100,
+  );
 
   constructor() {
     if (this.prefs.smooth) this.feed.setSmooth(true);
@@ -738,7 +1103,9 @@ export class TramsPageComponent {
       const area = this.mapArea().nativeElement;
       this.containerWidth.set(area.clientWidth);
       if (typeof ResizeObserver === 'undefined') return;
-      const observer = new ResizeObserver(([entry]) => this.containerWidth.set(entry.contentRect.width));
+      const observer = new ResizeObserver(([entry]) =>
+        this.containerWidth.set(entry.contentRect.width),
+      );
       observer.observe(area);
       this.destroyRef.onDestroy(() => observer.disconnect());
     });
@@ -767,7 +1134,10 @@ export class TramsPageComponent {
       const area = this.fullscreen() ? this.mapFit()?.nativeElement : undefined;
       if (!area || typeof ResizeObserver === 'undefined') return;
       const observer = new ResizeObserver(([entry]) =>
-        this.fullscreenSize.set({ width: entry.contentRect.width, height: entry.contentRect.height }),
+        this.fullscreenSize.set({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        }),
       );
       observer.observe(area);
       onCleanup(() => observer.disconnect());
@@ -853,8 +1223,10 @@ export class TramsPageComponent {
       return {};
     }
     const prefs: ViewPrefs = {};
-    if (PRESET_OPTIONS.some((o) => o.id === stored.preset)) prefs.preset = stored.preset as PresetId;
-    if (GLYPH_OPTIONS.some((o) => o.id === stored.glyphs)) prefs.glyphs = stored.glyphs as GlyphMode;
+    if (PRESET_OPTIONS.some((o) => o.id === stored.preset))
+      prefs.preset = stored.preset as PresetId;
+    if (GLYPH_OPTIONS.some((o) => o.id === stored.glyphs))
+      prefs.glyphs = stored.glyphs as GlyphMode;
     if (typeof stored.smooth === 'boolean') prefs.smooth = stored.smooth;
     if (typeof stored.trails === 'boolean') prefs.trails = stored.trails;
     return prefs;
@@ -891,7 +1263,9 @@ export class TramsPageComponent {
       case 'onTime':
         return this.i18n.t('trams.onTime');
       default:
-        return this.i18n.t(s.kind === 'ahead' ? 'trams.ahead' : 'trams.late', { minutes: s.minutes });
+        return this.i18n.t(s.kind === 'ahead' ? 'trams.ahead' : 'trams.late', {
+          minutes: s.minutes,
+        });
     }
   }
 
@@ -935,7 +1309,9 @@ export class TramsPageComponent {
     this.announcement.set('');
     afterNextRender(
       () => {
-        const root = this.fullscreen() ? this.fullscreenArea()?.nativeElement : this.mapArea().nativeElement;
+        const root = this.fullscreen()
+          ? this.fullscreenArea()?.nativeElement
+          : this.mapArea().nativeElement;
         const target =
           root?.querySelector<HTMLElement>(`[data-tram-key="${key}"]`) ??
           root?.querySelector<HTMLElement>('[role="region"]');
@@ -947,7 +1323,9 @@ export class TramsPageComponent {
 
   /** Arrow keys, Home and End move between the tram buttons in list order. */
   protected moveFocus(event: KeyboardEvent): void {
-    const buttons = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('button')];
+    const buttons = [
+      ...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('button'),
+    ];
     const index = buttons.indexOf(event.target as HTMLElement);
     if (index < 0) return;
     const next = {
@@ -992,7 +1370,8 @@ export class TramsPageComponent {
   /** Zooms the full-screen map, keeping the point in the middle of the view in the middle. */
   zoomBy(direction: 1 | -1): void {
     const step = Math.max(0, Math.min(ZOOM_STEPS.length - 1, this.zoomStep() + direction));
-    const region = this.fullscreenArea()?.nativeElement.querySelector<HTMLElement>('[role="region"]');
+    const region =
+      this.fullscreenArea()?.nativeElement.querySelector<HTMLElement>('[role="region"]');
     if (step === this.zoomStep() || !region) return;
     const centreX = (region.scrollLeft + region.clientWidth / 2) / region.scrollWidth;
     const centreY = (region.scrollTop + region.clientHeight / 2) / region.scrollHeight;
@@ -1035,7 +1414,9 @@ export class TramsPageComponent {
   protected trapFocus(event: KeyboardEvent, dialog: HTMLElement): void {
     if (event.key !== 'Tab') return;
     const focusable = [
-      ...dialog.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), [tabindex="0"]'),
+      ...dialog.querySelectorAll<HTMLElement>(
+        'button:not(:disabled):not([tabindex="-1"]), [tabindex="0"]',
+      ),
     ];
     if (focusable.length === 0) return;
     const first = focusable[0];

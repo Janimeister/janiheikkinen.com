@@ -10,7 +10,9 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
-    "test:production": "playwright test --config=playwright.production.config.ts"
+    "test:production": "playwright test --config=playwright.production.config.ts",
+    "format": "prettier --write src e2e scripts playwright.config.ts playwright.production.config.ts",
+    "format:check": "prettier --check src e2e scripts playwright.config.ts playwright.production.config.ts"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
