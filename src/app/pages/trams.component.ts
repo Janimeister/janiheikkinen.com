@@ -358,7 +358,10 @@ export class TramsPageComponent {
   private readonly fullscreenSize = signal<{ width: number; height: number } | null>(null);
   /** Character width divided by font size, measured once the web font has loaded. */
   private readonly charRatio = signal(0.6);
-  /** Whether the browser's own full screen is on too; not every browser has it (iPhone Safari). */
+  /**
+   * Whether the browser's own full screen is on, or asked for and not refused. Not every browser
+   * has it (iPhone Safari).
+   */
   private nativeFullscreen = false;
 
   readonly presetId = computed(() => this.chosenPreset() ?? defaultPreset(this.containerWidth() ?? 1024));
@@ -441,8 +444,14 @@ export class TramsPageComponent {
     const onFullscreenChange = () => {
       const doc = this.document as FullscreenDocument;
       const active = !!(doc.fullscreenElement ?? doc.webkitFullscreenElement);
-      if (this.nativeFullscreen && !active) this.exitFullscreen();
-      this.nativeFullscreen = active;
+      if (active && !this.fullscreen()) {
+        // It arrived after the map was already closed again.
+        this.exitNativeFullscreen();
+      } else if (!active && this.nativeFullscreen) {
+        // Even if it never quite started: Esc during the switch cancels it without a key event.
+        this.nativeFullscreen = false;
+        this.exitFullscreen();
+      }
     };
     this.document.addEventListener('fullscreenchange', onFullscreenChange);
     this.document.addEventListener('webkitfullscreenchange', onFullscreenChange);
@@ -466,11 +475,15 @@ export class TramsPageComponent {
     // Hide the browser's own bars too where that's possible. If it isn't, or it's refused, the
     // overlay still covers the page.
     const root = this.document.documentElement as FullscreenElement;
-    try {
-      const request = root.requestFullscreen ?? root.webkitRequestFullscreen;
-      Promise.resolve(request?.call(root)).catch(() => undefined);
-    } catch {
-      // Not allowed here; the overlay is enough.
+    const request = root.requestFullscreen ?? root.webkitRequestFullscreen;
+    if (request) {
+      this.nativeFullscreen = true;
+      try {
+        Promise.resolve(request.call(root)).catch(() => (this.nativeFullscreen = false));
+      } catch {
+        // Not allowed here; the overlay is enough.
+        this.nativeFullscreen = false;
+      }
     }
     afterNextRender(() => this.exitButton()?.nativeElement.focus(), { injector: this.injector });
   }
@@ -502,15 +515,18 @@ export class TramsPageComponent {
     this.fullscreen.set(false);
     this.zoomStep.set(0);
     this.document.documentElement.style.overflow = '';
+    this.nativeFullscreen = false;
+    this.exitNativeFullscreen();
+  }
+
+  private exitNativeFullscreen(): void {
     const doc = this.document as FullscreenDocument;
-    if (doc.fullscreenElement ?? doc.webkitFullscreenElement) {
-      this.nativeFullscreen = false;
-      try {
-        const exit = doc.exitFullscreen ?? doc.webkitExitFullscreen;
-        Promise.resolve(exit?.call(doc)).catch(() => undefined);
-      } catch {
-        // Already left.
-      }
+    if (!(doc.fullscreenElement ?? doc.webkitFullscreenElement)) return;
+    try {
+      const exit = doc.exitFullscreen ?? doc.webkitExitFullscreen;
+      Promise.resolve(exit?.call(doc)).catch(() => undefined);
+    } catch {
+      // Already left.
     }
   }
 

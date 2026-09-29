@@ -4,9 +4,25 @@ import { expectAttribution, expectBackLink } from './helpers';
 import { HFP_SAMPLE, HFP_SAMPLE_TRAMS, mockHfpBroker } from './hfp-broker';
 
 async function setUp(page: Page) {
+  // The staggered entrance animations move cards after they've been still for their delay, so a
+  // click can land where a button was. Reduced motion turns them off.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => {
     localStorage.setItem('cookie-consent', 'accepted');
     localStorage.setItem('app-language', 'en');
+  });
+}
+
+/**
+ * Removes the Fullscreen API, as on iPhone Safari, so the map opens as an overlay only. Where the
+ * API works (headless Firefox), the browser's full screen takes the whole virtual screen instead of
+ * the emulated viewport and swallows Esc while it switches.
+ */
+async function withoutFullscreenApi(page: Page) {
+  await page.addInitScript(() => {
+    for (const name of ['requestFullscreen', 'webkitRequestFullscreen']) {
+      Object.defineProperty(Element.prototype, name, { value: undefined, configurable: true });
+    }
   });
 }
 
@@ -189,7 +205,6 @@ test.describe('Live trams', () => {
 
   test('has no axe violations with trams on the map', async ({ page }) => {
     const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
-    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/trams');
     await broker.subscribed();
     await expect(page.getByTestId('tram-count')).toHaveText(`Trams: ${HFP_SAMPLE_TRAMS}`);
@@ -200,6 +215,7 @@ test.describe('Live trams', () => {
 test.describe('Full-screen map', () => {
   test.beforeEach(async ({ page }) => {
     await setUp(page);
+    await withoutFullscreenApi(page);
     await mockHfpBroker(page, { replay: HFP_SAMPLE });
   });
 
@@ -304,10 +320,43 @@ test.describe('Full-screen map', () => {
   });
 
   test('has no axe violations', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/trams');
     await page.getByRole('button', { name: 'Full screen' }).click();
     await expect(page.getByRole('dialog').getByTestId('tram-map')).toBeVisible();
     await expectNoAxeViolations(page);
+  });
+});
+
+// The only test with the real Fullscreen API, where the browser grants it.
+test.describe("Full-screen map with the browser's full screen", () => {
+  test.beforeEach(async ({ page }) => {
+    await setUp(page);
+    await mockHfpBroker(page, { replay: HFP_SAMPLE });
+  });
+
+  test("uses the browser's own full screen where it can, and closes with it", async ({ page }) => {
+    await page.goto('/trams');
+    const nativeFullscreen = () => page.evaluate(() => !!document.fullscreenElement);
+    await page.getByRole('button', { name: 'Full screen' }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    // Not every browser grants it headless; the overlay is the full screen then.
+    const granted = await expect
+      .poll(nativeFullscreen, { timeout: 3_000 })
+      .toBe(true)
+      .then(() => true)
+      .catch(() => false);
+    test.skip(!granted, "This browser doesn't grant full screen here");
+
+    await expect(dialog.getByRole('button', { name: 'Exit full screen' })).toBeFocused();
+    // Leaving the browser's full screen, as Esc or Android's back gesture do, closes the map too.
+    await page.evaluate(() => document.exitFullscreen());
+    await expect(dialog).toBeHidden();
+
+    // And closing the map leaves the browser's full screen.
+    await page.getByRole('button', { name: 'Full screen' }).click();
+    await expect.poll(nativeFullscreen, { timeout: 3_000 }).toBe(true);
+    await dialog.getByRole('button', { name: 'Exit full screen' }).click();
+    await expect.poll(nativeFullscreen).toBe(false);
   });
 });
