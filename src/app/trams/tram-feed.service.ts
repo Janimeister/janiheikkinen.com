@@ -1,11 +1,18 @@
 import { DestroyRef, inject, Injectable, InjectionToken, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { Deduplicator, isInside, parseHfpMessage, type TramState } from './hfp';
-import { HFP_BROKER_URL, tramFilters } from './hfp-filters';
+import {
+  compareLines,
+  Deduplicator,
+  isInside,
+  lineOf,
+  parseHfpMessage,
+  type TramState,
+} from './hfp';
+import { CELL_CHANGE_LEVELS, HFP_BROKER_URL, routeIdForLine, tramFilters } from './hfp-filters';
 import { MqttLiteClient } from './mqtt-lite';
 import type { BBox } from './tram-map.model';
 
-export type FeedStatus = 'connecting' | 'live' | 'reconnecting' | 'offline';
+export type FeedStatus = 'connecting' | 'live' | 'reconnecting' | 'offline' | 'paused';
 
 /** Opens the broker socket. Tests replace it with a fake. */
 export const HFP_SOCKET_FACTORY = new InjectionToken<(url: string, protocol: string) => WebSocket>(
@@ -30,8 +37,8 @@ const decoder = new TextDecoder();
 
 /**
  * Live tram positions from HSL's HFP feed. Provide it on the page component, so the connection
- * lives exactly as long as the page: it disconnects on destroy, while the tab is hidden and while
- * the browser is offline.
+ * lives exactly as long as the page: it disconnects on destroy, while paused, while the tab is
+ * hidden and while the browser is offline.
  */
 @Injectable()
 export class TramFeedService {
@@ -41,17 +48,26 @@ export class TramFeedService {
   private readonly statusSignal = signal<FeedStatus>('offline');
   private readonly vehiclesSignal = signal<ReadonlyMap<string, TramState>>(new Map());
   private readonly nowSignal = signal(Date.now());
+  private readonly pausedSignal = signal(false);
 
   readonly status = this.statusSignal.asReadonly();
   /** Trams by `oper/veh`, published at most every {@link FLUSH_MS}. */
   readonly vehicles = this.vehiclesSignal.asReadonly();
   /** The clock staleness is judged against; ticks every {@link TICK_MS}. */
   readonly now = this.nowSignal.asReadonly();
+  readonly paused = this.pausedSignal.asReadonly();
 
   private readonly trams = new Map<string, TramState>();
   private readonly dedupe = new Deduplicator();
   private client: MqttLiteClient | null = null;
   private bbox: BBox | null = null;
+  /** The lines to follow, or null for every line including depot runs. */
+  private lines: ReadonlySet<string> | null = null;
+  /**
+   * Route ids seen per line, like `1004H` or `1004 4` for line 4. A per-line filter only matches
+   * its exact route id, so following a line also subscribes to the variants seen so far.
+   */
+  private readonly routeIds = new Map<string, Set<string>>();
   private running = false;
   private attempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -81,6 +97,32 @@ export class TramFeedService {
     this.reconsider();
   }
 
+  /**
+   * Follows only these lines (by {@link lineOf}), each with its own subscription, or every line
+   * with `null`. Trams of lines left out disappear at once; those of lines added appear as they
+   * next report, when they move into another map cell.
+   */
+  setLines(lines: ReadonlySet<string> | null): void {
+    this.lines = lines === null ? null : new Set(lines);
+    this.client?.setFilters(this.filters());
+    let removed = false;
+    for (const [key, tram] of this.trams) {
+      if (!this.follows(tram)) removed = this.trams.delete(key) || removed;
+    }
+    if (removed) this.scheduleFlush();
+  }
+
+  /** Disconnects until {@link resume}. Trams stay on the map, and go stale as usual. */
+  pause(): void {
+    this.pausedSignal.set(true);
+    this.reconsider();
+  }
+
+  resume(): void {
+    this.pausedSignal.set(false);
+    this.reconsider();
+  }
+
   stop(): void {
     this.running = false;
     clearInterval(this.tickTimer);
@@ -93,7 +135,10 @@ export class TramFeedService {
     if (!this.running) return;
     const hidden = this.document.visibilityState === 'hidden';
     const offline = this.document.defaultView?.navigator.onLine === false;
-    if (hidden || offline) {
+    if (this.pausedSignal()) {
+      this.disconnect();
+      this.statusSignal.set('paused');
+    } else if (hidden || offline) {
       this.disconnect();
       this.statusSignal.set('offline');
     } else if (!this.client && this.reconnectTimer === undefined) {
@@ -106,7 +151,7 @@ export class TramFeedService {
     this.statusSignal.set(this.attempt === 0 ? 'connecting' : 'reconnecting');
     const client = new MqttLiteClient({
       url: HFP_BROKER_URL,
-      filters: tramFilters(),
+      filters: this.filters(),
       keepAlive: 30,
       createSocket: this.createSocket,
       onSubscribed: () => {
@@ -135,6 +180,20 @@ export class TramFeedService {
     }, delay);
   }
 
+  private filters(): string[] {
+    if (this.lines === null) return tramFilters();
+    const routeIds = new Set<string>();
+    for (const line of [...this.lines].sort(compareLines)) {
+      routeIds.add(routeIdForLine(line));
+      for (const id of this.routeIds.get(line) ?? []) routeIds.add(id);
+    }
+    return tramFilters(CELL_CHANGE_LEVELS, [...routeIds]);
+  }
+
+  private follows(tram: TramState): boolean {
+    return this.lines === null || this.lines.has(lineOf(tram.desi));
+  }
+
   private disconnect(): void {
     clearTimeout(this.reconnectTimer);
     this.reconnectTimer = undefined;
@@ -149,6 +208,11 @@ export class TramFeedService {
       if (!this.trams.delete(event.key)) return;
     } else {
       const { tram } = event;
+      const line = lineOf(tram.desi);
+      const seen = this.routeIds.get(line) ?? new Set<string>();
+      this.routeIds.set(line, seen.add(tram.routeId));
+      // Right after a filter change, the broker can still send lines we no longer follow.
+      if (!this.follows(tram)) return;
       if (this.bbox && !isInside(tram, this.bbox)) {
         if (!this.trams.delete(tram.key)) return;
       } else {

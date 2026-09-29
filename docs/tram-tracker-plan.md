@@ -5,7 +5,7 @@ map and the vehicles are drawn in ASCII. It gets its data from the Digitransit /
 **High-frequency positioning (HFP)** MQTT API and is limited to the Helsinki city tram network.
 Raide-Jokeri (line 15) is left out.
 
-> Status: milestones 1 (static map) and 2 (live trams) are implemented. The live feed was
+> Status: milestones 1 (static map), 2 (live trams) and 3 (interaction) are implemented. The live feed was
 > rechecked on **29 Sep 2026 at about 07:50 Helsinki time** (weekday morning peak) in Chromium,
 > with the site's own MQTT client (§6).
 >
@@ -300,7 +300,17 @@ The *measured* level distribution for trams matches the docs:
 - **Line filter active:** put the `route_id` in the filter, e.g.
   `/hfp/v2/journey/ongoing/vp/tram/+/+/1004/+/+/+/+/3/#`. That's one filter per line and
   level; MQTT allows many in one `SUBSCRIBE`. Base `route_id`s don't match variant IDs like
-  `1001H6`, which is acceptable: depot runs only show in "all lines" mode.
+  `1001H6` or `1004 4`.
+  - *Implemented (milestone 3):* the feed service remembers every `route_id` it has seen per
+    line, and a line's filters include those variants too. The page starts in "all lines"
+    mode, so by the time someone narrows it down the common variants are known. The `H` line
+    has no chip; it and variants never seen only show in "all lines" mode.
+  - The subscription changes on the live connection: `SUBSCRIBE` the new filters first, then
+    `UNSUBSCRIBE` the old ones, so nothing is missed. Messages for lines no longer followed can
+    still arrive in between; the client drops them.
+  - Trams of a deselected line are removed at once. A re-added line's trams reappear when they
+    next report (when they move into another cell), because a quiet tram's old position can't
+    be trusted. The page says so under the chips.
 - **Smooth mode** (opt-in toggle, "uses ~15× more data"): subscribe to all levels and
   interpolate between fixes.
 - **Stale handling:** in level-filtered mode, a tram standing still sends nothing. Waiting at
@@ -406,7 +416,13 @@ e2e/trams.spec.ts                     # Playwright
 2. **Live trams.** MQTT client, HFP parsing and dedupe, feed service with the level 0–3
    subscription, overlay and status badge. Recheck the 4× duplication in a real browser.
 3. **Interaction.** Line filters with per-line subscriptions, depot-run toggle, selection
-   details, accessible list, pause and visibility handling.
+   details, accessible list, pause and visibility handling. *Done:* each tram on the map is an
+   invisible button placed over its label (`ch` units, so it lines up with the `<pre>`). The
+   buttons, grouped by line in a `<nav>`, are also the accessible list. They're one Tab stop
+   (roving `tabindex`, arrow keys, Home and End). A cluster's `*` offers its other trams in the
+   details panel. Selection is announced once through a polite live region, never on updates.
+   In full screen the details take a row under the map, which refits, so they never cover a
+   tram. Pause adds a `paused` status.
 4. **Polish.** Smooth mode, trails, presets, mobile tuning, README and notices, and the
    GTFS re-run for lines 11 and 12 after 9 Nov 2026.
 

@@ -1,6 +1,6 @@
 import { blankCells, type Cell, lineClass, SHARED_TRACK_CLASS } from './ascii-raster';
 import { type Grid, toCell } from './grid';
-import type { TramState } from './hfp';
+import { lineOf, type TramState } from './hfp';
 
 /** One label on the overlay: a tram's line number, or `*` where several trams overlap. */
 export interface TramMarker {
@@ -47,7 +47,7 @@ export function snapToTrack(
 ): { row: number; col: number } {
   if (isTrack(base[row]?.[col])) return { row, col };
   // Depot runs like `4H` drive on line 4's track; the `H` line can be on any.
-  const own = lineClass(desi.replace(/H$/, '') || desi);
+  const own = lineClass(lineOf(desi));
   let fallback: { row: number; col: number } | null = null;
   for (const [dr, dc] of NEIGHBOURS) {
     const cell = base[row + dr]?.[col + dc];
@@ -101,7 +101,7 @@ export function renderTramOverlay(
       row,
       col,
       text,
-      cls: `tram ${isDim(tram) ? 'tram-dim' : lineClass(text.replace(/H$/, '') || text)}`,
+      cls: `tram ${isDim(tram) ? 'tram-dim' : lineClass(lineOf(text))}`,
       keys: [tram.key],
     };
     markers.push(marker);

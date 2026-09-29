@@ -7,6 +7,7 @@ import {
   encodeConnect,
   encodeRemainingLength,
   encodeSubscribe,
+  encodeUnsubscribe,
   MqttLiteClient,
   PacketReader,
   PINGREQ,
@@ -42,6 +43,12 @@ describe('MQTT packet encoding', () => {
   it('encodes SUBSCRIBE with flags 0b0010 and QoS 0 for every filter', () => {
     expect(encodeSubscribe(1, ['a/#', 'b'])).toEqual(
       bytes(0x82, 12, 0, 1, 0, 3, ...ascii('a/#'), 0, 0, 1, ...ascii('b'), 0),
+    );
+  });
+
+  it('encodes UNSUBSCRIBE with flags 0b0010 and no QoS bytes', () => {
+    expect(encodeUnsubscribe(2, ['a/#', 'b'])).toEqual(
+      bytes(0xa2, 10, 0, 2, 0, 3, ...ascii('a/#'), 0, 1, ...ascii('b')),
     );
   });
 
@@ -200,6 +207,34 @@ describe('MqttLiteClient', () => {
     socket.open();
     socket.drop();
     expect(events).toEqual(['closed: Socket closed (1006)']);
+  });
+
+  it('changes the subscription on a live connection, subscribing before unsubscribing', () => {
+    const c = client();
+    socket.open();
+    socket.receive(bytes(0x20, 2, 0, 0));
+    socket.receive(bytes(0x90, 3, 0, 1, 0));
+    c.setFilters(['b/#', 'c/#']);
+    expect(socket.sent.slice(2)).toEqual([
+      encodeSubscribe(2, ['b/#', 'c/#']),
+      encodeUnsubscribe(3, ['a/#']),
+    ]);
+    // A later SUBACK doesn't count as coming live again.
+    socket.receive(bytes(0x90, 4, 0, 2, 0, 0));
+    expect(events).toEqual(['subscribed']);
+    // Only the difference is sent.
+    c.setFilters(['c/#']);
+    expect(socket.sent.slice(4)).toEqual([encodeUnsubscribe(4, ['b/#'])]);
+    c.setFilters(['c/#']);
+    expect(socket.sent).toHaveLength(5);
+  });
+
+  it('subscribes to the latest filters when they change before the broker accepts', () => {
+    const c = client();
+    c.setFilters(['b/#']);
+    socket.open();
+    socket.receive(bytes(0x20, 2, 0, 0));
+    expect(socket.sent.slice(1)).toEqual([encodeSubscribe(1, ['b/#'])]);
   });
 
   it('says goodbye with DISCONNECT and stays silent after close()', () => {

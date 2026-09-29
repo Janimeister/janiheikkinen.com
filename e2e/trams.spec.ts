@@ -1,7 +1,7 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { expectAttribution, expectBackLink } from './helpers';
-import { HFP_SAMPLE, HFP_SAMPLE_TRAMS, mockHfpBroker } from './hfp-broker';
+import { HFP_SAMPLE, HFP_SAMPLE_TRAMS, laterFix, mockHfpBroker, sampleFix } from './hfp-broker';
 
 async function setUp(page: Page) {
   // The staggered entrance animations move cards after they've been still for their delay, so a
@@ -212,6 +212,212 @@ test.describe('Live trams', () => {
   });
 });
 
+test.describe('Choosing lines and trams', () => {
+  test.beforeEach(async ({ page }) => setUp(page));
+
+  /** Line 13 trams in the sample, and those of them inside the default city centre view. */
+  const LINE_13_TRAMS = 6;
+  const LINE_13_TRAMS_IN_VIEW = 5;
+  const tram = (page: Page, key: string) => page.locator(`[data-tram-key="${key}"]`);
+
+  test('follows only the chosen lines, each with its own subscription', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    const count = page.getByTestId('tram-count');
+    const overlay = page.getByTestId('tram-overlay');
+    await expect(count).toHaveText(`Trams: ${HFP_SAMPLE_TRAMS}`);
+    await expect(page.getByRole('button', { name: 'All', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await page.getByRole('button', { name: 'None', exact: true }).click();
+    await expect(count).toHaveText('Trams: 0');
+    await expect(overlay.locator('.tram')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Line 4', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    await expect
+      .poll(() => broker.unsubscriptions)
+      .toEqual([
+        [
+          '/hfp/v2/journey/ongoing/vp/tram/+/+/+/+/+/+/+/0/#',
+          '/hfp/v2/journey/ongoing/vp/tram/+/+/+/+/+/+/+/1/#',
+          '/hfp/v2/journey/ongoing/vp/tram/+/+/+/+/+/+/+/2/#',
+          '/hfp/v2/journey/ongoing/vp/tram/+/+/+/+/+/+/+/3/#',
+        ],
+      ]);
+
+    // Line 4 has its own route id, plus the variant `1004 4` seen in the feed.
+    await page.getByRole('button', { name: 'Line 4', exact: true }).click();
+    await broker.subscribed(2);
+    expect(broker.subscriptions[1]).toEqual(
+      ['1004', '1004 4'].flatMap((route) =>
+        [0, 1, 2, 3].map(
+          (level) => `/hfp/v2/journey/ongoing/vp/tram/+/+/${route}/+/+/+/+/${level}/#`,
+        ),
+      ),
+    );
+    await expect(page.getByText('Trams of a line you add appear as they next move.')).toBeVisible();
+    // A line's trams come back as they report again; other lines stay away.
+    broker.publish([laterFix(sampleFix(648), 5), laterFix(sampleFix(650), 5)]);
+    await expect(count).toHaveText('Trams: 1');
+    await expect(overlay.locator('.tram')).toHaveText('4');
+
+    await page.getByRole('button', { name: 'All', exact: true }).click();
+    await broker.subscribed(3);
+    expect(broker.subscriptions[2]).toEqual(broker.subscriptions[0].slice(0, 4));
+  });
+
+  test('hides one line, and depot runs', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    const count = page.getByTestId('tram-count');
+    const overlay = page.getByTestId('tram-overlay');
+    await expect(count).toHaveText(`Trams: ${HFP_SAMPLE_TRAMS}`);
+
+    // The sample's one depot run is an H line tram.
+    await expect(tram(page, '40/443')).toHaveAttribute('aria-label', 'Line H to Kuusitie');
+    await page.getByLabel('Show depot runs').uncheck();
+    await expect(count).toHaveText(`Trams: ${HFP_SAMPLE_TRAMS - 1}`);
+    await expect(tram(page, '40/443')).toHaveCount(0);
+    await page.getByLabel('Show depot runs').check();
+    await expect(tram(page, '40/443')).toHaveCount(1);
+
+    await expect(overlay.locator('.tram.line-13').first()).toBeVisible();
+    await page.getByRole('button', { name: 'Line 13', exact: true }).click();
+    await expect(count).toHaveText(`Trams: ${HFP_SAMPLE_TRAMS - LINE_13_TRAMS}`);
+    await expect(overlay.locator('.tram.line-13')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'All', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    // The H line has no button of its own: only "all lines" follows it.
+    await expect(tram(page, '40/443')).toHaveCount(0);
+  });
+
+  test('shows the details of a selected tram', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    await expect(page.getByText('Select a tram on the map for its details.')).toBeVisible();
+
+    const target = tram(page, '40/650');
+    await expect(target).toHaveAttribute('aria-label', 'Line 13 to Ilmala');
+    await target.click();
+    await expect(target).toHaveAttribute('aria-pressed', 'true');
+    const details = page.getByTestId('tram-details');
+    await expect(details.getByRole('heading', { name: 'Line 13 to Ilmala' })).toHaveText('Ilmala');
+    await expect(details.getByTestId('tram-speed')).toHaveText('13 km/h');
+    await expect(details.getByTestId('tram-schedule')).toHaveText('On time');
+    await expect(details.getByTestId('tram-next-stop')).toHaveText('Eevanmäki');
+    await expect(details.getByTestId('tram-updated')).toHaveText(/^\d+ s ago$/);
+    await expect(details).toContainText('Closed');
+    await expect(page.getByTestId('tram-announcement')).toHaveText(
+      'Line 13 to Ilmala. Schedule: On time. Next stop: Eevanmäki.',
+    );
+
+    // Selecting it again deselects it.
+    await target.click();
+    await expect(details).toBeHidden();
+    await expect(target).toHaveAttribute('aria-pressed', 'false');
+
+    await target.click();
+    await details.getByRole('button', { name: 'Close tram details' }).click();
+    await expect(details).toBeHidden();
+    await expect(target).toBeFocused();
+  });
+
+  test('offers the other trams under a cluster', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    // Two line 1 trams, to Käpylä and to Eira, meet at Viiskulma.
+    await tram(page, '40/110').click();
+    const details = page.getByTestId('tram-details');
+    await expect(details.getByRole('heading')).toHaveText('Käpylä');
+    await details.getByRole('button', { name: 'Line 1 to Eira' }).click();
+    await expect(details.getByRole('heading')).toHaveText('Eira');
+    await expect(details.getByTestId('tram-schedule')).toHaveText('1 min late');
+    await expect(details.getByRole('button', { name: 'Line 1 to Käpylä' })).toBeVisible();
+  });
+
+  test('moves between trams with the keyboard', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    const list = page.getByRole('navigation', { name: 'Trams on the map' });
+    await expect(list.getByRole('list', { name: 'Line 13' }).getByRole('button')).toHaveCount(
+      LINE_13_TRAMS_IN_VIEW,
+    );
+
+    await page.getByTestId('tram-map-region').focus();
+    await page.keyboard.press('Tab');
+    await expect(tram(page, '40/403')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(tram(page, '40/409')).toBeFocused();
+    await page.keyboard.press('End');
+    await expect(tram(page, '40/443')).toBeFocused();
+    await page.keyboard.press('Enter');
+    const details = page.getByTestId('tram-details');
+    await expect(details.getByRole('heading')).toHaveText('Kuusitie');
+    await expect(details).toContainText('Depot run');
+    // Escape closes the details and returns to the tram.
+    await page.keyboard.press('Escape');
+    await expect(details).toBeHidden();
+    await expect(tram(page, '40/443')).toBeFocused();
+  });
+
+  test('pauses and resumes the live feed', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    const status = page.getByTestId('tram-status');
+    await expect(status).toHaveText('Live');
+
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await expect(status).toHaveText('Paused');
+    // The trams stay where they were last seen.
+    await expect(page.getByTestId('tram-count')).toHaveText(`Trams: ${HFP_SAMPLE_TRAMS}`);
+    await page.getByRole('button', { name: 'Resume' }).click();
+    await broker.subscribed(2);
+    await expect(status).toHaveText('Live');
+    expect(broker.connections).toHaveLength(2);
+  });
+
+  test('disconnects while the tab is hidden', async ({ page }) => {
+    const broker = await mockHfpBroker(page);
+    await page.goto('/trams');
+    await broker.subscribed();
+    const status = page.getByTestId('tram-status');
+    await expect(status).toHaveText('Live');
+    const setVisibility = (state: DocumentVisibilityState) =>
+      page.evaluate((value) => {
+        Object.defineProperty(document, 'visibilityState', { value, configurable: true });
+        document.dispatchEvent(new Event('visibilitychange'));
+      }, state);
+
+    await setVisibility('hidden');
+    await expect(status).toHaveText('Offline');
+    await setVisibility('visible');
+    await broker.subscribed(2);
+    await expect(status).toHaveText('Live');
+  });
+
+  test('has no axe violations with a line filter and a tram selected', async ({ page }) => {
+    const broker = await mockHfpBroker(page, { replay: HFP_SAMPLE });
+    await page.goto('/trams');
+    await broker.subscribed();
+    await tram(page, '40/110').click();
+    await expect(page.getByTestId('tram-details')).toBeVisible();
+    await page.getByRole('button', { name: 'Line 13', exact: true }).click();
+    await expectNoAxeViolations(page);
+  });
+});
+
 test.describe('Full-screen map', () => {
   test.beforeEach(async ({ page }) => {
     await setUp(page);
@@ -265,11 +471,16 @@ test.describe('Full-screen map', () => {
     await expect(dialog.getByRole('button', { name: 'Exit full screen' })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(dialog.getByTestId('tram-map-region')).toBeFocused();
-    // Past the last control back to the first one (Zoom out is disabled, so it's skipped).
+    // The trams take a single Tab stop, the first one in the list.
+    const firstTram = dialog.locator('[data-tram-key="40/403"]');
+    await expect(firstTram).toHaveAttribute('tabindex', '0');
     await page.keyboard.press('Tab');
-    await expect(dialog.getByRole('button', { name: 'Zoom in' })).toBeFocused();
+    await expect(firstTram).toBeFocused();
+    // Past the last control back to the first one.
+    await page.keyboard.press('Tab');
+    await expect(dialog.getByRole('button', { name: 'Pause' })).toBeFocused();
     await page.keyboard.press('Shift+Tab');
-    await expect(dialog.getByTestId('tram-map-region')).toBeFocused();
+    await expect(firstTram).toBeFocused();
   });
 
   test('fills a phone screen, fits the compact map on it and zooms in', async ({ page }) => {

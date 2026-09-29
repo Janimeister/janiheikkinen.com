@@ -4,6 +4,7 @@ import {
   isDepotRun,
   isExcludedLine,
   isInside,
+  lineOf,
   parseHfpMessage,
   parseTopic,
   type TramState,
@@ -159,6 +160,15 @@ describe('HFP line rules', () => {
     ['10', false],
   ])('treats line %s as a depot run: %s', (desi, depot) => {
     expect(isDepotRun(desi)).toBe(depot);
+  });
+
+  it.each([
+    ['4', '4'],
+    ['4H', '4'],
+    ['10', '10'],
+    ['H', 'H'],
+  ])('puts line %s on line %s', (desi, line) => {
+    expect(lineOf(desi)).toBe(line);
   });
 
   it('checks the map box inclusively', () => {

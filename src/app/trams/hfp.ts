@@ -85,6 +85,19 @@ export function isDepotRun(desi: string): boolean {
   return desi.endsWith('H');
 }
 
+/**
+ * The line a tram belongs to for colours and filters: a depot run like `4H` is on line 4's
+ * track. The `H` line to Ruskeasuo is a line of its own.
+ */
+export function lineOf(desi: string): string {
+  return desi.replace(/H$/, '') || desi;
+}
+
+/** Line order: `1`, `2`, … `13`, then letters like `H`. */
+export function compareLines(a: string, b: string): number {
+  return a.localeCompare(b, 'en', { numeric: true });
+}
+
 interface VpPayload {
   desi?: unknown;
   oper?: unknown;
