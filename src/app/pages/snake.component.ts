@@ -7,6 +7,7 @@ import {
   inject,
   OnDestroy,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
@@ -24,6 +25,7 @@ interface Point {
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   host: {
     '(window:keydown)': 'onKeyDown($event)',
+    '(document:visibilitychange)': 'onVisibilityChange()',
   },
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
@@ -213,6 +215,7 @@ interface Point {
 })
 export class SnakePageComponent implements OnDestroy {
   protected readonly i18n = inject(LanguageService);
+  private readonly document = inject(DOCUMENT);
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('gameCanvas');
 
   // Grid dimensions
@@ -306,6 +309,11 @@ export class SnakePageComponent implements OnDestroy {
   onKeyDown(event: KeyboardEvent) {
     const key = event.key;
     const state = this.gameState();
+    const target = event.target instanceof Element ? event.target : null;
+
+    // Never take keys from text fields, and leave Enter and Space to the focused link or button.
+    if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;
+    if ((key === 'Enter' || key === ' ') && target?.closest('a[href], button, [role="button"]')) return;
 
     // Start/restart with Enter
     if (key === 'Enter' && (state === 'idle' || state === 'over' || state === 'won')) {
@@ -355,6 +363,13 @@ export class SnakePageComponent implements OnDestroy {
       this.setDirection(dx > 0 ? 'RIGHT' : 'LEFT');
     } else {
       this.setDirection(dy > 0 ? 'DOWN' : 'UP');
+    }
+  }
+
+  /** Pauses when the tab is hidden, so the snake isn't lost while nobody is watching. */
+  onVisibilityChange() {
+    if (this.document.visibilityState === 'hidden' && this.gameState() === 'playing') {
+      this.pauseGame();
     }
   }
 

@@ -132,6 +132,7 @@ import { LanguageService } from '../i18n/language.service';
     }
 
     .notices-content a {
+      overflow-wrap: anywhere;
       color: var(--color-accent-light);
       text-decoration: underline;
       text-underline-offset: 2px;
@@ -284,8 +285,11 @@ export class ThirdPartyNoticesComponent {
     result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
     // Links [text](url)
     result = result.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    // Bare URLs
-    result = result.replace(/(?<!="|'>)(https?:\/\/[^\s<,]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Bare URLs, skipping the ones already inside a link's href or text
+    result = result.replace(/(?<!="|">)https?:\/\/[^\s<,]+/g, (match) => {
+      const [url, trailing] = splitTrailingPunctuation(match);
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${trailing}`;
+    });
     return result;
   }
 
@@ -296,4 +300,17 @@ export class ThirdPartyNoticesComponent {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
+}
+
+/**
+ * Splits sentence punctuation off the end of a bare URL, e.g. the `)` in "(see https://x.org)".
+ * A closing parenthesis stays when the URL itself opened one.
+ */
+export function splitTrailingPunctuation(match: string): [url: string, trailing: string] {
+  let url = match;
+  while (/[.;:!?)]$/.test(url)) {
+    if (url.endsWith(')') && url.split('(').length > url.split(')').length - 1) break;
+    url = url.slice(0, -1);
+  }
+  return [url, match.slice(url.length)];
 }

@@ -70,9 +70,6 @@ jobs:
       - name: Build
         run: npm run build -- --base-href /
 
-      - name: Copy index.html to 404.html for SPA routing
-        run: cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
-
       - name: Install Chromium for the production smoke test
         run: bash scripts/install-playwright.sh chromium
 

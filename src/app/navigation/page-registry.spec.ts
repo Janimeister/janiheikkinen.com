@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { EN_TRANSLATIONS, FI_TRANSLATIONS } from '../i18n/translations';
+import { EN_TRANSLATIONS } from '../i18n/translations';
+import { FI_TRANSLATIONS } from '../i18n/translations.fi';
 import { routes } from '../app.routes';
 import { findPageGroups, SITE_PAGES } from './page-registry';
 
@@ -12,7 +13,8 @@ describe('Page registry', () => {
       expect(routes.find((route) => route.path === page.path)?.loadComponent).toBe(
         page.loadComponent,
       );
-      for (const key of [page.labelKey, page.descriptionKey, page.keywordsKey]) {
+      const keys = [page.labelKey, page.descriptionKey, page.keywordsKey, page.metaKey];
+      for (const key of page.titleKey ? [...keys, page.titleKey] : keys) {
         expect(EN_TRANSLATIONS[key]).toBeTruthy();
         expect(FI_TRANSLATIONS[key]).toBeTruthy();
       }

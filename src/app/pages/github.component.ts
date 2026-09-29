@@ -36,6 +36,7 @@ interface GitHubRepo {
 }
 
 interface GitHubEvent {
+  id: string;
   type: string;
   repo: { name: string };
   created_at: string;
@@ -239,7 +240,7 @@ const LANG_COLORS: Record<string, string> = {
                   <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.recentActivity') }}</h2>
                 </div>
                 <div class="space-y-3">
-                  @for (event of recentActivity(); track event.type + event.date + event.repo) {
+                  @for (event of recentActivity(); track event.id) {
                     <div class="flex items-start gap-3 p-3 bg-bg-card-hover border-2 border-ink shadow-brutal-sm">
                       <span class="text-lg mt-0.5">{{ event.icon }}</span>
                       <div class="min-w-0 flex-1">
@@ -330,6 +331,7 @@ export class GithubPageComponent {
     return eventList.slice(0, 10).map(e => {
       const info = eventMap[e.type];
       return {
+        id: e.id,
         type: e.type,
         icon: info?.icon ?? '📌',
         action: info ? this.i18n.t(info.actionKey) : this.i18n.t('github.eventUnknown'),

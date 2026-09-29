@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ThirdPartyNoticesComponent } from './third-party-notices.component';
+import { ThirdPartyNoticesComponent, splitTrailingPunctuation } from './third-party-notices.component';
 import { LanguageService } from '../i18n/language.service';
 
 describe('ThirdPartyNoticesComponent', () => {
@@ -43,11 +43,11 @@ describe('ThirdPartyNoticesComponent', () => {
     expect(h1?.textContent).toContain('Third-Party Notices');
   });
 
-  it('should translate heading and back link when language changes', () => {
+  it('should translate heading and back link when language changes', async () => {
     const fixture = TestBed.createComponent(ThirdPartyNoticesComponent);
     const language = TestBed.inject(LanguageService);
 
-    language.setLanguage('fi');
+    await language.setLanguage('fi');
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -121,5 +121,40 @@ describe('ThirdPartyNoticesComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('script')).toBeNull();
+  });
+
+  it('should keep sentence punctuation out of bare links', async () => {
+    const md =
+      '- Feed (https://example.org/feed.zip) and https://example.org/wiki/A_(b), see [Docs](https://example.org/docs).';
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(md, { status: 200 }));
+
+    const fixture = TestBed.createComponent(ThirdPartyNoticesComponent);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).querySelector('.notices-content a')).toBeTruthy();
+    });
+
+    const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.notices-content a')];
+    expect(links.map((a) => a.getAttribute('href'))).toEqual([
+      'https://example.org/feed.zip',
+      'https://example.org/wiki/A_(b)',
+      'https://example.org/docs',
+    ]);
+    expect(links[2].textContent).toBe('Docs');
+  });
+});
+
+describe('splitTrailingPunctuation', () => {
+  it('splits closing parentheses and sentence punctuation off a URL', () => {
+    expect(splitTrailingPunctuation('https://a.org/x)')).toEqual(['https://a.org/x', ')']);
+    expect(splitTrailingPunctuation('https://a.org/x).')).toEqual(['https://a.org/x', ').']);
+    expect(splitTrailingPunctuation('https://a.org/x')).toEqual(['https://a.org/x', '']);
+  });
+
+  it('keeps a closing parenthesis the URL opened', () => {
+    expect(splitTrailingPunctuation('https://a.org/A_(b)')).toEqual(['https://a.org/A_(b)', '']);
+    expect(splitTrailingPunctuation('https://a.org/A_(b))')).toEqual(['https://a.org/A_(b)', ')']);
   });
 });

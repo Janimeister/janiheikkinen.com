@@ -109,12 +109,12 @@ function localDateKey(d: Date): string {
                     </div>
                     <hr class="border-t-2 border-ink" />
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.cheapestHour') }}</span>
-                      <span class="text-sm font-medium text-data-green">{{ stats.cheapestHour }}</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.cheapestSlot') }}</span>
+                      <span class="text-sm font-medium text-data-green">{{ stats.cheapestSlot }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.priciestHour') }}</span>
-                      <span class="text-sm font-medium text-red-400">{{ stats.priciestHour }}</span>
+                      <span class="text-sm text-text-secondary">{{ i18n.t('electricity.priciestSlot') }}</span>
+                      <span class="text-sm font-medium text-red-400">{{ stats.priciestSlot }}</span>
                     </div>
                   </div>
                 } @else {
@@ -142,16 +142,16 @@ function localDateKey(d: Date): string {
                 <div class="overflow-x-auto flex-1 min-w-0 -mr-4 pr-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.priceChartRegion')" #chartScroller (click)="activeBarIdx.set(null)">
                   <div [style.min-width.px]="chartBars().length * 10" class="pt-8">
                     <div class="flex items-end gap-0.5 h-48">
-                      @for (bar of chartBars(); track bar.hour; let i = $index) {
+                      @for (bar of chartBars(); track bar.start; let i = $index) {
                         <button type="button"
                                 class="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer"
                                 (click)="onBarClick($event, i)"
                                 [attr.data-current]="bar.isCurrent || null"
-                                [attr.aria-label]="bar.hour + ': ' + bar.price.toFixed(2) + ' c/kWh'"
+                                [attr.aria-label]="bar.label + ': ' + bar.price.toFixed(2) + ' c/kWh'"
                                 [attr.aria-pressed]="activeBarIdx() === i">
                           <div class="absolute bottom-full mb-1 bg-bg-card border-2 border-ink shadow-brutal-sm px-2 py-1 text-xs text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
                                [style.opacity]="activeBarIdx() === i ? 1 : null">
-                            {{ bar.hour }}: {{ bar.price.toFixed(2) }} c/kWh
+                            {{ bar.label }}: {{ bar.price.toFixed(2) }} c/kWh
                           </div>
                           <div class="w-full transition-all duration-300"
                                [class]="bar.isCurrent ? 'bg-accent-primary border-2 border-ink' : bar.colorClass"
@@ -162,10 +162,10 @@ function localDateKey(d: Date): string {
                     </div>
                     <!-- X-axis labels -->
                     <div class="flex mt-1">
-                      @for (bar of chartBars(); track bar.hour; let i = $index) {
+                      @for (bar of chartBars(); track bar.start; let i = $index) {
                         @if (i % 12 === 0) {
-                          <div class="text-[9px] text-text-secondary" [style.width.%]="(12 / chartBars().length) * 100">
-                            {{ bar.hour }}
+                          <div class="text-[9px] text-text-secondary" [class.font-bold]="bar.startsDay" [style.width.%]="(12 / chartBars().length) * 100">
+                            {{ bar.axisLabel }}
                           </div>
                         }
                       }
@@ -174,8 +174,9 @@ function localDateKey(d: Date): string {
                 </div>
               </div>
               <!-- Legend -->
-              <div class="flex items-center gap-4 mt-4 text-xs text-text-secondary">
-                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-lime"></span> &lt; 5 c/kWh</span>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-xs text-text-secondary">
+                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-sky"></span> &lt; 0 c/kWh</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-lime"></span> 0–5 c/kWh</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-pop-yellow"></span> 5–10 c/kWh</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-red-400"></span> &gt; 10 c/kWh</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-2 border-2 border-ink bg-accent-primary"></span> {{ i18n.t('electricity.currentLegend') }}</span>
@@ -188,9 +189,9 @@ function localDateKey(d: Date): string {
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl" aria-hidden="true">📋</span>
-                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.hourlyPrices') }}</h2>
+                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('electricity.allPrices') }}</h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.hourlyPricesRegion')">
+              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('electricity.allPricesRegion')">
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="text-text-secondary border-b-2 border-ink">
@@ -201,7 +202,12 @@ function localDateKey(d: Date): string {
                     </tr>
                   </thead>
                   <tbody>
-                    @for (row of priceTable(); track row.hour) {
+                    @for (row of priceTable(); track row.start) {
+                      @if (row.dayLabel) {
+                        <tr class="border-b-2 border-ink bg-pop-yellow/40">
+                          <th colspan="4" scope="colgroup" class="text-left py-2 font-semibold text-text-primary">{{ row.dayLabel }}</th>
+                        </tr>
+                      }
                       <tr class="border-b-2 border-ink transition-colors"
                           [class]="row.isCurrent ? 'bg-bg-card-hover' : 'hover:bg-bg-card-hover'">
                         <td class="py-2 pr-4 font-mono text-text-primary">
@@ -254,14 +260,17 @@ export class ElectricityPageComponent {
     const timer = setInterval(() => this.nowTick.set(Date.now()), 60_000);
     this.destroyRef.onDestroy(() => clearInterval(timer));
 
+    // Centre the current price once; after that the visitor's scroll position is left alone.
+    let centred = false;
     afterRenderEffect(() => {
       const bars = this.chartBars();
       const scroller = this.chartScroller()?.nativeElement;
-      if (!scroller || !bars.some(b => b.isCurrent)) return;
+      if (centred || !scroller || !bars.some(b => b.isCurrent)) return;
       const currentBar = scroller.querySelector('[data-current]') as HTMLElement | null;
       if (currentBar) {
         const scrollLeft = currentBar.offsetLeft - scroller.clientWidth / 2 + currentBar.offsetWidth / 2;
         scroller.scrollTo({ left: scrollLeft, behavior: 'instant' });
+        centred = true;
       }
     });
   }
@@ -299,10 +308,7 @@ export class ElectricityPageComponent {
     const idx = this.currentIdx();
     const prices = this.sortedPrices();
     if (idx < 0 || !prices[idx]) return '';
-    const start = new Date(prices[idx].startDate);
-    const end = new Date(prices[idx].endDate);
-    const fmt = (d: Date) => d.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
-    return `${fmt(start)} – ${fmt(end)}`;
+    return this.timeRange(prices[idx], ' – ');
   });
 
   todayStats = computed(() => {
@@ -318,13 +324,14 @@ export class ElectricityPageComponent {
     const maxVal = Math.max(...vals);
     const cheapest = todayPrices.find(p => p.price === minVal)!;
     const priciest = todayPrices.find(p => p.price === maxVal)!;
-    const fmtHour = (p: PriceEntry) => {
-      const s = new Date(p.startDate);
-      const e = new Date(p.endDate);
-      return `${s.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}–${e.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}`;
-    };
 
-    return { avg, min: minVal, max: maxVal, cheapestHour: fmtHour(cheapest), priciestHour: fmtHour(priciest) };
+    return {
+      avg,
+      min: minVal,
+      max: maxVal,
+      cheapestSlot: this.timeRange(cheapest),
+      priciestSlot: this.timeRange(priciest),
+    };
   });
 
   private chartMax = computed(() => {
@@ -347,13 +354,21 @@ export class ElectricityPageComponent {
     const curIdx = this.currentIdx();
     const maxP = this.chartMax();
 
-    return prices.map((p, i) => ({
-      hour: new Date(p.startDate).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' }),
-      price: p.price,
-      heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
-      isCurrent: i === curIdx,
-      colorClass: this.priceBgColor(p.price),
-    }));
+    return prices.map((p, i) => {
+      const start = new Date(p.startDate);
+      const time = this.formatTime(start);
+      const startsDay = i === 0 || localDateKey(new Date(prices[i - 1].startDate)) !== localDateKey(start);
+      return {
+        start: p.startDate,
+        label: `${this.shortDate(start)} ${time}`,
+        axisLabel: startsDay ? this.shortDate(start) : time,
+        startsDay,
+        price: p.price,
+        heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
+        isCurrent: i === curIdx,
+        colorClass: this.priceBgColor(p.price),
+      };
+    });
   });
 
   priceTable = computed(() => {
@@ -362,21 +377,29 @@ export class ElectricityPageComponent {
     const curIdx = this.currentIdx();
     const maxP = Math.max(...prices.map(p => Math.abs(p.price)), 1);
 
-    return prices.map((p, i) => ({
-      hour: `${new Date(p.startDate).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}–${new Date(p.endDate).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' })}`,
-      price: p.price,
-      isCurrent: i === curIdx,
-      barPct: Math.max(3, (Math.max(0, p.price) / maxP) * 100),
-    }));
+    return prices.map((p, i) => {
+      const day = localDateKey(new Date(p.startDate));
+      const newDay = i === 0 || localDateKey(new Date(prices[i - 1].startDate)) !== day;
+      return {
+        start: p.startDate,
+        dayLabel: newDay ? this.dayLabel(new Date(p.startDate)) : null,
+        hour: this.timeRange(p),
+        price: p.price,
+        isCurrent: i === curIdx,
+        barPct: Math.max(3, (Math.max(0, p.price) / maxP) * 100),
+      };
+    });
   });
 
   priceColor(price: number): string {
+    if (price < 0) return 'text-data-blue';
     if (price < 5) return 'text-data-green';
     if (price < 10) return 'text-data-orange';
     return 'text-red-400';
   }
 
   priceBgColor(price: number): string {
+    if (price < 0) return 'bg-pop-sky';
     if (price < 5) return 'bg-pop-lime';
     if (price < 10) return 'bg-pop-yellow';
     return 'bg-red-400';
@@ -388,10 +411,35 @@ export class ElectricityPageComponent {
   }
 
   priceLevel(price: number): string {
+    if (price < 0) return this.i18n.t('electricity.negative');
     if (price < 2) return this.i18n.t('electricity.veryCheap');
     if (price < 5) return this.i18n.t('electricity.cheap');
     if (price < 10) return this.i18n.t('electricity.moderate');
     if (price < 15) return this.i18n.t('electricity.expensive');
     return this.i18n.t('electricity.veryExpensive');
+  }
+
+  private formatTime(date: Date): string {
+    return date.toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /** "13:00–13:15": the API ends each slot at hh:mm:59.999, so round the end up to the minute. */
+  private timeRange(p: PriceEntry, separator = '–'): string {
+    const end = new Date(Math.ceil(new Date(p.endDate).getTime() / 60_000) * 60_000);
+    return `${this.formatTime(new Date(p.startDate))}${separator}${this.formatTime(end)}`;
+  }
+
+  private shortDate(date: Date): string {
+    return date.toLocaleDateString(this.i18n.locale(), { weekday: 'short', day: 'numeric', month: 'numeric' });
+  }
+
+  /** Today, Tomorrow, or the date for any other day. */
+  private dayLabel(date: Date): string {
+    const now = new Date(this.nowTick());
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const key = localDateKey(date);
+    if (key === localDateKey(now)) return this.i18n.t('common.today');
+    if (key === localDateKey(tomorrow)) return this.i18n.t('electricity.tomorrow');
+    return date.toLocaleDateString(this.i18n.locale(), { weekday: 'long', day: 'numeric', month: 'numeric' });
   }
 }

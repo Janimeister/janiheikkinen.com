@@ -55,9 +55,24 @@ test.describe('Navigation', () => {
     });
   }
 
-  test('unknown route redirects to home', async ({ page }) => {
+  test('unknown route shows a not-found page with a way home', async ({ page }) => {
     await page.goto('/nonexistent');
+    await expect(page.locator('h1')).toContainText('Page not found');
+    await expect(page).toHaveTitle('Page not found · Jani Heikkinen');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+    await page.getByRole('link', { name: 'Go to the home page' }).click();
     await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  });
+
+  test('each page has its own title, description and canonical link', async ({ page }) => {
+    await page.goto('/weather');
+    await expect(page).toHaveTitle('Weather Conditions · Jani Heikkinen');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://janiheikkinen.com/weather',
+    );
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Open-Meteo/);
   });
 });
 
@@ -178,7 +193,7 @@ test.describe('Electricity Page', () => {
   });
 
   test('loads data sections', async ({ page }) => {
-    const sections = ['Current Price', 'Today Stats', 'Price Chart', 'Hourly Prices'];
+    const sections = ['Current Price', 'Today Stats', 'Price Chart', 'All Prices'];
     for (const heading of sections) {
       await expectSectionOrError(page, heading);
     }
@@ -284,6 +299,24 @@ test.describe('Snake Page', () => {
 
   test('shows how-to-play instructions', async ({ page }) => {
     await expect(page.locator('h2', { hasText: 'How to Play' })).toBeVisible();
+  });
+
+  test('Enter on a focused link follows it instead of starting a game', async ({ page }) => {
+    await page.locator('main a[href="/"]').first().focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test('Enter on the page starts a game, and hiding the tab pauses it', async ({ page }) => {
+    await page.locator('h1').click();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[data-testid="snake-start-btn"]')).not.toBeVisible();
+
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(page.getByText('Paused', { exact: true })).toBeVisible();
   });
 
   test('shows d-pad controls on mobile viewport', async ({ page }) => {

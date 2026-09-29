@@ -49,11 +49,11 @@ describe('FooterComponent', () => {
     expect(link?.textContent).toContain('Third-Party Notices');
   });
 
-  it('should translate footer links when language changes', () => {
+  it('should translate footer links when language changes', async () => {
     const fixture = TestBed.createComponent(FooterComponent);
     const language = TestBed.inject(LanguageService);
 
-    language.setLanguage('fi');
+    await language.setLanguage('fi');
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Kolmansien osapuolten ilmoitukset');

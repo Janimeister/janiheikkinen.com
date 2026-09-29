@@ -47,9 +47,22 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "THIRD-PARTY-NOTICES.md",
+                "input": ".",
+                "output": "."
               }
             ],
             "styles": [
+              "node_modules/@fontsource/archivo-black/400.css",
+              "node_modules/@fontsource/space-grotesk/400.css",
+              "node_modules/@fontsource/space-grotesk/500.css",
+              "node_modules/@fontsource/space-grotesk/600.css",
+              "node_modules/@fontsource/space-grotesk/700.css",
+              "node_modules/@fontsource/jetbrains-mono/400.css",
+              "node_modules/@fontsource/jetbrains-mono/500.css",
+              "node_modules/@fontsource/jetbrains-mono/700.css",
               "src/styles.css"
             ]
           },

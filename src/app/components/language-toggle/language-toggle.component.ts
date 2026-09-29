@@ -62,6 +62,6 @@ export class LanguageToggleComponent {
   protected readonly i18n = inject(LanguageService);
 
   protected setLanguage(language: Language): void {
-    this.i18n.setLanguage(language);
+    void this.i18n.setLanguage(language);
   }
 }

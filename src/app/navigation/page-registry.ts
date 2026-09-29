@@ -8,9 +8,31 @@ export const PAGE_GROUPS = [
   { id: 'about', labelKey: 'explore.about' },
 ] as const satisfies readonly { id: string; labelKey: TranslationKey }[];
 
-export interface SitePage {
+export const SITE_NAME = 'Jani Heikkinen';
+export const SITE_URL = 'https://janiheikkinen.com';
+
+/** What a route tells the title strategy: its page heading and its meta description. */
+export interface PageMeta {
+  /** The page's heading, shown before the site name; the home page shows the name alone. */
+  titleKey?: TranslationKey;
+  metaKey: TranslationKey;
+  /** Keeps a page out of search results, e.g. "not found". */
+  noindex?: boolean;
+}
+
+/** The same heading as the page's `<h1>`, then the site name; the home page is the name alone. */
+export function pageTitle(heading: string | null): string {
+  return heading ? `${heading} · ${SITE_NAME}` : SITE_NAME;
+}
+
+/** The address search engines should index for a path, without query or fragment. */
+export function canonicalUrl(url: string): string {
+  const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
+  return `${SITE_URL}${path || '/'}`;
+}
+
+export interface SitePage extends PageMeta {
   path: string;
-  title: string;
   labelKey: TranslationKey;
   descriptionKey: TranslationKey;
   keywordsKey: TranslationKey;
@@ -22,7 +44,7 @@ export interface SitePage {
 export const SITE_PAGES: readonly SitePage[] = [
   {
     path: '',
-    title: 'Jani Heikkinen',
+    metaKey: 'meta.home',
     labelKey: 'nav.home',
     descriptionKey: 'explore.homeDescription',
     keywordsKey: 'explore.homeKeywords',
@@ -31,7 +53,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'weather',
-    title: 'Weather · Jani Heikkinen',
+    titleKey: 'weather.title',
+    metaKey: 'meta.weather',
     labelKey: 'nav.weather',
     descriptionKey: 'explore.weatherDescription',
     keywordsKey: 'explore.weatherKeywords',
@@ -40,7 +63,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'electricity',
-    title: 'Electricity Prices · Jani Heikkinen',
+    titleKey: 'electricity.title',
+    metaKey: 'meta.electricity',
     labelKey: 'electricity.title',
     descriptionKey: 'explore.electricityDescription',
     keywordsKey: 'explore.electricityKeywords',
@@ -50,7 +74,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'trams',
-    title: 'Tram Map · Jani Heikkinen',
+    titleKey: 'trams.title',
+    metaKey: 'meta.trams',
     labelKey: 'trams.title',
     descriptionKey: 'explore.tramsDescription',
     keywordsKey: 'explore.tramsKeywords',
@@ -59,7 +84,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'github',
-    title: 'GitHub Profile · Jani Heikkinen',
+    titleKey: 'github.title',
+    metaKey: 'meta.github',
     labelKey: 'github.title',
     descriptionKey: 'explore.githubDescription',
     keywordsKey: 'explore.githubKeywords',
@@ -68,7 +94,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'ascii',
-    title: 'ASCII Art · Jani Heikkinen',
+    titleKey: 'ascii.title',
+    metaKey: 'meta.ascii',
     labelKey: 'ascii.title',
     descriptionKey: 'explore.asciiDescription',
     keywordsKey: 'explore.asciiKeywords',
@@ -77,7 +104,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'snake',
-    title: 'Snake Game · Jani Heikkinen',
+    titleKey: 'snake.title',
+    metaKey: 'meta.snake',
     labelKey: 'snake.title',
     descriptionKey: 'explore.snakeDescription',
     keywordsKey: 'explore.snakeKeywords',
@@ -86,7 +114,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'pet',
-    title: 'Virtual Pet · Jani Heikkinen',
+    titleKey: 'pet.title',
+    metaKey: 'meta.pet',
     labelKey: 'pet.title',
     descriptionKey: 'explore.petDescription',
     keywordsKey: 'explore.petKeywords',
@@ -95,7 +124,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'sorting',
-    title: 'Sorting Algorithms · Jani Heikkinen',
+    titleKey: 'sorting.title',
+    metaKey: 'meta.sorting',
     labelKey: 'sorting.title',
     descriptionKey: 'explore.sortingDescription',
     keywordsKey: 'explore.sortingKeywords',
@@ -104,7 +134,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'searching',
-    title: 'Searching Algorithms · Jani Heikkinen',
+    titleKey: 'searching.title',
+    metaKey: 'meta.searching',
     labelKey: 'algorithms.searching',
     descriptionKey: 'explore.searchingDescription',
     keywordsKey: 'explore.searchingKeywords',
@@ -114,7 +145,8 @@ export const SITE_PAGES: readonly SitePage[] = [
   },
   {
     path: 'pathfinding',
-    title: 'Pathfinding Algorithms · Jani Heikkinen',
+    titleKey: 'pathfinding.title',
+    metaKey: 'meta.pathfinding',
     labelKey: 'algorithms.pathfinding',
     descriptionKey: 'explore.pathfindingDescription',
     keywordsKey: 'explore.pathfindingKeywords',
@@ -123,6 +155,19 @@ export const SITE_PAGES: readonly SitePage[] = [
       import('../pages/pathfinding.component').then((m) => m.PathfindingPageComponent),
   },
 ];
+
+/** Pages outside the launcher, reached from the footer. */
+export const NOTICES_PAGE = {
+  path: 'third-party-notices',
+  titleKey: 'thirdParty.title',
+  metaKey: 'meta.thirdParty',
+} as const satisfies PageMeta & { path: string };
+
+export const NOT_FOUND_PAGE = {
+  titleKey: 'notFound.title',
+  metaKey: 'meta.home',
+  noindex: true,
+} as const satisfies PageMeta;
 
 export function findPageGroups(query: string, translate: (key: TranslationKey) => string) {
   const words = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);

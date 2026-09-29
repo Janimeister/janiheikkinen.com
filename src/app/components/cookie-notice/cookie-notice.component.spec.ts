@@ -46,14 +46,27 @@ describe('CookieNoticeComponent', () => {
     expect(button.textContent.trim()).toBe('Got it');
   });
 
-  it('should translate notice text when language changes', () => {
+  it('should be a labelled landmark that names the third-party services', () => {
+    const fixture = TestBed.createComponent(CookieNoticeComponent);
+    fixture.detectChanges();
+    const aside = fixture.nativeElement.querySelector('aside') as HTMLElement;
+    expect(aside).toBeTruthy();
+    const title = aside.querySelector(`#${aside.getAttribute('aria-labelledby')}`);
+    expect(title?.textContent).toContain('Privacy note');
+    for (const service of ['Open-Meteo', 'Cloudflare', 'GitHub', 'catfact.ninja', 'HSL']) {
+      expect(aside.textContent).toContain(service);
+    }
+    expect(aside.textContent).toContain('tram map view');
+  });
+
+  it('should translate notice text when language changes', async () => {
     const fixture = TestBed.createComponent(CookieNoticeComponent);
     const language = TestBed.inject(LanguageService);
 
-    language.setLanguage('fi');
+    await language.setLanguage('fi');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Eväste- ja tietosuojailmoitus');
+    expect(fixture.nativeElement.textContent).toContain('Tietosuoja');
     expect(fixture.nativeElement.querySelector('button').textContent.trim()).toBe('Selvä');
   });
 });
