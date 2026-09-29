@@ -39,6 +39,8 @@ export interface MockBroker {
   readonly connections: WebSocketRoute[];
   /** The filters of each SUBSCRIBE received. */
   readonly subscriptions: string[][];
+  /** The filters of each UNSUBSCRIBE received. */
+  readonly unsubscriptions: string[][];
   /** Resolves once a client has subscribed `count` times in total. */
   subscribed(count?: number): Promise<void>;
   /** Sends messages to the newest connection, each as many times as the real broker did. */
@@ -48,8 +50,8 @@ export interface MockBroker {
 }
 
 /**
- * Stands in for the HFP broker: answers CONNECT, SUBSCRIBE and PINGREQ like wss://mqtt.hsl.fi,
- * then optionally replays messages after each subscription.
+ * Stands in for the HFP broker: answers CONNECT, SUBSCRIBE, UNSUBSCRIBE and PINGREQ like
+ * wss://mqtt.hsl.fi, then optionally replays messages after each subscription.
  */
 export async function mockHfpBroker(
   page: Page,
@@ -57,6 +59,7 @@ export async function mockHfpBroker(
 ): Promise<MockBroker> {
   const connections: WebSocketRoute[] = [];
   const subscriptions: string[][] = [];
+  const unsubscriptions: string[][] = [];
   const waiters: { count: number; resolve: () => void }[] = [];
 
   const publish = (ws: WebSocketRoute, messages: readonly HfpMessage[]) => {
@@ -87,6 +90,13 @@ export async function mockHfpBroker(
             waiter.resolve();
           break;
         }
+        case 10: {
+          // UNSUBSCRIBE → UNSUBACK, echoing the packet id
+          const idAt = 2 + extraLengthBytes(packet);
+          unsubscriptions.push(readFilters(packet, idAt + 2, false));
+          ws.send(Buffer.from([0xb0, 2, packet[idAt], packet[idAt + 1]]));
+          break;
+        }
         case 12: // PINGREQ → PINGRESP
           ws.send(Buffer.from([0xd0, 0]));
           break;
@@ -97,6 +107,7 @@ export async function mockHfpBroker(
   return {
     connections,
     subscriptions,
+    unsubscriptions,
     subscribed: (count = 1) =>
       subscriptions.length >= count
         ? Promise.resolve()
@@ -115,13 +126,31 @@ function extraLengthBytes(packet: Buffer): number {
   return i - 1;
 }
 
-/** Each filter is a length-prefixed UTF-8 string followed by its QoS byte. */
-function readFilters(packet: Buffer, offset: number): string[] {
+/**
+ * Each filter is a length-prefixed UTF-8 string, in SUBSCRIBE followed by its QoS byte.
+ */
+function readFilters(packet: Buffer, offset: number, withQos = true): string[] {
   const filters: string[] = [];
   while (offset < packet.length) {
     const length = packet.readUInt16BE(offset);
     filters.push(packet.toString('utf8', offset + 2, offset + 2 + length));
-    offset += 2 + length + 1;
+    offset += 2 + length + (withQos ? 1 : 0);
   }
   return filters;
+}
+
+/** A sample position, reported again `seconds` later from the same place. */
+export function laterFix(message: HfpMessage, seconds: number): HfpMessage {
+  const payload = JSON.parse(message.payload) as { VP: { tst: string } };
+  payload.VP.tst = new Date(Date.parse(payload.VP.tst) + seconds * 1000).toISOString();
+  return { topic: message.topic, payload: JSON.stringify(payload) };
+}
+
+/** The sample's last position of a vehicle, by its number. */
+export function sampleFix(vehicle: number): HfpMessage {
+  const fixes = HFP_SAMPLE.filter(
+    (m) => m.topic.includes('/vp/') && m.topic.split('/')[8] === String(vehicle).padStart(5, '0'),
+  );
+  if (fixes.length === 0) throw new Error(`No position for vehicle ${vehicle} in the sample`);
+  return fixes.at(-1)!;
 }

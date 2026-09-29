@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { encodeRemainingLength } from './mqtt-lite';
+import { encodeRemainingLength, encodeSubscribe, encodeUnsubscribe } from './mqtt-lite';
+import { tramFilters } from './hfp-filters';
 import {
   DROP_MS,
   FLUSH_MS,
@@ -19,11 +20,14 @@ class FakeSocket {
   readyState = 0;
   binaryType = 'blob';
   closed = false;
+  sent: Uint8Array[] = [];
   onopen: (() => void) | null = null;
   onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
   onclose: ((event: { code: number; reason: string }) => void) | null = null;
   onerror: (() => void) | null = null;
-  send() {}
+  send(data: Uint8Array) {
+    this.sent.push(data);
+  }
   close() {
     this.closed = true;
     this.readyState = 3;
@@ -225,6 +229,78 @@ describe('TramFeedService', () => {
     onLine.mockReturnValue(true);
     window.dispatchEvent(new Event('online'));
     expect(feed.status()).toBe('connecting');
+  });
+
+  it('follows chosen lines with their own subscription, including variants seen so far', () => {
+    feed.start(BOX);
+    socket().accept();
+    send(vp(648, '2026-09-29T04:53:45.256Z'));
+    send(vp(649, '2026-09-29T04:53:45.256Z', { desi: '4', route: '1004 4' }));
+    send(vp(641, '2026-09-29T04:53:44.257Z', { desi: '13', route: '1013' }));
+    send(vp(457, '2026-09-29T04:53:10.000Z', { desi: 'H', route: '100HI5' }));
+    vi.advanceTimersByTime(FLUSH_MS);
+    expect(trams()).toHaveLength(4);
+
+    feed.setLines(new Set(['4']));
+    const lineFilters = tramFilters(undefined, ['1004', '1004 4']);
+    expect(socket().sent.slice(-2)).toEqual([
+      encodeSubscribe(2, lineFilters.slice(0, -1)),
+      encodeUnsubscribe(3, tramFilters().slice(0, -1)),
+    ]);
+    vi.advanceTimersByTime(FLUSH_MS);
+    expect(trams().map((t) => t.key)).toEqual(['40/648', '40/649']);
+
+    // Until the broker has processed the change, other lines can still arrive.
+    send(vp(641, '2026-09-29T04:53:50.000Z', { desi: '13', route: '1013' }));
+    vi.advanceTimersByTime(FLUSH_MS);
+    expect(trams()).toHaveLength(2);
+
+    // A new connection subscribes to the chosen lines straight away.
+    socket().drop();
+    vi.advanceTimersByTime(1_000);
+    socket().accept();
+    expect(socket().sent.at(-1)).toEqual(encodeSubscribe(1, lineFilters));
+
+    feed.setLines(null);
+    expect(socket().sent.slice(-2)).toEqual([
+      encodeSubscribe(2, tramFilters().slice(0, -1)),
+      encodeUnsubscribe(3, lineFilters.slice(0, -1)),
+    ]);
+  });
+
+  it('keeps only the sign-offs when no line is chosen', () => {
+    feed.setLines(new Set());
+    feed.start(BOX);
+    socket().accept();
+    expect(socket().sent.at(-1)).toEqual(
+      encodeSubscribe(1, ['/hfp/v2/journey/ongoing/vjout/tram/#']),
+    );
+  });
+
+  it('disconnects while paused and keeps the trams', () => {
+    feed.start(BOX);
+    socket().accept();
+    send(vp(648, '2026-09-29T04:53:45.256Z'));
+    vi.advanceTimersByTime(FLUSH_MS);
+    feed.pause();
+    expect(feed.paused()).toBe(true);
+    expect(feed.status()).toBe('paused');
+    expect(socket().closed).toBe(true);
+    expect(trams()).toHaveLength(1);
+
+    // Showing the tab again doesn't undo a pause.
+    visibility = 'hidden';
+    document.dispatchEvent(new Event('visibilitychange'));
+    visibility = 'visible';
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(sockets).toHaveLength(1);
+    expect(feed.status()).toBe('paused');
+
+    feed.resume();
+    expect(feed.status()).toBe('connecting');
+    expect(sockets).toHaveLength(2);
+    socket().accept();
+    expect(feed.status()).toBe('live');
   });
 
   it('disconnects when destroyed', () => {

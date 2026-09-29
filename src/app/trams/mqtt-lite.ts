@@ -1,7 +1,8 @@
 /**
  * A minimal MQTT 3.1.1 client over WebSocket, just enough for HSL's public HFP broker: anonymous
- * CONNECT with a clean session, one SUBSCRIBE with several QoS 0 filters, incoming QoS 0 PUBLISH,
- * keep-alive pings and DISCONNECT. Nothing is ever published and nothing needs acknowledging.
+ * CONNECT with a clean session, SUBSCRIBE and UNSUBSCRIBE with several QoS 0 filters, incoming
+ * QoS 0 PUBLISH, keep-alive pings and DISCONNECT. Nothing is ever published and nothing needs
+ * acknowledging.
  *
  * Spec: https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
  */
@@ -12,6 +13,8 @@ export const PacketType = {
   Publish: 3,
   Subscribe: 8,
   Suback: 9,
+  Unsubscribe: 10,
+  Unsuback: 11,
   Pingreq: 12,
   Pingresp: 13,
   Disconnect: 14,
@@ -77,6 +80,17 @@ export function encodeSubscribe(
   const body = [packetId >> 8, packetId & 0xff];
   for (const filter of filters) body.push(...utf8String(filter), 0);
   return packet((PacketType.Subscribe << 4) | 0x02, body);
+}
+
+/** UNSUBSCRIBE from every filter. Like SUBSCRIBE, the fixed header flags must be 0b0010. */
+export function encodeUnsubscribe(
+  packetId: number,
+  filters: readonly string[],
+): Uint8Array<ArrayBuffer> {
+  if (filters.length === 0) throw new Error('UNSUBSCRIBE needs at least one filter');
+  const body = [packetId >> 8, packetId & 0xff];
+  for (const filter of filters) body.push(...utf8String(filter));
+  return packet((PacketType.Unsubscribe << 4) | 0x02, body);
 }
 
 export const PINGREQ = Uint8Array.of(PacketType.Pingreq << 4, 0);
@@ -155,6 +169,7 @@ export function decodeSuback(p: Packet): { packetId: number; granted: number[] }
 
 export interface MqttLiteOptions {
   url: string;
+  /** What to subscribe to once connected. {@link MqttLiteClient.setFilters} changes it later. */
   filters: readonly string[];
   /** Seconds. The broker drops us after 1.5× this without traffic, so we ping at half of it. */
   keepAlive?: number;
@@ -176,9 +191,35 @@ export class MqttLiteClient {
   private lastReceived = 0;
   private closed = false;
   private readonly keepAlive: number;
+  /** The filters we want. */
+  private filters: readonly string[];
+  /** The filters the broker has been asked for, once connected. */
+  private active: readonly string[] | null = null;
+  private packetId = 0;
 
   constructor(private readonly options: MqttLiteOptions) {
     this.keepAlive = options.keepAlive ?? 60;
+    this.filters = [...options.filters];
+  }
+
+  /**
+   * Changes the subscription without reconnecting. New filters are subscribed before old ones are
+   * dropped, so nothing is missed in between; a message matching both may arrive twice.
+   */
+  setFilters(filters: readonly string[]): void {
+    this.filters = [...filters];
+    if (!this.active || this.closed) return;
+    const added = this.filters.filter((f) => !this.active!.includes(f));
+    const removed = this.active.filter((f) => !this.filters.includes(f));
+    this.active = this.filters;
+    if (added.length > 0) this.socket!.send(encodeSubscribe(this.nextPacketId(), added));
+    if (removed.length > 0) this.socket!.send(encodeUnsubscribe(this.nextPacketId(), removed));
+  }
+
+  /** Packet ids are 1–65535; 0 isn't allowed. */
+  private nextPacketId(): number {
+    this.packetId = (this.packetId % 0xffff) + 1;
+    return this.packetId;
   }
 
   connect(): void {
@@ -238,11 +279,14 @@ export class MqttLiteClient {
       case PacketType.Connack: {
         const code = decodeConnack(p);
         if (code !== 0) return this.fail(`Connection refused (CONNACK ${code})`);
-        this.socket!.send(encodeSubscribe(1, this.options.filters));
+        this.active = this.filters;
+        this.socket!.send(encodeSubscribe(this.nextPacketId(), this.filters));
         return;
       }
       case PacketType.Suback: {
-        const { granted } = decodeSuback(p);
+        // Only the first subscription decides whether the connection is any use.
+        const { packetId, granted } = decodeSuback(p);
+        if (packetId !== 1) return;
         if (granted.every((qos) => qos === 0x80)) return this.fail('Subscription refused');
         this.options.onSubscribed?.();
         return;
@@ -252,7 +296,7 @@ export class MqttLiteClient {
         this.options.onMessage(topic, payload);
         return;
       }
-      // PINGRESP only matters for `lastReceived`, which every message updates.
+      // PINGRESP and UNSUBACK only matter for `lastReceived`, which every message updates.
     }
   }
 
