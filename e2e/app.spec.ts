@@ -460,4 +460,19 @@ test.describe('Third-Party Notices Page', () => {
     const footerLink = page.locator('app-footer a[href="/third-party-notices"]');
     await expect(footerLink).toBeVisible();
   });
+
+  test('fits a phone screen without scrolling sideways', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 740 });
+    await expect(page.locator('.notices-content h2').first()).toBeVisible({ timeout: API_TIMEOUT });
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    const links = await page
+      .locator('.notices-content a')
+      .evaluateAll((as) =>
+        as.map((a) => a.getAttribute('href')).filter((href) => href?.endsWith(')')),
+      );
+    expect(links).toEqual([]);
+  });
 });

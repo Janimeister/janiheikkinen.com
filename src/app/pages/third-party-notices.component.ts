@@ -113,7 +113,9 @@ import { LanguageService } from '../i18n/language.service';
       border: 2px solid var(--color-ink);
       box-shadow: var(--shadow-brutal-sm);
       padding: 1rem 1.25rem;
-      overflow-x: auto;
+      /* Wrap license text on phones rather than scroll a region keyboard users can't reach. */
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
       margin-bottom: 1.5rem;
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       font-size: 0.8125rem;
