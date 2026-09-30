@@ -14,7 +14,8 @@ import type { Language } from '../../i18n/translations';
           [attr.aria-label]="language.nativeName"
           [attr.aria-pressed]="i18n.isLanguage(language.code)"
           [attr.title]="language.nativeName"
-          [attr.data-testid]="'language-' + language.code">
+          [attr.data-testid]="'language-' + language.code"
+        >
           {{ language.label }}
         </button>
       }
@@ -62,6 +63,6 @@ export class LanguageToggleComponent {
   protected readonly i18n = inject(LanguageService);
 
   protected setLanguage(language: Language): void {
-    this.i18n.setLanguage(language);
+    void this.i18n.setLanguage(language);
   }
 }

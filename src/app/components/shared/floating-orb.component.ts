@@ -4,15 +4,17 @@ import { Component, input } from '@angular/core';
 @Component({
   selector: 'app-floating-orb',
   template: `
-    <div class="deco animate-bob"
-         [class.deco-circle]="shape() === 'circle'"
-         [class.deco-triangle]="shape() === 'triangle'"
-         [style.animation-delay]="delay()"
-         [style.--bob-rotate]="rotate()"
-         [style.width.px]="size()"
-         [style.height.px]="size()"
-         [style.background]="'var(--color-pop-' + color() + ')'"
-         aria-hidden="true"></div>
+    <div
+      class="deco animate-bob"
+      [class.deco-circle]="shape() === 'circle'"
+      [class.deco-triangle]="shape() === 'triangle'"
+      [style.animation-delay]="delay()"
+      [style.--bob-rotate]="rotate()"
+      [style.width.px]="size()"
+      [style.height.px]="size()"
+      [style.background]="'var(--color-pop-' + color() + ')'"
+      aria-hidden="true"
+    ></div>
   `,
   styles: `
     .deco {
@@ -28,7 +30,7 @@ import { Component, input } from '@angular/core';
     .deco-triangle {
       clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
     }
-  `
+  `,
 })
 export class FloatingOrbComponent {
   delay = input('0s');

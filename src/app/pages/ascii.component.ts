@@ -5,7 +5,8 @@ import { FloatingOrbComponent } from '../components/shared/floating-orb.componen
 import { LanguageService } from '../i18n/language.service';
 import type { TranslationKey } from '../i18n/translations';
 
-type AlgorithmId = 'plasma' | 'mandelbrot' | 'waves' | 'spiral' | 'terrain' | 'coral' | 'windlines' | 'island';
+type AlgorithmId =
+  'plasma' | 'mandelbrot' | 'waves' | 'spiral' | 'terrain' | 'coral' | 'windlines' | 'island';
 
 interface ArtAlgorithm {
   id: AlgorithmId;
@@ -25,15 +26,47 @@ const ASPECT_CORRECTION = 0.5;
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">
-      <app-floating-orb class="hidden md:block absolute top-[12%] right-[12%] z-[1]" delay="0s" [size]="65" shape="triangle" color="lime" rotate="8deg" />
-      <app-floating-orb class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]" delay="3s" [size]="55" shape="square" color="orange" rotate="-5deg" />
-      <app-floating-orb class="hidden lg:block absolute top-[48%] left-[4%] z-[1]" delay="1.5s" [size]="42" shape="circle" color="sky" rotate="3deg" />
+      <app-floating-orb
+        class="hidden md:block absolute top-[12%] right-[12%] z-[1]"
+        delay="0s"
+        [size]="65"
+        shape="triangle"
+        color="lime"
+        rotate="8deg"
+      />
+      <app-floating-orb
+        class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]"
+        delay="3s"
+        [size]="55"
+        shape="square"
+        color="orange"
+        rotate="-5deg"
+      />
+      <app-floating-orb
+        class="hidden lg:block absolute top-[48%] left-[4%] z-[1]"
+        delay="1.5s"
+        [size]="42"
+        shape="circle"
+        color="sky"
+        rotate="3deg"
+      />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <a
+            routerLink="/"
+            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-3 leading-tight">
@@ -46,14 +79,20 @@ const ASPECT_CORRECTION = 0.5;
         <div class="mb-6 animate-fade-slide-up stagger-1">
           <app-glow-card>
             <div class="flex flex-wrap items-center gap-3">
-              <span class="text-sm font-semibold text-text-secondary mr-1 uppercase tracking-wider">{{ i18n.t('ascii.algorithm') }}</span>
+              <span
+                class="text-sm font-semibold text-text-secondary mr-1 uppercase tracking-wider"
+                >{{ i18n.t('ascii.algorithm') }}</span
+              >
               @for (algo of algorithms; track algo.id) {
                 <button
                   (click)="selectAlgorithm(algo.id)"
-                  [class]="currentAlgorithm() === algo.id
-                    ? 'px-3 py-1.5 text-sm font-semibold bg-pop-yellow text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform'
-                    : 'px-3 py-1.5 text-sm font-semibold bg-bg-card text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform'"
-                  [attr.aria-pressed]="currentAlgorithm() === algo.id">
+                  [class]="
+                    currentAlgorithm() === algo.id
+                      ? 'px-3 py-1.5 text-sm font-semibold bg-pop-yellow text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform'
+                      : 'px-3 py-1.5 text-sm font-semibold bg-bg-card text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform'
+                  "
+                  [attr.aria-pressed]="currentAlgorithm() === algo.id"
+                >
                   {{ algo.icon }} {{ i18n.t(algo.labelKey) }}
                 </button>
               }
@@ -61,7 +100,8 @@ const ASPECT_CORRECTION = 0.5;
                 (click)="generate()"
                 [disabled]="isAnimating()"
                 class="sm:ml-auto px-4 py-1.5 text-sm font-semibold bg-pop-pink text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                [attr.aria-label]="i18n.t('ascii.generateAria')">
+                [attr.aria-label]="i18n.t('ascii.generateAria')"
+              >
                 🎲 {{ i18n.t('ascii.generate') }}
               </button>
             </div>
@@ -71,8 +111,15 @@ const ASPECT_CORRECTION = 0.5;
         <!-- ASCII Art Display -->
         <div class="animate-fade-slide-up stagger-2">
           <app-glow-card>
-            <div class="overflow-x-auto" tabindex="0" role="region" [attr.aria-label]="i18n.t('ascii.outputRegion')">
-              <pre class="ascii-art" role="img" [attr.aria-label]="i18n.t('ascii.generatedArt')">{{ displayText() }}</pre>
+            <div
+              class="overflow-x-auto"
+              tabindex="0"
+              role="region"
+              [attr.aria-label]="i18n.t('ascii.outputRegion')"
+            >
+              <pre class="ascii-art" role="img" [attr.aria-label]="i18n.t('ascii.generatedArt')">{{
+                displayText()
+              }}</pre>
             </div>
           </app-glow-card>
         </div>
@@ -144,7 +191,7 @@ export class AsciiArtPageComponent implements OnDestroy {
 
     // Skip animation for users who prefer reduced motion — show full grid immediately
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
-      this.displayText.set(grid.map(row => row.join('')).join('\n'));
+      this.displayText.set(grid.map((row) => row.join('')).join('\n'));
       this.isAnimating.set(false);
       return;
     }
@@ -358,7 +405,8 @@ export class AsciiArtPageComponent implements OnDestroy {
         for (let i = 0; i < numArms; i++) {
           const armAngle = (2 * Math.PI * i) / numArms;
           const spiralAngle = Math.log(dist + 0.001) * tightness + armAngle;
-          const raw = ((theta - spiralAngle) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+          const raw =
+            ((((theta - spiralAngle) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
           v += Math.exp(-raw * raw * 5) * Math.max(0, 1 - dist * 0.85);
         }
 

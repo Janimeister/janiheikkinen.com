@@ -67,7 +67,7 @@ All verified ≥4.5:1 on cream, card, and card-hover surfaces. Check new shades 
 | Body / UI | Space Grotesk | `--font-sans` (body default) |
 | Code, labels, stickers, data | JetBrains Mono | `--font-mono` / `font-mono` |
 
-Fonts are loaded from Google Fonts in `src/index.html`. Page `h1` headings wrap their text in a marker highlight (see §5).
+Fonts are self-hosted from the [Fontsource](https://fontsource.org) packages listed in the `styles` of `angular.json`, so no font request leaves the site. Page `h1` headings wrap their text in a marker highlight (see §5).
 
 ## 4. Borders, Shadows, Radius
 

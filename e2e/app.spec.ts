@@ -55,9 +55,24 @@ test.describe('Navigation', () => {
     });
   }
 
-  test('unknown route redirects to home', async ({ page }) => {
+  test('unknown route shows a not-found page with a way home', async ({ page }) => {
     await page.goto('/nonexistent');
+    await expect(page.locator('h1')).toContainText('Page not found');
+    await expect(page).toHaveTitle('Page not found · Jani Heikkinen');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+    await page.getByRole('link', { name: 'Go to the home page' }).click();
     await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  });
+
+  test('each page has its own title, description and canonical link', async ({ page }) => {
+    await page.goto('/weather');
+    await expect(page).toHaveTitle('Weather Conditions · Jani Heikkinen');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://janiheikkinen.com/weather',
+    );
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Open-Meteo/);
   });
 });
 
@@ -65,7 +80,11 @@ test.describe('Language Settings', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => {
-      try { localStorage.removeItem('app-language'); } catch { /* ignore */ }
+      try {
+        localStorage.removeItem('app-language');
+      } catch {
+        /* ignore */
+      }
     });
     await page.reload();
   });
@@ -178,7 +197,7 @@ test.describe('Electricity Page', () => {
   });
 
   test('loads data sections', async ({ page }) => {
-    const sections = ['Current Price', 'Today Stats', 'Price Chart', 'Hourly Prices'];
+    const sections = ['Current Price', 'Today Stats', 'Price Chart', 'All Prices'];
     for (const heading of sections) {
       await expectSectionOrError(page, heading);
     }
@@ -218,7 +237,16 @@ test.describe('ASCII Page', () => {
   });
 
   test('displays algorithm selector buttons', async ({ page }) => {
-    const algorithms = ['Plasma', 'Mandelbrot', 'Waves', 'Galaxy', 'Terrain', 'Coral Bloom', 'Wind Lines', 'Island Contours'];
+    const algorithms = [
+      'Plasma',
+      'Mandelbrot',
+      'Waves',
+      'Galaxy',
+      'Terrain',
+      'Coral Bloom',
+      'Wind Lines',
+      'Island Contours',
+    ];
     for (const algo of algorithms) {
       await expect(page.locator('button', { hasText: algo })).toBeVisible();
     }
@@ -247,7 +275,7 @@ test.describe('ASCII Page', () => {
     // Art should be regenerated and remain non-whitespace after switching
     await expect(pre).toHaveText(/\S/, { timeout: 15_000 });
     await expect
-      .poll(async () => ((await pre.textContent())?.trim() ?? ''), { timeout: 15_000 })
+      .poll(async () => (await pre.textContent())?.trim() ?? '', { timeout: 15_000 })
       .not.toBe(initialArt);
   });
 });
@@ -286,6 +314,27 @@ test.describe('Snake Page', () => {
     await expect(page.locator('h2', { hasText: 'How to Play' })).toBeVisible();
   });
 
+  test('Enter on a focused link follows it instead of starting a game', async ({ page }) => {
+    await page.locator('main a[href="/"]').first().focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test('Enter on the page starts a game, and hiding the tab pauses it', async ({ page }) => {
+    await page.locator('h1').click();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[data-testid="snake-start-btn"]')).not.toBeVisible();
+
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(page.getByText('Paused', { exact: true })).toBeVisible();
+  });
+
   test('shows d-pad controls on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await expect(page.locator('button[aria-label="Move up"]')).toBeVisible();
@@ -299,7 +348,11 @@ test.describe('Virtual Pet Page', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any persisted pet so each test starts from the hatching screen.
     await page.addInitScript(() => {
-      try { localStorage.removeItem('virtual-pet-v1'); } catch { /* ignore */ }
+      try {
+        localStorage.removeItem('virtual-pet-v1');
+      } catch {
+        /* ignore */
+      }
     });
     await page.goto('/pet');
   });
@@ -330,7 +383,13 @@ test.describe('Virtual Pet Page', () => {
 
     // Stats and care action buttons are present
     await expect(page.locator('[data-testid="pet-stats"]')).toBeVisible();
-    for (const id of ['pet-feed-btn', 'pet-play-btn', 'pet-clean-btn', 'pet-sleep-btn', 'pet-heal-btn']) {
+    for (const id of [
+      'pet-feed-btn',
+      'pet-play-btn',
+      'pet-clean-btn',
+      'pet-sleep-btn',
+      'pet-heal-btn',
+    ]) {
       await expect(page.locator(`[data-testid="${id}"]`)).toBeVisible();
     }
   });
@@ -400,5 +459,20 @@ test.describe('Third-Party Notices Page', () => {
   test('footer links to this page', async ({ page }) => {
     const footerLink = page.locator('app-footer a[href="/third-party-notices"]');
     await expect(footerLink).toBeVisible();
+  });
+
+  test('fits a phone screen without scrolling sideways', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 740 });
+    await expect(page.locator('.notices-content h2').first()).toBeVisible({ timeout: API_TIMEOUT });
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    const links = await page
+      .locator('.notices-content a')
+      .evaluateAll((as) =>
+        as.map((a) => a.getAttribute('href')).filter((href) => href?.endsWith(')')),
+      );
+    expect(links).toEqual([]);
   });
 });

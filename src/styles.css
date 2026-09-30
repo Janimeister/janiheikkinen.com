@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ── Theme tokens (neo-brutalist) ── */
 @theme {
@@ -41,9 +41,9 @@
   --color-line-13: #8ce99a;
   --color-line-h: #dee2e6;
 
-  --font-display: "Archivo Black", "Space Grotesk", system-ui, sans-serif;
-  --font-sans: "Space Grotesk", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: 'Archivo Black', 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --shadow-brutal-sm: 3px 3px 0 0 #131310;
   --shadow-brutal: 5px 5px 0 0 #131310;
@@ -69,14 +69,16 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(to right, rgba(19,19,16,0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(19,19,16,0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(19, 19, 16, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(19, 19, 16, 0.05) 1px, transparent 1px);
   background-size: 32px 32px;
   pointer-events: none;
   z-index: 0;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-display);
   letter-spacing: -0.01em;
 }
@@ -105,7 +107,9 @@ h1, h2, h3 {
 }
 
 .brutal-hover {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .brutal-hover:hover:not(:disabled) {
   transform: translate(-2px, -2px);
@@ -134,10 +138,18 @@ h1, h2, h3 {
   z-index: -1;
   transform: rotate(-1deg);
 }
-.marker-pink::before { background: var(--color-pop-pink); }
-.marker-lime::before { background: var(--color-pop-lime); }
-.marker-sky::before { background: var(--color-pop-sky); }
-.marker-orange::before { background: var(--color-pop-orange); }
+.marker-pink::before {
+  background: var(--color-pop-pink);
+}
+.marker-lime::before {
+  background: var(--color-pop-lime);
+}
+.marker-sky::before {
+  background: var(--color-pop-sky);
+}
+.marker-orange::before {
+  background: var(--color-pop-orange);
+}
 
 /* Sticker tag (small rotated label) */
 .sticker {
@@ -155,23 +167,44 @@ h1, h2, h3 {
 
 /* ── Keyframes ── */
 @keyframes cursor-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 @keyframes fade-slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes bob {
-  0%, 100% { transform: translateY(0) rotate(var(--bob-rotate, 0deg)); }
-  50% { transform: translateY(-10px) rotate(var(--bob-rotate, 0deg)); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--bob-rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-10px) rotate(var(--bob-rotate, 0deg));
+  }
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
 }
 
 /* ── Utility animation classes ── */
@@ -192,14 +225,24 @@ h1, h2, h3 {
 }
 
 /* Stagger delays */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+.stagger-4 {
+  animation-delay: 0.4s;
+}
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
   }
@@ -210,8 +253,10 @@ h1, h2, h3 {
   .brutal-hover:hover:not(:disabled),
   .brutal-press:active:not(:disabled),
   .glow-card:hover,
-  a:hover, a:active,
-  button:hover, button:active {
+  a:hover,
+  a:active,
+  button:hover,
+  button:active {
     transform: none !important;
   }
 }

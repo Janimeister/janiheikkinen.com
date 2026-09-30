@@ -36,6 +36,7 @@ interface GitHubRepo {
 }
 
 interface GitHubEvent {
+  id: string;
   type: string;
   repo: { name: string };
   created_at: string;
@@ -62,15 +63,47 @@ const LANG_COLORS: Record<string, string> = {
   imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">
-      <app-floating-orb class="hidden md:block absolute top-[12%] right-[12%] z-[1]" delay="0s" [size]="65" shape="square" color="sky" rotate="-6deg" />
-      <app-floating-orb class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]" delay="3s" [size]="55" shape="circle" color="pink" rotate="4deg" />
-      <app-floating-orb class="hidden lg:block absolute top-[46%] left-[3%] z-[1]" delay="1.5s" [size]="44" shape="triangle" color="yellow" rotate="-12deg" />
+      <app-floating-orb
+        class="hidden md:block absolute top-[12%] right-[12%] z-[1]"
+        delay="0s"
+        [size]="65"
+        shape="square"
+        color="sky"
+        rotate="-6deg"
+      />
+      <app-floating-orb
+        class="hidden md:block absolute bottom-[25%] left-[8%] z-[1]"
+        delay="3s"
+        [size]="55"
+        shape="circle"
+        color="pink"
+        rotate="4deg"
+      />
+      <app-floating-orb
+        class="hidden lg:block absolute top-[46%] left-[3%] z-[1]"
+        delay="1.5s"
+        [size]="44"
+        shape="triangle"
+        color="yellow"
+        rotate="-12deg"
+      />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <a
+            routerLink="/"
+            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-3 leading-tight">
@@ -81,7 +114,7 @@ const LANG_COLORS: Record<string, string> = {
 
         @if (profile.isLoading()) {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            @for (i of [1,2,3]; track i) {
+            @for (i of [1, 2, 3]; track i) {
               <app-glow-card>
                 <div class="animate-pulse space-y-3">
                   <div class="h-6 bg-ink/10 w-1/2"></div>
@@ -100,12 +133,24 @@ const LANG_COLORS: Record<string, string> = {
             <div class="lg:col-span-2">
               <app-glow-card>
                 <div class="flex flex-col sm:flex-row items-start gap-5">
-                  <img [src]="user.avatar_url" [alt]="user.login"
-                       class="w-20 h-20 md:w-24 md:h-24 border-2 border-ink shadow-brutal-sm object-cover" width="96" height="96" />
+                  <img
+                    [src]="user.avatar_url"
+                    [alt]="user.login"
+                    class="w-20 h-20 md:w-24 md:h-24 border-2 border-ink shadow-brutal-sm object-cover"
+                    width="96"
+                    height="96"
+                  />
                   <div class="flex-1 min-w-0">
-                    <h2 class="text-2xl font-bold text-text-primary">{{ user.name || user.login }}</h2>
-                    <a [href]="user.html_url" target="_blank" rel="noopener noreferrer"
-                       class="text-sm text-accent-light hover:underline">{{"@"}}{{ user.login }}</a>
+                    <h2 class="text-2xl font-bold text-text-primary">
+                      {{ user.name || user.login }}
+                    </h2>
+                    <a
+                      [href]="user.html_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-sm text-accent-light hover:underline"
+                      >{{ '@' }}{{ user.login }}</a
+                    >
                     @if (user.bio) {
                       <p class="text-sm text-text-secondary mt-2">{{ user.bio }}</p>
                     }
@@ -114,12 +159,21 @@ const LANG_COLORS: Record<string, string> = {
                         <span class="flex items-center gap-1">📍 {{ user.location }}</span>
                       }
                       @if (user.blog) {
-                        <a [href]="blogUrl(user.blog)" target="_blank" rel="noopener noreferrer"
-                           class="flex items-center gap-1 hover:text-accent-light transition-colors underline decoration-2 underline-offset-4">
+                        <a
+                          [href]="blogUrl(user.blog)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="flex items-center gap-1 hover:text-accent-light transition-colors underline decoration-2 underline-offset-4"
+                        >
                           🔗 {{ user.blog }}
                         </a>
                       }
-                      <span class="flex items-center gap-1">📅 {{ i18n.t('github.memberSince', { year: memberYear(user.created_at) }) }}</span>
+                      <span class="flex items-center gap-1"
+                        >📅
+                        {{
+                          i18n.t('github.memberSince', { year: memberYear(user.created_at) })
+                        }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -127,7 +181,9 @@ const LANG_COLORS: Record<string, string> = {
             </div>
             <div>
               <app-glow-card>
-                <h3 class="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">{{ i18n.t('github.stats') }}</h3>
+                <h3 class="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">
+                  {{ i18n.t('github.stats') }}
+                </h3>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="bg-pop-yellow border-2 border-ink shadow-brutal-sm p-3 text-center">
                     <div class="text-2xl font-display text-ink">{{ user.public_repos }}</div>
@@ -156,21 +212,37 @@ const LANG_COLORS: Record<string, string> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl" aria-hidden="true">🎨</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.languages') }}</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">
+                    {{ i18n.t('github.languages') }}
+                  </h2>
                 </div>
                 <!-- Language bar -->
-                <div class="flex h-5 overflow-hidden mb-4 border-2 border-ink shadow-brutal-sm bg-bg-card">
+                <div
+                  class="flex h-5 overflow-hidden mb-4 border-2 border-ink shadow-brutal-sm bg-bg-card"
+                >
                   @for (lang of languages(); track lang.name) {
-                    <div [class]="langColor(lang.name) + ' box-border border-r-2 border-ink transition-all hover:opacity-80'"
-                         [style.width.%]="lang.pct"
-                         [title]="lang.name + ': ' + (lang.count === 1 ? i18n.t('github.repoCountOne') : i18n.t('github.repoCount', { count: lang.count }))">
-                    </div>
+                    <div
+                      [class]="
+                        langColor(lang.name) +
+                        ' box-border border-r-2 border-ink transition-all hover:opacity-80'
+                      "
+                      [style.width.%]="lang.pct"
+                      [title]="
+                        lang.name +
+                        ': ' +
+                        (lang.count === 1
+                          ? i18n.t('github.repoCountOne')
+                          : i18n.t('github.repoCount', { count: lang.count }))
+                      "
+                    ></div>
                   }
                 </div>
                 <div class="flex flex-wrap gap-4">
                   @for (lang of languages(); track lang.name) {
                     <div class="flex items-center gap-2 text-sm">
-                      <span [class]="langColor(lang.name) + ' w-3 h-3 border border-ink shrink-0'"></span>
+                      <span
+                        [class]="langColor(lang.name) + ' w-3 h-3 border border-ink shrink-0'"
+                      ></span>
                       <span class="text-text-primary">{{ lang.name }}</span>
                       <span class="text-text-secondary text-xs">({{ lang.count }})</span>
                     </div>
@@ -186,19 +258,31 @@ const LANG_COLORS: Record<string, string> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl" aria-hidden="true">📦</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.repositories') }}</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">
+                    {{ i18n.t('github.repositories') }}
+                  </h2>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   @for (repo of repoList; track repo.name) {
-                    <a [href]="repo.html_url" target="_blank" rel="noopener noreferrer"
-                       class="block p-4 bg-bg-card border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform group">
+                    <a
+                      [href]="repo.html_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="block p-4 bg-bg-card border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform group"
+                    >
                       <div class="flex items-start justify-between mb-2">
-                        <h3 class="text-sm font-semibold text-text-primary group-hover:text-accent-light transition-colors truncate">
+                        <h3
+                          class="text-sm font-semibold text-text-primary group-hover:text-accent-light transition-colors truncate"
+                        >
                           {{ repo.name }}
                         </h3>
-                        <div class="flex items-center gap-2 text-xs text-text-secondary shrink-0 ml-2">
+                        <div
+                          class="flex items-center gap-2 text-xs text-text-secondary shrink-0 ml-2"
+                        >
                           @if (repo.stargazers_count > 0) {
-                            <span class="flex items-center gap-0.5">⭐ {{ repo.stargazers_count }}</span>
+                            <span class="flex items-center gap-0.5"
+                              >⭐ {{ repo.stargazers_count }}</span
+                            >
                           }
                           @if (repo.forks_count > 0) {
                             <span class="flex items-center gap-0.5">🍴 {{ repo.forks_count }}</span>
@@ -206,16 +290,24 @@ const LANG_COLORS: Record<string, string> = {
                         </div>
                       </div>
                       @if (repo.description) {
-                        <p class="text-xs text-text-secondary mb-2 line-clamp-2">{{ repo.description }}</p>
+                        <p class="text-xs text-text-secondary mb-2 line-clamp-2">
+                          {{ repo.description }}
+                        </p>
                       }
                       <div class="flex items-center gap-3 text-xs text-text-secondary">
                         @if (repo.language) {
                           <span class="flex items-center gap-1">
-                            <span [class]="langColor(repo.language) + ' w-2.5 h-2.5 border border-ink shrink-0'"></span>
+                            <span
+                              [class]="
+                                langColor(repo.language) + ' w-2.5 h-2.5 border border-ink shrink-0'
+                              "
+                            ></span>
                             {{ repo.language }}
                           </span>
                         }
-                        <span>{{ i18n.t('github.updated', { date: relativeDate(repo.updated_at) }) }}</span>
+                        <span>{{
+                          i18n.t('github.updated', { date: relativeDate(repo.updated_at) })
+                        }}</span>
                       </div>
                     </a>
                   }
@@ -236,18 +328,24 @@ const LANG_COLORS: Record<string, string> = {
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl" aria-hidden="true">📡</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('github.recentActivity') }}</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">
+                    {{ i18n.t('github.recentActivity') }}
+                  </h2>
                 </div>
                 <div class="space-y-3">
-                  @for (event of recentActivity(); track event.type + event.date + event.repo) {
-                    <div class="flex items-start gap-3 p-3 bg-bg-card-hover border-2 border-ink shadow-brutal-sm">
+                  @for (event of recentActivity(); track event.id) {
+                    <div
+                      class="flex items-start gap-3 p-3 bg-bg-card-hover border-2 border-ink shadow-brutal-sm"
+                    >
                       <span class="text-lg mt-0.5">{{ event.icon }}</span>
                       <div class="min-w-0 flex-1">
                         <div class="text-sm text-text-primary">
                           <span class="font-medium">{{ event.action }}</span>
                           <span class="text-accent-light"> {{ event.repo }}</span>
                         </div>
-                        <div class="text-xs text-text-secondary mt-0.5">{{ relativeDate(event.date) }}</div>
+                        <div class="text-xs text-text-secondary mt-0.5">
+                          {{ relativeDate(event.date) }}
+                        </div>
                       </div>
                     </div>
                   }
@@ -275,15 +373,19 @@ export class GithubPageComponent {
     timeout: 10_000,
   }));
 
-  repos = httpResource<GitHubRepo[]>(() => ({
-    url: `https://api.github.com/users/${this.username}/repos`,
-    params: { sort: 'updated', per_page: 30 },
-    timeout: 10_000,
-  }), {
-    parse: value => (value as GitHubRepo[]).filter(repo => !repo.fork).sort(
-      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    ),
-  });
+  repos = httpResource<GitHubRepo[]>(
+    () => ({
+      url: `https://api.github.com/users/${this.username}/repos`,
+      params: { sort: 'updated', per_page: 30 },
+      timeout: 10_000,
+    }),
+    {
+      parse: (value) =>
+        (value as GitHubRepo[])
+          .filter((repo) => !repo.fork)
+          .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+    },
+  );
 
   private events = httpResource<GitHubEvent[]>(() => ({
     url: `https://api.github.com/users/${this.username}/events/public`,
@@ -301,7 +403,7 @@ export class GithubPageComponent {
     const repoList = this.repoList();
     if (!repoList?.length) return [];
     const counts: Record<string, number> = {};
-    repoList.forEach(r => {
+    repoList.forEach((r) => {
       if (r.language) counts[r.language] = (counts[r.language] || 0) + 1;
     });
     const total = Object.values(counts).reduce((s, v) => s + v, 0);
@@ -327,9 +429,10 @@ export class GithubPageComponent {
       ReleaseEvent: { icon: '🏷️', actionKey: 'github.eventRelease' },
     };
 
-    return eventList.slice(0, 10).map(e => {
+    return eventList.slice(0, 10).map((e) => {
       const info = eventMap[e.type];
       return {
+        id: e.id,
         type: e.type,
         icon: info?.icon ?? '📌',
         action: info ? this.i18n.t(info.actionKey) : this.i18n.t('github.eventUnknown'),

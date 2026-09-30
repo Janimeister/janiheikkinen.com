@@ -77,10 +77,10 @@ describe('NavbarComponent', () => {
     expect(element.querySelectorAll('dialog a')).toHaveLength(11);
   });
 
-  it('reacts to language changes in labels, groups, and search', () => {
+  it('reacts to language changes in labels, groups, and search', async () => {
     const { fixture, element, component } = setup();
     component.open();
-    TestBed.inject(LanguageService).setLanguage('fi');
+    await TestBed.inject(LanguageService).setLanguage('fi');
     component.query.set('eläin');
     fixture.detectChanges();
     expect(element.querySelector('.explore-button')?.textContent).toContain('Tutustu');

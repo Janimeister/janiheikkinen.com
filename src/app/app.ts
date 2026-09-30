@@ -23,7 +23,6 @@ import { CookieNoticeComponent } from './components/cookie-notice/cookie-notice.
       position: relative;
       z-index: 1;
     }
-  `
+  `,
 })
 export class App {}
-

@@ -45,7 +45,7 @@ describe('App', () => {
     const host = fixture.nativeElement as HTMLElement;
     const main = host.querySelector('main') as HTMLElement;
     // Verify structural layout: navbar → main (flex-1) → footer as direct children
-    const children = Array.from(host.children).map(el => el.tagName.toLowerCase());
+    const children = Array.from(host.children).map((el) => el.tagName.toLowerCase());
     expect(children).toContain('app-navbar');
     expect(children).toContain('main');
     expect(children).toContain('app-footer');

@@ -47,15 +47,16 @@ src/app/
 │   ├── sorting.component.ts     # Sorting algorithms visualizer
 │   ├── searching.component.ts   # Search algorithms visualizer
 │   ├── pathfinding.component.ts # Weighted grid pathfinding visualizer
-│   └── third-party-notices.component.ts # Third-party license notices
+│   ├── third-party-notices.component.ts # Third-party license notices
+│   └── not-found.component.ts   # Page shown for unknown addresses
 ├── components/
 │   ├── hero/                # Hero section with typing effect and deco shapes
 │   ├── navbar/              # Compact header and Explore dialog
 │   ├── language-toggle/     # EN/FI language switcher
 │   ├── footer/              # Site footer
 │   ├── shared/              # GlowCardComponent, FloatingOrbComponent
-│   └── cookie-notice/       # Cookie consent banner
-├── navigation/              # Shared page registry, search and page cards
+│   └── cookie-notice/       # Privacy note (storage and third-party services)
+├── navigation/              # Page registry, search, page cards, titles and meta tags
 ├── sorting/                  # Sorting algorithms, metadata and event generators
 ├── searching/                # Search algorithms and event generators
 ├── pathfinding/              # Weighted grid algorithms and event generators
@@ -90,7 +91,7 @@ See [docs/algorithms-visualizer.md](docs/algorithms-visualizer.md) for event and
 
 ## Language Support
 
-The app supports English and Finnish through a small runtime i18n layer in `src/app/i18n/`. Users can switch language from the navbar using the EN/FI segmented control. The selected language is stored in `localStorage` under `app-language`, updates the document `<html lang>` attribute, and is applied immediately without changing routes or requiring a separate build.
+The app supports English and Finnish through a small runtime i18n layer in `src/app/i18n/`. Users can switch language from the navbar using the EN/FI segmented control. The selected language is stored in `localStorage` under `app-language`, updates the document `<html lang>` attribute, and is applied immediately without changing routes or requiring a separate build. English ships in the main bundle; the Finnish strings (`translations.fi.ts`) are a separate chunk, fetched the first time Finnish is chosen, and before the app starts when it was chosen on an earlier visit. The browser tab title and meta description follow the chosen language.
 
 Static UI copy is translated in the app. External content such as GitHub repository descriptions, cat facts, and third-party notice file contents is shown as returned by its source.
 
@@ -110,7 +111,7 @@ Static UI copy is translated in the app. External content such as GitHub reposit
 The `/trams` page draws Helsinki's tram network and its trams live in ASCII, following [docs/tram-tracker-plan.md](docs/tram-tracker-plan.md). All four milestones are done: the static map, live trams, interaction (line filters, selection details, pause) and polish (smooth mode, trails, remembered views, phone tuning).
 
 - **Grid.** One character is 0.001° × 0.001° (about 55 m × 111 m in Helsinki), which matches a monospace cell's 1 : 2 shape, so there is no projection. The views are *City centre* (140 × 67), *Whole network* (0.0015° cells, 128 × 48) and *Compact* (60 × 40, the default on narrow screens, which scrolls sideways). The font size is fitted to the card from a measured character width.
-- **Layers.** Parks (`,`), sea and lakes (`~`), tracks filled with each line's colour (ink where several lines share a track, `+` where lines cross), stops (`o`) and district labels placed on free cells. Pure ASCII is the default because the web font's Google Fonts subsets have no box-drawing glyphs; the **Unicode** toggle switches to `─ │ ╱ ╲ ┼`.
+- **Layers.** Parks (`,`), sea and lakes (`~`), tracks filled with each line's colour (ink where several lines share a track, `+` where lines cross), stops (`o`) and district labels placed on free cells. Pure ASCII is the default because the web font's subsets have no box-drawing glyphs; the **Unicode** toggle switches to `─ │ ╱ ╲ ┼`.
 - **Live trams.** `src/app/trams/mqtt-lite.ts` is a small MQTT 3.1.1 client over WebSocket (CONNECT, SUBSCRIBE, QoS 0 PUBLISH, pings), so there's no MQTT dependency. The page subscribes only to HFP geohash levels 0–3, which fire when a tram enters another 0.001° cell, i.e. another character, cutting traffic about 14× compared with every position. The broker delivers every position four times, so messages are deduplicated on vehicle and timestamp; Raide-Jokeri (line 15), missing positions and trams outside the map are dropped. `TramFeedService` reconnects with backoff (1 s → 30 s), disconnects while the tab is hidden or the browser is offline, dims trams after 3 minutes without an update and drops them after 6. Trams are drawn on a second, transparent `<pre>` over the static map: the line number on ink in the line's colour, grey for depot runs and quiet trams, `*` where labels would overlap or touch.
 - **Lines and details.** Line chips follow chosen lines only, each with its own MQTT subscription (plus the variant route ids seen so far); depot runs can be hidden. Every tram on the map is an invisible button over its label, grouped by line in a `<nav>` that doubles as the accessible list of trams (one Tab stop, arrow keys between trams). Selecting one shows its headsign, speed, schedule, doors, next stop and last update. **Pause** disconnects until resumed.
 - **Motion.** **Smooth** subscribes to every position (about once a second per tram, ~15× the data), glides trams from one fix to the next and makes them go grey after 15 s and disappear after 60 s without an update. **Trails** dot the last 8 cells each tram passed, in its line's colour, snapped to its track. With `prefers-reduced-motion`, trails start off and smooth mode doesn't glide.
@@ -145,6 +146,7 @@ The `/snake` page is a classic Snake game rendered on an HTML5 canvas, built wit
 **Features:**
 - Progressive speed increase as the score grows (5 speed levels).
 - Persistent high score stored in `localStorage`.
+- Pauses by itself when the tab is hidden. Keys pressed on links, buttons and text fields keep their usual meaning.
 - Fixed-size canvas for consistent gameplay and rendering.
 - Touch-optimised — `touch-none` canvas prevents scroll interference, dedicated D-pad for precise control on mobile.
 
@@ -229,7 +231,7 @@ These checks run as part of the full Playwright suite. Navigation tests also exe
 
 ## CI and Deployment
 
-[Tests](.github/workflows/test.yml) runs on pull requests to `main`, on manual dispatch, and when called by the deployment workflow. It checks the production build, Vitest unit tests, and Playwright end-to-end/accessibility tests. Browser and production smoke reports are retained for seven days.
+[Tests](.github/workflows/test.yml) runs on pull requests to `main`, on manual dispatch, and when called by the deployment workflow. It checks formatting (`npm run format:check`; `npm run format` fixes it), the production build, Vitest unit tests, and Playwright end-to-end/accessibility tests. Browser and production smoke reports are retained for seven days.
 
 CI uses Node.js 24 and installs the exact npm version declared in `package.json` (`npm@11.19.0`). Actions are pinned to reviewed commit SHAs and updated through Dependabot. Playwright rejects focused (`test.only`) tests in CI and uploads HTML reports for every completed, non-cancelled run, including successful retries.
 
@@ -242,17 +244,20 @@ For deployment, configure:
 - GitHub Pages to use **GitHub Actions** as its source.
 - A repository **variable** named `PORSSISAHKO_WORKER_URL` containing the electricity proxy's base URL, for example `https://porssisahko-proxy.janimeister.workers.dev`.
 
-The deployment build requires that variable and generates `src/environments/environment.prod.ts` from it. The Worker itself is managed outside this repository. The workflow builds with base href `/`, copies `index.html` to `404.html` for direct visits to client-side routes, and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
+The deployment build requires that variable and generates `src/environments/environment.prod.ts` from it. The Worker itself is managed outside this repository. The workflow builds with base href `/` and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
+
+### Pages, titles and the sitemap
+
+GitHub Pages serves `/weather` from `weather.html` with HTTP 200, so `npm run build` finishes with [scripts/prerender-routes.mjs](scripts/prerender-routes.mjs) (npm's `postbuild`). It reads the page registry and writes a copy of `index.html` for every page, each with its own English title, meta description, canonical link and social tags, plus `sitemap.xml` and a `404.html` marked `noindex`. Unknown addresses load the app from `404.html` and show its not-found page. In the browser, `PageTitleStrategy` keeps the same tags up to date on navigation and language changes. Titles repeat each page's `<h1>` translation key (`titleKey`); descriptions use the `meta.*` keys.
 
 ### Production smoke checks
 
-Browser system dependency installation has two bounded attempts and fails clearly if both fail. The production build job and the deployment build both run a Chromium smoke check before the Pages artifact is uploaded. It checks application startup, script/style loading, and a direct deep link served from `404.html`, independently of external APIs.
+Browser system dependency installation has two bounded attempts and fails clearly if both fail. The production build job and the deployment build both run a Chromium smoke check before the Pages artifact is uploaded. It checks application startup, script, style and font loading, that every sitemap page is served with HTTP 200 and its own title and canonical link, and that unknown addresses get the not-found page with HTTP 404, independently of external APIs.
 
 Run the same smoke check locally after building:
 
 ```bash
 npm run build
-cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
 npx playwright install --with-deps chromium
 npm run test:production
 ```

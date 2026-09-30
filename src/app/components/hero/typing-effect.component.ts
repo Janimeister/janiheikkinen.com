@@ -5,13 +5,15 @@ import { LanguageService } from '../../i18n/language.service';
   selector: 'app-typing-effect',
   template: `
     <span class="text-text-primary text-lg md:text-xl font-mono font-medium">
-      {{ displayText() }}<span class="animate-cursor-blink text-accent-primary font-bold" aria-hidden="true">█</span>
+      {{ displayText()
+      }}<span class="animate-cursor-blink text-accent-primary font-bold" aria-hidden="true">█</span>
     </span>
   `,
 })
 export class TypingEffectComponent implements OnDestroy {
   private readonly i18n = inject(LanguageService);
-  private readonly prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  private readonly prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    ?.matches;
 
   displayText = signal('');
   private roleIndex = 0;
@@ -41,10 +43,7 @@ export class TypingEffectComponent implements OnDestroy {
   }
 
   private roles(): string[] {
-    return [
-      this.i18n.t('hero.role1'),
-      this.i18n.t('hero.role2'),
-    ];
+    return [this.i18n.t('hero.role1'), this.i18n.t('hero.role2')];
   }
 
   private tick() {

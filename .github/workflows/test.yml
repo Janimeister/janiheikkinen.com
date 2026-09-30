@@ -45,11 +45,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Check formatting
+        run: npm run format:check
+
       - name: Build
         run: npm run build
-
-      - name: Add SPA fallback to the production build
-        run: cp dist/janiheikkinen-com/browser/index.html dist/janiheikkinen-com/browser/404.html
 
       - name: Install Chromium for the production smoke test
         run: bash scripts/install-playwright.sh chromium

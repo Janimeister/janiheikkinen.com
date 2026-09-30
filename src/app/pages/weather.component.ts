@@ -97,14 +97,39 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <!-- Decorative shapes -->
-      <app-floating-orb class="hidden md:block absolute top-[15%] right-[10%] z-[1]" delay="0s" [size]="60" shape="circle" color="sky" rotate="-4deg" />
-      <app-floating-orb class="hidden md:block absolute bottom-[20%] left-[5%] z-[1]" delay="3s" [size]="80" shape="square" color="yellow" rotate="6deg" />
+      <app-floating-orb
+        class="hidden md:block absolute top-[15%] right-[10%] z-[1]"
+        delay="0s"
+        [size]="60"
+        shape="circle"
+        color="sky"
+        rotate="-4deg"
+      />
+      <app-floating-orb
+        class="hidden md:block absolute bottom-[20%] left-[5%] z-[1]"
+        delay="3s"
+        [size]="80"
+        shape="square"
+        color="yellow"
+        rotate="6deg"
+      />
 
       <div class="relative z-10 max-w-6xl mx-auto">
         <!-- Header -->
         <div class="mb-8 animate-fade-slide-up">
-          <a routerLink="/" class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <a
+            routerLink="/"
+            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             {{ i18n.t('common.backToHome') }}
           </a>
           <h1 class="text-4xl md:text-5xl font-bold mt-2">
@@ -113,17 +138,27 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
           <p class="text-text-secondary mt-2">{{ i18n.t('weather.subtitle') }}</p>
           <!-- Location search -->
           <form [formRoot]="searchForm" class="mt-4 flex gap-2 max-w-sm">
-            <input type="text"
-                   [formField]="searchForm.location"
-                   [attr.placeholder]="i18n.t('weather.searchPlaceholder')"
-                   [attr.aria-label]="i18n.t('weather.searchPlaceholder')"
-                   [attr.aria-invalid]="searchForm.location().invalid() && searchForm.location().touched()"
-                   autocomplete="off"
-                   class="flex-1 min-w-0 bg-bg-card border-2 border-ink px-4 py-2 text-sm text-text-primary placeholder-text-secondary/70 shadow-brutal-sm transition-colors" />
-            <button type="submit"
-                    [disabled]="searchForm().submitting() || searchForm().invalid()"
-                    class="px-4 py-2 text-sm font-bold bg-pop-sky text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-              @if (searchForm().submitting()) { {{ i18n.t('weather.searching') }} } @else { {{ i18n.t('weather.search') }} }
+            <input
+              type="text"
+              [formField]="searchForm.location"
+              [attr.placeholder]="i18n.t('weather.searchPlaceholder')"
+              [attr.aria-label]="i18n.t('weather.searchPlaceholder')"
+              [attr.aria-invalid]="
+                searchForm.location().invalid() && searchForm.location().touched()
+              "
+              autocomplete="off"
+              class="flex-1 min-w-0 bg-bg-card border-2 border-ink px-4 py-2 text-sm text-text-primary placeholder-text-secondary/70 shadow-brutal-sm transition-colors"
+            />
+            <button
+              type="submit"
+              [disabled]="searchForm().submitting() || searchForm().invalid()"
+              class="px-4 py-2 text-sm font-bold bg-pop-sky text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              @if (searchForm().submitting()) {
+                {{ i18n.t('weather.searching') }}
+              } @else {
+                {{ i18n.t('weather.search') }}
+              }
             </button>
           </form>
           @if (searchError(); as err) {
@@ -133,7 +168,7 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
 
         @if (weather.isLoading()) {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            @for (i of [1,2,3,4,5,6]; track i) {
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
               <app-glow-card>
                 <div class="animate-pulse space-y-3">
                   <div class="h-6 bg-ink/10 w-1/2"></div>
@@ -153,39 +188,59 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">📍</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.currentLocation', { location: locationName() }) }}</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">
+                    {{ i18n.t('weather.currentLocation', { location: locationName() }) }}
+                  </h2>
                 </div>
                 <div class="flex items-center gap-6 mb-6">
-                  <span class="text-7xl md:text-8xl">{{ weatherInfo(data.current.weather_code).icon }}</span>
+                  <span class="text-7xl md:text-8xl">{{
+                    weatherInfo(data.current.weather_code).icon
+                  }}</span>
                   <div>
-                    <div class="text-5xl md:text-6xl font-bold text-text-primary font-[JetBrains_Mono,monospace]">
+                    <div
+                      class="text-5xl md:text-6xl font-bold text-text-primary font-[JetBrains_Mono,monospace]"
+                    >
                       {{ data.current.temperature_2m }}°C
                     </div>
                     <div class="text-lg text-text-secondary mt-1">
                       {{ weatherInfo(data.current.weather_code).label }}
                     </div>
                     <div class="text-sm text-text-secondary">
-                      {{ i18n.t('weather.feelsLike', { temperature: data.current.apparent_temperature }) }}
+                      {{
+                        i18n.t('weather.feelsLike', {
+                          temperature: data.current.apparent_temperature,
+                        })
+                      }}
                     </div>
                   </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div class="bg-pop-sky border-2 border-ink p-3 shadow-brutal-sm">
                     <div class="text-xs text-ink mb-1">💨 {{ i18n.t('weather.wind') }}</div>
-                    <div class="text-lg font-semibold text-ink">{{ data.current.wind_speed_10m }} km/h</div>
-                    <div class="text-xs text-ink">{{ windDirection(data.current.wind_direction_10m) }}</div>
+                    <div class="text-lg font-semibold text-ink">
+                      {{ data.current.wind_speed_10m }} km/h
+                    </div>
+                    <div class="text-xs text-ink">
+                      {{ windDirection(data.current.wind_direction_10m) }}
+                    </div>
                   </div>
                   <div class="bg-pop-orange border-2 border-ink p-3 shadow-brutal-sm">
                     <div class="text-xs text-ink mb-1">🌊 {{ i18n.t('weather.gusts') }}</div>
-                    <div class="text-lg font-semibold text-ink">{{ data.current.wind_gusts_10m }} km/h</div>
+                    <div class="text-lg font-semibold text-ink">
+                      {{ data.current.wind_gusts_10m }} km/h
+                    </div>
                   </div>
                   <div class="bg-pop-lime border-2 border-ink p-3 shadow-brutal-sm">
                     <div class="text-xs text-ink mb-1">💧 {{ i18n.t('weather.humidity') }}</div>
-                    <div class="text-lg font-semibold text-ink">{{ data.current.relative_humidity_2m }}%</div>
+                    <div class="text-lg font-semibold text-ink">
+                      {{ data.current.relative_humidity_2m }}%
+                    </div>
                   </div>
                   <div class="bg-pop-yellow border-2 border-ink p-3 shadow-brutal-sm">
                     <div class="text-xs text-ink mb-1">☁️ {{ i18n.t('weather.cloudCover') }}</div>
-                    <div class="text-lg font-semibold text-ink">{{ data.current.cloud_cover }}%</div>
+                    <div class="text-lg font-semibold text-ink">
+                      {{ data.current.cloud_cover }}%
+                    </div>
                   </div>
                 </div>
               </app-glow-card>
@@ -194,38 +249,68 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
               <app-glow-card>
                 <div class="flex items-center gap-2 mb-4">
                   <span class="text-xl">🌅</span>
-                  <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('common.today') }}</h2>
+                  <h2 class="text-lg font-semibold text-text-primary">
+                    {{ i18n.t('common.today') }}
+                  </h2>
                 </div>
                 @if (todayDaily(); as today) {
                   <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunrise') }}</span>
-                      <span class="text-sm font-medium text-data-orange">{{ formatTime(today.sunrise) }}</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('weather.sunrise')
+                      }}</span>
+                      <span class="text-sm font-medium text-data-orange">{{
+                        formatTime(today.sunrise)
+                      }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunset') }}</span>
-                      <span class="text-sm font-medium text-data-orange-deep">{{ formatTime(today.sunset) }}</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('weather.sunset')
+                      }}</span>
+                      <span class="text-sm font-medium text-data-orange-deep">{{
+                        formatTime(today.sunset)
+                      }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.sunshine') }}</span>
-                      <span class="text-sm font-medium text-text-primary">{{ formatDuration(today.sunshineDuration) }}</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('weather.sunshine')
+                      }}</span>
+                      <span class="text-sm font-medium text-text-primary">{{
+                        formatDuration(today.sunshineDuration)
+                      }}</span>
                     </div>
                     <hr class="border-t-2 border-ink" />
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.uvIndex') }}</span>
-                      <span class="text-sm font-semibold" [class]="uvColor(today.uvIndex)">{{ today.uvIndex.toFixed(1) }}</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('weather.uvIndex')
+                      }}</span>
+                      <span class="text-sm font-semibold" [class]="uvColor(today.uvIndex)">{{
+                        today.uvIndex.toFixed(1)
+                      }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.precipitation') }}</span>
-                      <span class="text-sm font-medium text-text-primary">{{ today.precipSum }} mm</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('weather.precipitation')
+                      }}</span>
+                      <span class="text-sm font-medium text-text-primary"
+                        >{{ today.precipSum }} mm</span
+                      >
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.precipChance') }}</span>
-                      <span class="text-sm font-medium text-text-primary">{{ today.precipProb }}%</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('weather.precipChance')
+                      }}</span>
+                      <span class="text-sm font-medium text-text-primary"
+                        >{{ today.precipProb }}%</span
+                      >
                     </div>
                     <div class="flex justify-between items-center">
-                      <span class="text-sm text-text-secondary">{{ i18n.t('weather.pressure') }}</span>
-                      <span class="text-sm font-medium text-text-primary">{{ data.current.surface_pressure.toFixed(0) }} hPa</span>
+                      <span class="text-sm text-text-secondary">{{
+                        i18n.t('weather.pressure')
+                      }}</span>
+                      <span class="text-sm font-medium text-text-primary"
+                        >{{ data.current.surface_pressure.toFixed(0) }} hPa</span
+                      >
                     </div>
                   </div>
                 }
@@ -238,18 +323,35 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">🕐</span>
-                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.hourlyForecast') }}</h2>
+                <h2 class="text-lg font-semibold text-text-primary">
+                  {{ i18n.t('weather.hourlyForecast') }}
+                </h2>
               </div>
-              <div class="overflow-x-auto -mx-4 px-4" tabindex="0" role="region" [attr.aria-label]="i18n.t('weather.hourlyForecastRegion')">
+              <div
+                class="overflow-x-auto -mx-4 px-4"
+                tabindex="0"
+                role="region"
+                [attr.aria-label]="i18n.t('weather.hourlyForecastRegion')"
+              >
                 <div class="flex gap-3 min-w-max pb-2">
                   @for (hour of next24Hours(); track hour.time) {
-                    <div class="flex flex-col items-center gap-1 min-w-[60px] p-2 border-2 border-ink shadow-brutal-sm transition-colors"
-                         [class]="hour.isNow ? 'bg-bg-card-hover shadow-brutal' : 'bg-bg-card hover:bg-bg-card-hover'">
+                    <div
+                      class="flex flex-col items-center gap-1 min-w-[60px] p-2 border-2 border-ink shadow-brutal-sm transition-colors"
+                      [class]="
+                        hour.isNow
+                          ? 'bg-bg-card-hover shadow-brutal'
+                          : 'bg-bg-card hover:bg-bg-card-hover'
+                      "
+                    >
                       <span class="text-xs text-text-secondary">{{ hour.timeLabel }}</span>
                       <span class="text-lg">{{ weatherInfo(hour.weatherCode).icon }}</span>
                       <span class="text-sm font-semibold text-text-primary">{{ hour.temp }}°</span>
                       <div class="flex items-center gap-0.5">
-                        <svg class="w-3 h-3 text-data-blue" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/></svg>
+                        <svg class="w-3 h-3 text-data-blue" fill="currentColor" viewBox="0 0 24 24">
+                          <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"
+                          />
+                        </svg>
                         <span class="text-[10px] text-data-blue">{{ hour.precipProb }}%</span>
                       </div>
                       <span class="text-[10px] text-text-secondary">{{ hour.windSpeed }} km/h</span>
@@ -265,11 +367,15 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">📈</span>
-                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.temperatureTrend') }}</h2>
+                <h2 class="text-lg font-semibold text-text-primary">
+                  {{ i18n.t('weather.temperatureTrend') }}
+                </h2>
               </div>
               <div class="relative h-32 flex">
                 <!-- Y-axis labels -->
-                <div class="flex flex-col justify-between items-end pr-2 text-[10px] text-text-secondary font-mono shrink-0 py-0.5">
+                <div
+                  class="flex flex-col justify-between items-end pr-2 text-[10px] text-text-secondary font-mono shrink-0 py-0.5"
+                >
                   <span>{{ tempRange().max }}°</span>
                   <span>{{ tempRange().mid }}°</span>
                   <span>{{ tempRange().min }}°</span>
@@ -277,7 +383,9 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                 <!-- Chart area -->
                 <div class="flex-1 relative">
                   <!-- Grid lines -->
-                  <div class="absolute inset-0 flex flex-col justify-between pointer-events-none py-0.5">
+                  <div
+                    class="absolute inset-0 flex flex-col justify-between pointer-events-none py-0.5"
+                  >
                     <div class="border-t-2 border-ink/15"></div>
                     <div class="border-t-2 border-ink/15"></div>
                     <div class="border-t-2 border-ink/15"></div>
@@ -285,16 +393,27 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
                   <!-- Bars -->
                   <div class="flex items-end gap-0.5 h-full relative z-[1]">
                     @for (hour of next24Hours(); track hour.time) {
-                      <div class="flex-1 transition-all duration-300 group relative"
-                           role="img"
-                           [attr.aria-label]="hour.timeLabel + ': ' + hour.temp + '°C'"
-                           [style.height.%]="hour.tempPct">
-                        <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-bg-card border-2 border-ink shadow-brutal-sm px-1.5 py-0.5 text-[10px] text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity">
+                      <div
+                        class="flex-1 transition-all duration-300 group relative"
+                        role="img"
+                        [attr.aria-label]="hour.timeLabel + ': ' + hour.temp + '°C'"
+                        [style.height.%]="hour.tempPct"
+                      >
+                        <div
+                          class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-bg-card border-2 border-ink shadow-brutal-sm px-1.5 py-0.5 text-[10px] text-text-primary whitespace-nowrap z-20 pointer-events-none transition-opacity"
+                        >
                           {{ hour.temp }}°C
                         </div>
-                        <div class="w-full h-full"
-                             [class]="hour.isNow ? 'bg-accent-primary' : (hour.temp > 0 ? 'bg-pop-orange' : 'bg-pop-sky')">
-                        </div>
+                        <div
+                          class="w-full h-full"
+                          [class]="
+                            hour.isNow
+                              ? 'bg-accent-primary'
+                              : hour.temp > 0
+                                ? 'bg-pop-orange'
+                                : 'bg-pop-sky'
+                          "
+                        ></div>
                       </div>
                     }
                   </div>
@@ -315,30 +434,49 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
             <app-glow-card>
               <div class="flex items-center gap-2 mb-4">
                 <span class="text-xl">📅</span>
-                <h2 class="text-lg font-semibold text-text-primary">{{ i18n.t('weather.dailyForecast') }}</h2>
+                <h2 class="text-lg font-semibold text-text-primary">
+                  {{ i18n.t('weather.dailyForecast') }}
+                </h2>
               </div>
               <div class="space-y-3">
                 @for (day of dailyForecast(); track day.date) {
-                  <div class="flex items-center gap-4 p-3 border-2 border-ink shadow-brutal-sm transition-colors"
-                       [class]="day.isToday ? 'bg-bg-card-hover shadow-brutal' : 'bg-bg-card hover:bg-bg-card-hover'">
+                  <div
+                    class="flex items-center gap-4 p-3 border-2 border-ink shadow-brutal-sm transition-colors"
+                    [class]="
+                      day.isToday
+                        ? 'bg-bg-card-hover shadow-brutal'
+                        : 'bg-bg-card hover:bg-bg-card-hover'
+                    "
+                  >
                     <div class="w-20 text-sm font-medium text-text-primary">{{ day.dayLabel }}</div>
-                    <span class="text-2xl w-10 text-center">{{ weatherInfo(day.weatherCode).icon }}</span>
+                    <span class="text-2xl w-10 text-center">{{
+                      weatherInfo(day.weatherCode).icon
+                    }}</span>
                     <div class="flex-1 flex items-center gap-2">
                       <!-- Temp range bar -->
                       <span class="text-sm text-data-blue w-10 text-right">{{ day.min }}°</span>
-                      <div class="flex-1 h-3 bg-bg-card border-2 border-ink relative overflow-hidden">
-                        <div class="absolute h-full bg-accent-secondary transition-all"
-                             [style.left.%]="day.barLeft"
-                             [style.width.%]="day.barWidth">
-                        </div>
+                      <div
+                        class="flex-1 h-3 bg-bg-card border-2 border-ink relative overflow-hidden"
+                      >
+                        <div
+                          class="absolute h-full bg-accent-secondary transition-all"
+                          [style.left.%]="day.barLeft"
+                          [style.width.%]="day.barWidth"
+                        ></div>
                       </div>
                       <span class="text-sm text-data-orange-deep w-10">{{ day.max }}°</span>
                     </div>
                     <div class="hidden md:flex items-center gap-4 text-xs text-text-secondary">
-                      <span [title]="i18n.t('weather.precipitationTitle')">💧 {{ day.precip }} mm</span>
-                      <span [title]="i18n.t('weather.precipitationProbabilityTitle')">☔ {{ day.precipProb }}%</span>
+                      <span [title]="i18n.t('weather.precipitationTitle')"
+                        >💧 {{ day.precip }} mm</span
+                      >
+                      <span [title]="i18n.t('weather.precipitationProbabilityTitle')"
+                        >☔ {{ day.precipProb }}%</span
+                      >
                       <span [title]="i18n.t('weather.windTitle')">💨 {{ day.wind }} km/h</span>
-                      <span [title]="i18n.t('weather.uvIndex')" [class]="uvColor(day.uv)">UV {{ day.uv.toFixed(0) }}</span>
+                      <span [title]="i18n.t('weather.uvIndex')" [class]="uvColor(day.uv)"
+                        >UV {{ day.uv.toFixed(0) }}</span
+                      >
                     </div>
                   </div>
                 }
@@ -349,8 +487,12 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
 
         <!-- Attribution -->
         <div class="mt-6 text-center">
-          <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer"
-             class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors">
+          <a
+            href="https://open-meteo.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors"
+          >
             {{ i18n.t('weather.attribution') }}
           </a>
         </div>
@@ -364,15 +506,21 @@ export class WeatherPageComponent {
   private coords = signal<{ lat: number; lon: number }>({ lat: 60.17, lon: 24.94 });
   locationName = signal('Helsinki');
   private readonly searchModel = signal({ location: '' });
-  protected readonly searchForm = form(this.searchModel, search => {
-    required(search.location);
-    maxLength(search.location, 100);
-  }, {
-    submission: {
-      action: async search => this.searchLocation(search.location().value()),
+  protected readonly searchForm = form(
+    this.searchModel,
+    (search) => {
+      required(search.location);
+      maxLength(search.location, 100);
     },
-  });
-  searchError = signal<{ key: TranslationKey; params?: Record<string, string | number> } | null>(null);
+    {
+      submission: {
+        action: async (search) => this.searchLocation(search.location().value()),
+      },
+    },
+  );
+  searchError = signal<{ key: TranslationKey; params?: Record<string, string | number> } | null>(
+    null,
+  );
 
   private async searchLocation(location: string) {
     const raw = location.trim();
@@ -388,9 +536,8 @@ export class WeatherPageComponent {
     this.searchError.set(null);
 
     try {
-      const data = await firstValueFrom(this.http.get<GeocodingResponse>(
-        'https://geocoding-api.open-meteo.com/v1/search',
-        {
+      const data = await firstValueFrom(
+        this.http.get<GeocodingResponse>('https://geocoding-api.open-meteo.com/v1/search', {
           params: {
             name: sanitized,
             count: 1,
@@ -398,8 +545,8 @@ export class WeatherPageComponent {
             format: 'json',
           },
           timeout: 10_000,
-        },
-      ));
+        }),
+      );
 
       if (!data.results?.length) {
         this.searchError.set({ key: 'weather.noResults', params: { location: sanitized } });
@@ -422,9 +569,12 @@ export class WeatherPageComponent {
       params: {
         latitude: lat,
         longitude: lon,
-        current: 'temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,surface_pressure,is_day',
-        hourly: 'temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,cloud_cover',
-        daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,sunshine_duration',
+        current:
+          'temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,surface_pressure,is_day',
+        hourly:
+          'temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,cloud_cover',
+        daily:
+          'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,sunshine_duration',
         timezone: 'auto',
         forecast_days: 7,
       },
@@ -439,14 +589,23 @@ export class WeatherPageComponent {
 
   windDirection(deg: number): string {
     const dirKeys: TranslationKey[] = [
-      'weather.windN', 'weather.windNE', 'weather.windE', 'weather.windSE',
-      'weather.windS', 'weather.windSW', 'weather.windW', 'weather.windNW',
+      'weather.windN',
+      'weather.windNE',
+      'weather.windE',
+      'weather.windSE',
+      'weather.windS',
+      'weather.windSW',
+      'weather.windW',
+      'weather.windNW',
     ];
     return this.i18n.t(dirKeys[Math.round(deg / 45) % 8]);
   }
 
   formatTime(isoString: string): string {
-    return new Date(isoString).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' });
+    return new Date(isoString).toLocaleTimeString(this.i18n.locale(), {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   formatDuration(seconds: number): string {
@@ -481,20 +640,29 @@ export class WeatherPageComponent {
     // Open-Meteo returns times in the *location's* timezone without an offset,
     // so compare the raw strings against current.time instead of parsing with Date
     // (which would apply the browser's timezone).
-    const nextHourIdx = data.hourly.time.findIndex(t => t > data.current.time);
-    const startIdx = Math.max(0, nextHourIdx === -1 ? data.hourly.time.length - 1 : nextHourIdx - 1);
+    const nextHourIdx = data.hourly.time.findIndex((t) => t > data.current.time);
+    const startIdx = Math.max(
+      0,
+      nextHourIdx === -1 ? data.hourly.time.length - 1 : nextHourIdx - 1,
+    );
     const slice = Array.from({ length: 24 }, (_, i) => startIdx + i).filter(
-      i => i < data.hourly.time.length
+      (i) => i < data.hourly.time.length,
     );
 
-    const temps = slice.map(i => data.hourly.temperature_2m[i]);
+    const temps = slice.map((i) => data.hourly.temperature_2m[i]);
     const minTemp = Math.min(...temps);
     const maxTemp = Math.max(...temps);
     const range = maxTemp - minTemp || 1;
 
     return slice.map((i, idx) => ({
       time: data.hourly.time[i],
-      timeLabel: idx === 0 ? this.i18n.t('common.now') : new Date(data.hourly.time[i]).toLocaleTimeString(this.i18n.locale(), { hour: '2-digit', minute: '2-digit' }),
+      timeLabel:
+        idx === 0
+          ? this.i18n.t('common.now')
+          : new Date(data.hourly.time[i]).toLocaleTimeString(this.i18n.locale(), {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
       temp: Math.round(data.hourly.temperature_2m[i]),
       tempPct: Math.max(8, ((data.hourly.temperature_2m[i] - minTemp) / range) * 85 + 15),
       weatherCode: data.hourly.weather_code[i],
@@ -507,7 +675,7 @@ export class WeatherPageComponent {
   tempRange = computed(() => {
     const hours = this.next24Hours();
     if (!hours.length) return { min: 0, mid: 0, max: 0 };
-    const temps = hours.map(h => h.temp);
+    const temps = hours.map((h) => h.temp);
     const min = Math.min(...temps);
     const max = Math.max(...temps);
     return { min, mid: Math.round((min + max) / 2), max };
@@ -525,13 +693,22 @@ export class WeatherPageComponent {
 
     return data.daily.time.map((date, i) => ({
       date,
-      dayLabel: date === today ? this.i18n.t('common.today') : new Date(date + 'T00:00').toLocaleDateString(this.i18n.locale(), { weekday: 'short', day: 'numeric' }),
+      dayLabel:
+        date === today
+          ? this.i18n.t('common.today')
+          : new Date(date + 'T00:00').toLocaleDateString(this.i18n.locale(), {
+              weekday: 'short',
+              day: 'numeric',
+            }),
       isToday: date === today,
       weatherCode: data.daily.weather_code[i],
       min: Math.round(data.daily.temperature_2m_min[i]),
       max: Math.round(data.daily.temperature_2m_max[i]),
       barLeft: ((data.daily.temperature_2m_min[i] - allMin) / totalRange) * 100,
-      barWidth: Math.max(5, ((data.daily.temperature_2m_max[i] - data.daily.temperature_2m_min[i]) / totalRange) * 100),
+      barWidth: Math.max(
+        5,
+        ((data.daily.temperature_2m_max[i] - data.daily.temperature_2m_min[i]) / totalRange) * 100,
+      ),
       precip: data.daily.precipitation_sum[i],
       precipProb: data.daily.precipitation_probability_max[i],
       wind: Math.round(data.daily.wind_speed_10m_max[i]),

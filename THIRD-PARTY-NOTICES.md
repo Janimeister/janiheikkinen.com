@@ -778,17 +778,27 @@ SOFTWARE.
 
 ## Fonts
 
-### Inter
-- **URL:** https://fonts.google.com/specimen/Inter
-- **Author:** Rasmus Andersson (rsms)
-- **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://scripts.sil.org/OFL)
-- **Delivery:** Served via Google Fonts
+All fonts are bundled with the site from the [Fontsource](https://fontsource.org) npm packages
+(`@fontsource/archivo-black`, `@fontsource/space-grotesk`, `@fontsource/jetbrains-mono`), so no
+font requests go to a third party.
+
+### Archivo Black
+- **URL:** https://fontsource.org/fonts/archivo-black
+- **Author:** Omnibus-Type
+- **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://openfontlicense.org)
+- **Delivery:** Self-hosted from `@fontsource/archivo-black`
+
+### Space Grotesk
+- **URL:** https://fontsource.org/fonts/space-grotesk
+- **Author:** Florian Karsten
+- **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://openfontlicense.org)
+- **Delivery:** Self-hosted from `@fontsource/space-grotesk`
 
 ### JetBrains Mono
-- **URL:** https://fonts.google.com/specimen/JetBrains+Mono
+- **URL:** https://fontsource.org/fonts/jetbrains-mono
 - **Author:** JetBrains s.r.o.
-- **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://scripts.sil.org/OFL)
-- **Delivery:** Served via Google Fonts
+- **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://openfontlicense.org)
+- **Delivery:** Self-hosted from `@fontsource/jetbrains-mono`
 
 ---
 
