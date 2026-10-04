@@ -14,6 +14,8 @@ import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 import { LanguageService } from '../i18n/language.service';
+import type { PriceSlot } from '../electricity/cheapest-run';
+import { RunPlannerComponent } from '../electricity/run-planner.component';
 
 interface PriceEntry {
   price: number;
@@ -32,7 +34,7 @@ function localDateKey(d: Date): string {
 
 @Component({
   selector: 'app-electricity-page',
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
+  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, RunPlannerComponent],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <!-- Decorative shapes -->
@@ -187,6 +189,13 @@ function localDateKey(d: Date): string {
             </div>
           </div>
 
+          <!-- Best time to run an appliance -->
+          <div class="mb-8 animate-fade-slide-up stagger-2">
+            <app-glow-card>
+              <app-run-planner [slots]="priceSlots()" [now]="nowTick()" />
+            </app-glow-card>
+          </div>
+
           <!-- 24h Price Chart -->
           <div class="mb-8 animate-fade-slide-up stagger-2">
             <app-glow-card>
@@ -244,6 +253,16 @@ function localDateKey(d: Date): string {
                         </button>
                       }
                     </div>
+                    <!-- The planner's cheapest run -->
+                    <div class="flex gap-0.5 h-1.5 mt-1" aria-hidden="true">
+                      @for (bar of chartBars(); track bar.start) {
+                        <div
+                          class="flex-1"
+                          [class.bg-ink]="bar.inRun"
+                          [attr.data-run]="bar.inRun || null"
+                        ></div>
+                      }
+                    </div>
                     <!-- X-axis labels -->
                     <div class="flex mt-1">
                       @for (bar of chartBars(); track bar.start; let i = $index) {
@@ -281,6 +300,12 @@ function localDateKey(d: Date): string {
                   ><span class="w-3 h-2 border-2 border-ink bg-accent-primary"></span>
                   {{ i18n.t('electricity.currentLegend') }}</span
                 >
+                @if (bestRun()) {
+                  <span class="flex items-center gap-1"
+                    ><span class="w-3 h-1.5 bg-ink"></span>
+                    {{ i18n.t('electricity.runLegend') }}</span
+                  >
+                }
               </div>
             </app-glow-card>
           </div>
@@ -382,10 +407,13 @@ export class ElectricityPageComponent {
   protected readonly i18n = inject(LanguageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly chartScroller = viewChild<ElementRef<HTMLElement>>('chartScroller');
+  private readonly planner = viewChild(RunPlannerComponent);
+  /** The planner's cheapest window, marked under the chart. */
+  protected readonly bestRun = computed(() => this.planner()?.window()?.best ?? null);
   activeBarIdx = signal<number | null>(null);
 
   /** Ticks every minute so time-dependent computeds stay fresh while the tab is open. */
-  private readonly nowTick = signal(Date.now());
+  protected readonly nowTick = signal(Date.now());
 
   constructor() {
     const timer = setInterval(() => this.nowTick.set(Date.now()), 60_000);
@@ -419,6 +447,15 @@ export class ElectricityPageComponent {
       (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
     );
   });
+
+  /** The prices as whole-minute slots: the API ends each one at hh:mm:59.999. */
+  protected readonly priceSlots = computed<PriceSlot[]>(() =>
+    this.sortedPrices().map((p) => ({
+      start: new Date(p.startDate).getTime(),
+      end: Math.ceil(new Date(p.endDate).getTime() / 60_000) * 60_000,
+      price: p.price,
+    })),
+  );
 
   private currentIdx = computed(() => {
     const prices = this.sortedPrices();
@@ -486,6 +523,7 @@ export class ElectricityPageComponent {
     if (!prices.length) return [];
     const curIdx = this.currentIdx();
     const maxP = this.chartMax();
+    const run = this.bestRun();
 
     return prices.map((p, i) => {
       const start = new Date(p.startDate);
@@ -500,6 +538,7 @@ export class ElectricityPageComponent {
         price: p.price,
         heightPct: Math.max(2, (Math.max(0, p.price) / maxP) * 100),
         isCurrent: i === curIdx,
+        inRun: !!run && new Date(p.endDate).getTime() > run.start && start.getTime() < run.end,
         colorClass: this.priceBgColor(p.price),
       };
     });

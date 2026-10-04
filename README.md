@@ -15,7 +15,7 @@ npm ci
 npm start
 ```
 
-Open `http://localhost:4200/`. The development server automatically uses [proxy.conf.json](proxy.conf.json) for electricity API requests; no local API key is needed.
+Open `http://localhost:4200/`. The development server automatically uses [proxy.conf.mjs](proxy.conf.mjs) for electricity and departures API requests. Electricity needs no key. Departures need a free [Digitransit subscription key](https://portal-api.digitransit.fi) in `DIGITRANSIT_SUBSCRIPTION_KEY` (`DIGITRANSIT_SUBSCRIPTION_KEY=… npm start`); without one the departures page shows its error card, and the tests mock the API either way.
 
 ## Tech Stack
 
@@ -40,6 +40,7 @@ src/app/
 │   ├── weather.component.ts     # Weather data (Open-Meteo API)
 │   ├── electricity.component.ts # Electricity prices (api.porssisahko.net)
 │   ├── trams.component.ts       # ASCII map of Helsinki's tram network
+│   ├── departures.component.ts  # Live departures from any HSL stop (Digitransit)
 │   ├── github.component.ts      # GitHub activity (GitHub REST API)
 │   ├── ascii.component.ts       # Procedural ASCII art generator
 │   ├── snake.component.ts       # Classic Snake game
@@ -61,6 +62,8 @@ src/app/
 ├── searching/                # Search algorithms and event generators
 ├── pathfinding/              # Weighted grid algorithms and event generators
 ├── trams/                    # Tram map grid, ASCII rasteriser, MQTT client, HFP parsing and live feed
+├── departures/               # Digitransit GraphQL queries and response parsing
+├── electricity/              # Cheapest-run search and the "Best time to run" planner
 ├── visualization/            # Shared playback, metadata types and category nav
 ├── i18n/                    # Signal-based runtime translations
 ├── app.routes.ts            # Route definitions
@@ -100,11 +103,30 @@ Static UI copy is translated in the app. External content such as GitHub reposit
 | Page | API | Notes |
 |---|---|---|
 | Weather | [Open-Meteo](https://open-meteo.com) | Free, no key required |
-| Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Dev: proxied via `proxy.conf.json`; Prod: routed through a Cloudflare Worker (`porssisahko-proxy.janimeister.workers.dev`) |
+| Electricity | [api.porssisahko.net](https://api.porssisahko.net) | Dev: proxied via `proxy.conf.mjs`; Prod: routed through a Cloudflare Worker (`porssisahko-proxy.janimeister.workers.dev`) |
+| Departures | [Digitransit routing API](https://digitransit.fi/en/developers/apis/1-routing-api/) (HSL, GraphQL) | Needs a subscription key. Dev: proxied via `proxy.conf.mjs` with `DIGITRANSIT_SUBSCRIPTION_KEY`; Prod: the Cloudflare Worker in [workers/digitransit-proxy](workers/digitransit-proxy) adds the key |
 | GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
 | Home | [Cat Facts](https://catfact.ninja) | Random cat fact in the hero section |
 | Trams | [HSL GTFS](https://www.hsl.fi/en/hsl/open-data) and [OpenStreetMap](https://www.openstreetmap.org) | Build time only, via `scripts/build-tram-map.mjs`; the page reads the committed `public/data/helsinki-trams.json` |
 | Trams (live) | [HSL High-frequency positioning](https://github.com/HSLdevcom/digitransit-site/blob/master/src/pages/en/developers/apis/5-realtime-api/vehicle-positions/high-frequency-positioning/index.md) | MQTT over WebSocket, `wss://mqtt.hsl.fi`, no key; the browser connects directly |
+
+## Electricity: Best Time to Run
+
+The electricity page has a **Best time to run** card. Pick a dishwasher, washing machine, sauna or EV charging preset (or set your own run time in 15-minute steps up to 12 h and the energy per run), optionally a **ready by** time, and it finds the cheapest start among the prices published so far.
+
+- `src/app/electricity/cheapest-run.ts` tries starting now and at every later slot boundary, and averages the price over the run weighted by the minutes spent in each 15-minute slot. Runs that cross a gap in the data, go past the last known price or end after the ready-by time are skipped; ties go to the earliest start.
+- The card shows the start and finish, the delay to set on a machine's delay-start timer, the average price, and the cost then, if started now and the saving for the given energy. It assumes the appliance draws power evenly. The chosen window is marked under the price chart.
+- The settings are kept in `localStorage` (`electricity-run`) once changed.
+
+## Departures Page
+
+The `/departures` page is a departure board for any HSL stop or station.
+
+- **Search.** Type at least three characters of a stop's name or its code (`H1234`). Results list stations (which group a metro or train station's platforms) first, then stops, with their lines. Five busy places are offered as starting points, searched by name so no stop id goes stale.
+- **Board.** The next 12 departures from the Digitransit routing API (`stoptimesWithoutPatterns`, cancellations included, drop-off-only calls left out), shown like HSL's own displays: `now`, minutes up to 10, then the clock time. Real-time estimates are marked with a dot, delays of a minute or more get a `+N min` tag, cancellations are struck through, and stations show the platform. Trams wear their line's colour from the tram map.
+- **Refresh.** The board reloads every 30 seconds while the tab is visible, at once when it becomes visible again after that, and on **Refresh**. Countdowns tick every 10 seconds between loads.
+- **Addresses and recents.** The chosen stop is in the address (`?stop=HSL:1130446` or `?station=HSL:1000202`), so boards can be bookmarked and shared. The last five stops are kept in `localStorage` (`departures-recent`); without a stop in the address the page opens the most recent one.
+- **API key.** Digitransit needs a subscription key, which must not ship in the browser bundle. [workers/digitransit-proxy/worker.js](workers/digitransit-proxy/worker.js) adds it on Cloudflare, forwards only the page's three named GraphQL operations (`Search`, `StopDepartures`, `StationDepartures`) from this site's origins (and localhost), and refuses bodies over 4 KB. Data © Digitransit, CC BY 4.0.
 
 ## Tram Map Page
 
@@ -172,7 +194,7 @@ The `/pet` page is a virtual pet simulator. Each run starts with a mystery egg t
 
 ### Development server
 
-Start the dev server with the proxy configuration (required for the Electricity API):
+Start the dev server with the proxy configuration (required for the Electricity and Departures APIs; Departures also need `DIGITRANSIT_SUBSCRIPTION_KEY`):
 
 ```bash
 npx ng serve --port 4200
@@ -244,7 +266,17 @@ For deployment, configure:
 - GitHub Pages to use **GitHub Actions** as its source.
 - A repository **variable** named `PORSSISAHKO_WORKER_URL` containing the electricity proxy's base URL, for example `https://porssisahko-proxy.janimeister.workers.dev`.
 
-The deployment build requires that variable and generates `src/environments/environment.prod.ts` from it. The Worker itself is managed outside this repository. The workflow builds with base href `/` and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
+- Optionally, a repository **variable** named `DIGITRANSIT_PROXY_URL` with the departures proxy's URL. Without it the build uses `https://digitransit-proxy.janimeister.workers.dev`.
+
+The deployment build requires `PORSSISAHKO_WORKER_URL` and generates `src/environments/environment.prod.ts` from both variables. The electricity Worker is managed outside this repository.
+
+The departures Worker lives in [workers/digitransit-proxy](workers/digitransit-proxy) and is deployed by hand with [Wrangler](https://developers.cloudflare.com/workers/wrangler/):
+
+```bash
+cd workers/digitransit-proxy
+npx wrangler secret put DIGITRANSIT_SUBSCRIPTION_KEY   # the key from portal-api.digitransit.fi
+npx wrangler deploy
+``` The workflow builds with base href `/` and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
 
 ### Pages, titles and the sitemap
 

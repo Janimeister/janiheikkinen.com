@@ -31,6 +31,7 @@ jobs:
     timeout-minutes: 10
     env:
       PORSSISAHKO_WORKER_URL: ${{ vars.PORSSISAHKO_WORKER_URL }}
+      DIGITRANSIT_PROXY_URL: ${{ vars.DIGITRANSIT_PROXY_URL }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -60,10 +61,13 @@ jobs:
           if (!workerUrl) {
             throw new Error('PORSSISAHKO_WORKER_URL repository variable is required.');
           }
+          // workers/digitransit-proxy deployed under its own name; a variable overrides it.
+          const digitransitUrl =
+            process.env.DIGITRANSIT_PROXY_URL || 'https://digitransit-proxy.janimeister.workers.dev';
 
           writeFileSync(
             'src/environments/environment.prod.ts',
-            `export const environment = {\n  workerUrl: ${JSON.stringify(workerUrl)}\n};\n`
+            `export const environment = {\n  workerUrl: ${JSON.stringify(workerUrl)},\n  digitransitUrl: ${JSON.stringify(digitransitUrl)}\n};\n`
           );
           EOF
 
