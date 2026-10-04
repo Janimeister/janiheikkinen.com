@@ -255,9 +255,9 @@ export const FI_TRANSLATIONS = {
 
   'cookie.title': 'Tietosuoja',
   'cookie.storage':
-    'Sivusto ei käytä evästeitä eikä analytiikkaa. Selaimesi localStorage säilyttää vain asetuksesi: kielen, raitiovaunukartan näkymän, virtuaalilemmikin, matopelin ennätyksen ja tiedon, että olet lukenut tämän ilmoituksen.',
+    'Sivusto ei käytä evästeitä eikä analytiikkaa. Selaimesi localStorage säilyttää vain asetuksesi: kielen, raitiovaunukartan näkymän, viimeksi katsotut pysäkit, laitteiden käyttöasetukset, virtuaalilemmikin, matopelin ennätyksen ja tiedon, että olet lukenut tämän ilmoituksen.',
   'cookie.services':
-    'Sivut, joilla on ajantasaista tietoa, hakevat sen suoraan lähteestä, joka näkee IP-osoitteesi: Open-Meteo (sää ja sijaintihaku), Pörssisähkön edessä oleva Cloudflare Worker (sähkön hinnat), GitHub, catfact.ninja ja HSL (raitiovaunut livenä). Fontit tulevat tältä sivustolta.',
+    'Sivut, joilla on ajantasaista tietoa, hakevat sen suoraan lähteestä, joka näkee IP-osoitteesi: Open-Meteo (sää ja sijaintihaku), Pörssisähkön edessä oleva Cloudflare Worker (sähkön hinnat), Digitransitin edessä oleva Cloudflare Worker (lähdöt), GitHub, catfact.ninja ja HSL (raitiovaunut livenä). Fontit tulevat tältä sivustolta.',
   'cookie.accept': 'Selvä',
 
   'hero.sticker': 'Moikka!',
@@ -637,4 +637,75 @@ export const FI_TRANSLATIONS = {
   'notFound.body':
     'Tästä osoitteesta ei löydy mitään. Sivu on ehkä siirtynyt, tai linkissä on kirjoitusvirhe.',
   'notFound.home': 'Siirry etusivulle',
+
+  'explore.departuresDescription': 'Seuraavat lähdöt miltä tahansa HSL-pysäkiltä',
+  'explore.departuresKeywords':
+    'lähdöt aikataulu bussi ratikka raitiovaunu metro juna pysäkki hsl joukkoliikenne reaaliaikainen',
+  'meta.departures':
+    'Ajantasaiset lähdöt miltä tahansa HSL-alueen pysäkiltä tai asemalta: bussit, raitiovaunut, metro, junat ja lautat.',
+  'electricity.runLegend': 'Paras käynnistysaika',
+  'run.title': 'Paras käynnistysaika',
+  'run.intro':
+    'Valitse laite ja katso, milloin sen käynnistäminen on halvinta tähän mennessä tiedossa olevilla hinnoilla.',
+  'run.appliance': 'Laite',
+  'run.dishwasher': 'Astianpesukone',
+  'run.washer': 'Pyykinpesukone',
+  'run.sauna': 'Sauna',
+  'run.ev': 'Sähköauton lataus',
+  'run.duration': 'Kesto',
+  'run.energy': 'Kulutus kerralla',
+  'run.readyBy': 'Valmis viimeistään (valinnainen)',
+  'run.clearReadyBy': 'Poista valmistumisaika',
+  'run.startNow': 'Nyt on halvinta – käynnistä heti',
+  'run.bestStart': 'Halvin käynnistys',
+  'run.readyAt': 'valmis {time}',
+  'run.delay': 'Ajastusviive {delay}',
+  'run.average': 'Keskihinta',
+  'run.cost': 'Hinta silloin',
+  'run.costNow': 'Hinta nyt käynnistäen',
+  'run.saving': 'Säästät',
+  'run.noData':
+    'Tähän mennessä julkaistut hinnat eivät riitä näin pitkään käyttöön. Huomisen hinnat julkaistaan yleensä iltapäivällä.',
+  'run.tooTight':
+    'Käyttö ei ehdi valmistua siihen mennessä. Valitse myöhempi valmistumisaika tai lyhyempi kesto.',
+  'run.note':
+    'Spot-hinnat sis. ALV, ilman siirtomaksuja ja sopimuksesi marginaalia. Olettaa, että laite kuluttaa sähköä tasaisesti.',
+  'departures.title': 'Lähdöt',
+  'departures.subtitle':
+    'Ajantasaiset lähdöt miltä tahansa HSL-pysäkiltä tai -asemalta, päivittyy 30 sekunnin välein.',
+  'departures.findStop': 'Etsi pysäkki',
+  'departures.searchPlaceholder': 'Pysäkin nimi tai tunnus',
+  'departures.searchHelp':
+    'Kirjoita vähintään 3 merkkiä, esim. Kamppi tai H1234. Asema kokoaa metro- tai juna-aseman laiturit yhteen.',
+  'departures.searching': 'Haetaan…',
+  'departures.searchError': 'Haku epäonnistui. Yritä uudelleen.',
+  'departures.noMatches': 'Hakua "{query}" vastaavia pysäkkejä ei löytynyt.',
+  'departures.matches': '{count} hakua vastaavaa pysäkkiä',
+  'departures.recent': 'Viimeksi',
+  'departures.try': 'Kokeile',
+  'departures.platformShort': 'laituri {platform}',
+  'departures.loadError': 'Lähtöjä ei voitu ladata. Yritä myöhemmin uudelleen.',
+  'departures.notFound':
+    'Pysäkkiä ei voitu ladata. Se on ehkä poistunut käytöstä; hae se uudelleen.',
+  'departures.retry': 'Yritä uudelleen',
+  'departures.updated': 'Päivitetty {time}',
+  'departures.refresh': 'Päivitä',
+  'departures.boardRegion': 'Lähtötaulu',
+  'departures.line': 'Linja',
+  'departures.destination': 'Määränpää',
+  'departures.platform': 'Lait.',
+  'departures.departs': 'Lähtee',
+  'departures.now': 'nyt',
+  'departures.late': 'myöhässä',
+  'departures.cancelled': 'Peruttu',
+  'departures.realtime': 'Reaaliaikainen arvio:',
+  'departures.legend': 'Reaaliaikainen arvio; muut ajat ovat aikataulusta.',
+  'departures.noDepartures': 'Ei lähtöjä seuraavan 24 tunnin aikana.',
+  'departures.attribution': 'Tiedot © Digitransit (HSL), CC BY 4.0',
+  'departures.mode.bus': 'Bussi',
+  'departures.mode.tram': 'Ratikka',
+  'departures.mode.subway': 'Metro',
+  'departures.mode.rail': 'Juna',
+  'departures.mode.ferry': 'Lautta',
+  'departures.mode.other': 'Pysäkki',
 } satisfies Record<TranslationKey, string>;

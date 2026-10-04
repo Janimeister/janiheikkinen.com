@@ -40,6 +40,7 @@ describe('Page registry', () => {
       'weather',
       'electricity',
       'trams',
+      'departures',
     ]);
     expect(findPageGroups('LÄMPÖTILA', (key) => FI_TRANSLATIONS[key])[0].pages[0].path).toBe(
       'weather',

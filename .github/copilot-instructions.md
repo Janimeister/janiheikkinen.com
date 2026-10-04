@@ -30,7 +30,8 @@ Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electrici
 - Use Angular's `httpResource()` for reactive HTTP reads and `HttpClient` for imperative requests or mutations
 - Use `resource()` only for asynchronous work that is not backed by HTTP
 - Weather: Open-Meteo API (free, CC BY 4.0)
-- Electricity: api.porssisahko.net (proxied via `proxy.conf.json` to avoid CORS)
+- Electricity: api.porssisahko.net (proxied via `proxy.conf.mjs` to avoid CORS)
+- Departures: Digitransit routing API (GraphQL, needs a subscription key; proxied via `proxy.conf.mjs` in dev and `workers/digitransit-proxy` in production)
 - GitHub: GitHub REST API (rate-limited to 60 req/hr for unauthenticated)
 - Cat Facts: catfact.ninja
 
@@ -46,7 +47,7 @@ Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electrici
 - `npx ng serve --port 4200` — dev server with proxy
 - `npx ng build` — production build
 - `npx playwright test` — run e2e tests
-- Dev proxy: `proxy.conf.json` maps `/api/porssisahko` → `https://api.porssisahko.net`
+- Dev proxy: `proxy.conf.mjs` maps `/api/porssisahko` → `https://api.porssisahko.net` and `/api/digitransit` → the Digitransit HSL routing API (with `DIGITRANSIT_SUBSCRIPTION_KEY` from the environment)
 
 ## TypeScript Best Practices
 

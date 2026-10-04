@@ -41,6 +41,9 @@ export const EN_TRANSLATIONS = {
   'explore.pathfindingKeywords': 'algorithms pathfinding graph bfs dijkstra a star route',
   'explore.tramsDescription': "Helsinki's trams live on a text map",
   'explore.tramsKeywords': 'trams helsinki hsl live realtime public transport transit map',
+  'explore.departuresDescription': 'Next departures from any HSL stop',
+  'explore.departuresKeywords':
+    'departures timetable bus tram metro train stop hsl public transport realtime',
 
   'language.label': 'Language',
   'sorting.elapsed': 'Elapsed animation time',
@@ -260,9 +263,9 @@ export const EN_TRANSLATIONS = {
 
   'cookie.title': 'Privacy note',
   'cookie.storage':
-    "This site sets no cookies and has no analytics. Your browser's localStorage keeps only your settings: language, tram map view, virtual pet, Snake high score and that you have read this note.",
+    "This site sets no cookies and has no analytics. Your browser's localStorage keeps only your settings: language, tram map view, recent departure stops, appliance run settings, virtual pet, Snake high score and that you have read this note.",
   'cookie.services':
-    'Pages with live data fetch it straight from the source, which sees your IP address: Open-Meteo (weather and location search), a Cloudflare Worker in front of Pörssisähkö (electricity prices), GitHub, catfact.ninja and HSL (live trams). Fonts are served from this site.',
+    'Pages with live data fetch it straight from the source, which sees your IP address: Open-Meteo (weather and location search), a Cloudflare Worker in front of Pörssisähkö (electricity prices), a Cloudflare Worker in front of Digitransit (departures), GitHub, catfact.ninja and HSL (live trams). Fonts are served from this site.',
   'cookie.accept': 'Got it',
 
   'hero.sticker': 'Hello there!',
@@ -366,6 +369,71 @@ export const EN_TRANSLATIONS = {
   'electricity.moderate': 'Moderate',
   'electricity.expensive': 'Expensive',
   'electricity.veryExpensive': 'Very expensive',
+  'electricity.runLegend': 'Best time to run',
+
+  'run.title': 'Best Time to Run',
+  'run.intro':
+    'Pick an appliance and find the cheapest time to start it from the prices known so far.',
+  'run.appliance': 'Appliance',
+  'run.dishwasher': 'Dishwasher',
+  'run.washer': 'Washing machine',
+  'run.sauna': 'Sauna',
+  'run.ev': 'EV charging',
+  'run.duration': 'Run time',
+  'run.energy': 'Energy per run',
+  'run.readyBy': 'Ready by (optional)',
+  'run.clearReadyBy': 'Clear ready-by time',
+  'run.startNow': 'Now is the cheapest time — start right away',
+  'run.bestStart': 'Cheapest start',
+  'run.readyAt': 'ready {time}',
+  'run.delay': 'Delay start by {delay}',
+  'run.average': 'Average price',
+  'run.cost': 'Cost then',
+  'run.costNow': 'Cost if started now',
+  'run.saving': 'You save',
+  'run.noData':
+    "The prices known so far don't cover a run this long. Tomorrow's prices are usually published in the afternoon.",
+  'run.tooTight': "The run can't finish by then. Pick a later ready-by time or a shorter run.",
+  'run.note':
+    "Spot prices with VAT, without transfer fees or your contract's margin. Assumes the appliance uses power evenly.",
+
+  'departures.title': 'Departures',
+  'departures.subtitle':
+    'Live departures from any HSL stop or station, refreshed every 30 seconds.',
+  'departures.findStop': 'Find a Stop',
+  'departures.searchPlaceholder': 'Stop name or code',
+  'departures.searchHelp':
+    'Type at least 3 characters, like Kamppi or H1234. Stations group a metro or train station’s platforms.',
+  'departures.searching': 'Searching…',
+  'departures.searchError': 'Search failed. Please try again.',
+  'departures.noMatches': 'No stops match "{query}".',
+  'departures.matches': '{count} matching stops',
+  'departures.recent': 'Recent',
+  'departures.try': 'Try',
+  'departures.platformShort': 'platform {platform}',
+  'departures.loadError': 'Could not load departures. Please try again later.',
+  'departures.notFound': 'Could not load this stop. It may have been removed; search for it again.',
+  'departures.retry': 'Try again',
+  'departures.updated': 'Updated {time}',
+  'departures.refresh': 'Refresh',
+  'departures.boardRegion': 'Departure board',
+  'departures.line': 'Line',
+  'departures.destination': 'Destination',
+  'departures.platform': 'Plat.',
+  'departures.departs': 'Departs',
+  'departures.now': 'now',
+  'departures.late': 'late',
+  'departures.cancelled': 'Cancelled',
+  'departures.realtime': 'Real-time estimate:',
+  'departures.legend': 'Real-time estimate; other times are from the timetable.',
+  'departures.noDepartures': 'No departures in the next 24 hours.',
+  'departures.attribution': 'Data © Digitransit (HSL), CC BY 4.0',
+  'departures.mode.bus': 'Bus',
+  'departures.mode.tram': 'Tram',
+  'departures.mode.subway': 'Metro',
+  'departures.mode.rail': 'Train',
+  'departures.mode.ferry': 'Ferry',
+  'departures.mode.other': 'Stop',
 
   'github.title': 'GitHub Profile',
   'github.subtitle': 'Public repositories & activity',
@@ -620,6 +688,8 @@ export const EN_TRANSLATIONS = {
     "Today's and tomorrow's Finnish electricity spot prices in 15-minute slots, VAT included, with the cheapest and priciest times.",
   'meta.trams':
     "Helsinki's tram network drawn in ASCII, with every tram moving live from HSL's real-time feed.",
+  'meta.departures':
+    'Live departures from any HSL stop or station in the Helsinki region: buses, trams, metro, trains and ferries.',
   'meta.github': "Jani Heikkinen's GitHub profile: repositories, languages and recent activity.",
   'meta.ascii':
     'Procedural ASCII art: plasma, fractals, galaxies, terrain and more, generated fresh every time.',
