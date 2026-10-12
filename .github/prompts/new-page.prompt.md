@@ -28,7 +28,7 @@ Create a new routed detail page for this Angular portfolio site.
    - Add the route to the `NAV_ROUTES` array
    - Add a test describe block with heading/back-link test, data sections test using `expectSectionOrError()`, and attribution test if applicable
 
-5. **Handle CORS**: If the API has CORS issues, add a proxy entry in `proxy.conf.json` instead of calling the API directly
+5. **Handle CORS**: If the API has CORS issues, add a proxy entry in `proxy.conf.mjs` instead of calling the API directly
 
 6. **Attribution**: If the API requires attribution, add a visible link and update `THIRD-PARTY-NOTICES.md`
 
