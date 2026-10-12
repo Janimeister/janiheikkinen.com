@@ -278,6 +278,8 @@ npx wrangler secret put DIGITRANSIT_SUBSCRIPTION_KEY   # the key from portal-api
 npx wrangler deploy
 ```
 
+`npm run test:workers` checks the Worker with Node's test runner and a mocked upstream (origins and CORS, the 4 KB limit, the query allowlist and what goes upstream); CI runs it with the unit tests.
+
 The workflow builds with base href `/` and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
 
 ### Pages, titles and the sitemap
