@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  allowedRequest,
   boardRequest,
   countdown,
   DigitransitError,
   parseBoard,
   parseSearch,
+  SEARCH_QUERY,
   searchRequest,
   STATION_QUERY,
   STOP_QUERY,
@@ -60,6 +62,63 @@ describe('requests', () => {
     });
     expect(boardRequest('station', 'HSL:2').query).toBe(STATION_QUERY);
     expect(STOP_QUERY).toContain('omitCanceled: false');
+  });
+});
+
+describe('allowedRequest', () => {
+  it("passes the page's own requests through", () => {
+    for (const request of [
+      searchRequest('kamppi'),
+      boardRequest('stop', 'HSL:1130446'),
+      boardRequest('station', 'HSL:1000202'),
+    ]) {
+      expect(allowedRequest(JSON.parse(JSON.stringify(request)))).toEqual(request);
+    }
+  });
+
+  it('refuses any other query, even one with an allowed name', () => {
+    const variables = { name: 'kamppi' };
+    expect(allowedRequest({ query: 'query Search { agencies { name } }', variables })).toBeNull();
+    expect(
+      allowedRequest({
+        query: `${SEARCH_QUERY} query Other { agencies { name } }`,
+        variables,
+        operationName: 'Other',
+      }),
+    ).toBeNull();
+    expect(allowedRequest({ query: ` ${SEARCH_QUERY}`, variables })).toBeNull();
+    expect(allowedRequest({ variables })).toBeNull();
+    expect(allowedRequest(null)).toBeNull();
+    expect(allowedRequest('query')).toBeNull();
+  });
+
+  it('checks the variables', () => {
+    const stop = (variables: unknown) => allowedRequest({ query: STOP_QUERY, variables });
+    expect(stop({ id: 'HSL:1', count: 13 })).toBeNull();
+    expect(stop({ id: 'HSL:1', count: 0 })).toBeNull();
+    expect(stop({ id: 'HSL:1', count: 1.5 })).toBeNull();
+    expect(stop({ id: 'HSL:1', count: '12' })).toBeNull();
+    expect(stop({ id: '', count: 12 })).toBeNull();
+    expect(stop({ id: 'x'.repeat(65), count: 12 })).toBeNull();
+    expect(stop({ id: 'HSL:1', count: 12, extra: true })).toBeNull();
+    expect(stop({ id: 'HSL:1' })).toBeNull();
+    expect(stop(null)).toBeNull();
+
+    const search = (name: unknown) => allowedRequest({ query: SEARCH_QUERY, variables: { name } });
+    expect(search('ka')).toBeNull();
+    expect(search('k'.repeat(61))).toBeNull();
+    expect(search(42)).toBeNull();
+  });
+
+  it('forwards nothing but the query and its variables', () => {
+    expect(
+      allowedRequest({
+        query: STOP_QUERY,
+        variables: { id: 'HSL:1', count: 5 },
+        operationName: 'Other',
+        extensions: { persistedQuery: {} },
+      }),
+    ).toEqual({ query: STOP_QUERY, variables: { id: 'HSL:1', count: 5 } });
   });
 });
 

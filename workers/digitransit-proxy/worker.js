@@ -1,15 +1,18 @@
 // Cloudflare Worker in front of the Digitransit routing API for /departures. It adds the
 // subscription key, which must stay out of the browser bundle, and only forwards the site's own
 // queries from the site's own origins. Deploy with `npx wrangler deploy` from this folder, after
-// `npx wrangler secret put DIGITRANSIT_SUBSCRIPTION_KEY`.
+// `npx wrangler secret put DIGITRANSIT_SUBSCRIPTION_KEY`. Wrangler bundles the import below.
+//
+// The Origin check only keeps other sites' pages out: any script can send any Origin. What keeps
+// the key from running arbitrary queries is allowedRequest(), which accepts the page's three
+// queries word for word and nothing else.
+
+import { allowedRequest } from '../../src/app/departures/digitransit.ts';
 
 const UPSTREAM = 'https://api.digitransit.fi/routing/v2/hsl/gtfs/v1';
 
 const ALLOWED_ORIGINS = new Set(['https://janiheikkinen.com', 'https://www.janiheikkinen.com']);
 const LOCAL_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-
-/** The operations in src/app/departures/digitransit.ts; anything else is refused. */
-const ALLOWED_OPERATIONS = new Set(['Search', 'StopDepartures', 'StationDepartures']);
 
 const MAX_BODY_BYTES = 4096;
 
@@ -40,16 +43,15 @@ export default {
     if (new TextEncoder().encode(body).length > MAX_BODY_BYTES) {
       return error(413, 'Request too large', cors);
     }
-    let query;
+    let parsed;
     try {
-      ({ query } = JSON.parse(body));
+      parsed = JSON.parse(body);
     } catch {
       return error(400, 'Body must be JSON', cors);
     }
-    const operation = typeof query === 'string' ? /^\s*query\s+(\w+)/.exec(query)?.[1] : null;
-    if (!operation || !ALLOWED_OPERATIONS.has(operation)) {
-      return error(400, 'Unknown operation', cors);
-    }
+    // Rebuilt from the checked query and variables, so nothing else in the body goes upstream.
+    const forward = allowedRequest(parsed);
+    if (!forward) return error(400, 'Unknown query', cors);
 
     const upstream = await fetch(UPSTREAM, {
       method: 'POST',
@@ -57,7 +59,7 @@ export default {
         'Content-Type': 'application/json',
         'digitransit-subscription-key': env.DIGITRANSIT_SUBSCRIPTION_KEY,
       },
-      body,
+      body: JSON.stringify(forward),
     });
     return new Response(upstream.body, {
       status: upstream.status,

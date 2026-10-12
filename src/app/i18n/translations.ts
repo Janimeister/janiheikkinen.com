@@ -416,6 +416,7 @@ export const EN_TRANSLATIONS = {
   'departures.retry': 'Try again',
   'departures.updated': 'Updated {time}',
   'departures.refresh': 'Refresh',
+  'departures.refreshFailed': 'Refresh failed, showing {time}',
   'departures.boardRegion': 'Departure board',
   'departures.line': 'Line',
   'departures.destination': 'Destination',
@@ -681,7 +682,7 @@ export const EN_TRANSLATIONS = {
   'thirdParty.loadError': 'Could not load third-party notices.',
 
   'meta.home':
-    'Personal site of Jani Heikkinen: live weather, Finnish electricity spot prices, Helsinki trams, GitHub activity, algorithm visualizers, ASCII art and small browser games.',
+    'Personal site of Jani Heikkinen: live weather, Finnish electricity spot prices, Helsinki trams, HSL departures, GitHub activity, algorithm visualizers, ASCII art and small browser games.',
   'meta.weather':
     'Current conditions, a 24-hour forecast and the week ahead for any place, with data from Open-Meteo.',
   'meta.electricity':

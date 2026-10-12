@@ -612,7 +612,7 @@ export const FI_TRANSLATIONS = {
   'thirdParty.loadError': 'Kolmansien osapuolten ilmoituksia ei voitu ladata.',
 
   'meta.home':
-    'Jani Heikkisen kotisivu: ajantasainen sää, Suomen pörssisähkön hinnat, Helsingin raitiovaunut, GitHub-aktiivisuus, algoritmien visualisoinnit, ASCII-taidetta ja pieniä selainpelejä.',
+    'Jani Heikkisen kotisivu: ajantasainen sää, Suomen pörssisähkön hinnat, Helsingin raitiovaunut, HSL-lähdöt, GitHub-aktiivisuus, algoritmien visualisoinnit, ASCII-taidetta ja pieniä selainpelejä.',
   'meta.weather':
     'Mikä tahansa paikka: sää nyt, 24 tunnin ennuste ja tuleva viikko Open-Meteon tiedoilla.',
   'meta.electricity':
@@ -690,6 +690,7 @@ export const FI_TRANSLATIONS = {
   'departures.retry': 'Yritä uudelleen',
   'departures.updated': 'Päivitetty {time}',
   'departures.refresh': 'Päivitä',
+  'departures.refreshFailed': 'Päivitys epäonnistui, näytetään {time}',
   'departures.boardRegion': 'Lähtötaulu',
   'departures.line': 'Linja',
   'departures.destination': 'Määränpää',

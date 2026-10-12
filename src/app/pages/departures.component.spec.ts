@@ -161,6 +161,27 @@ describe('DeparturesPageComponent', () => {
     expect(page.textContent).toContain('Recent');
   });
 
+  it('keeps the board when a refresh fails', async () => {
+    const harness = await open('/departures?stop=HSL:1130446');
+    const page = harness.routeNativeElement!;
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(page.querySelectorAll('[data-testid="departure-row"]').length).toBe(4);
+    });
+    const updated = page.querySelector('[data-testid="departures-updated"]')!;
+    expect(updated.textContent).toContain('Updated');
+
+    vi.mocked(fetch).mockResolvedValue(new Response('Bad gateway', { status: 502 }));
+    vi.setSystemTime(NOW + 30_000);
+    [...page.querySelectorAll('button')].find((b) => b.textContent!.includes('Refresh'))!.click();
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(updated.textContent).toContain('Refresh failed');
+    });
+    expect(page.querySelectorAll('[data-testid="departure-row"]').length).toBe(4);
+    expect(updated.classList).toContain('text-red-400');
+  });
+
   it('says so when the stop is unknown', async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ data: { place: null } }), {

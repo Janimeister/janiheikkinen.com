@@ -1,6 +1,14 @@
 import { DOCUMENT } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { environment } from '../../environments/environment';
@@ -11,6 +19,7 @@ import {
   countdown,
   parseBoard,
   parseSearch,
+  SEARCH_MAX_LENGTH,
   SEARCH_MIN_LENGTH,
   searchRequest,
   upcoming,
@@ -35,6 +44,19 @@ const SUGGESTIONS = ['Rautatientori', 'Kamppi', 'Hakaniemi', 'Pasila', 'Kauppato
 
 type PlaceRef = Pick<Place, 'kind' | 'id'>;
 type RecentPlace = Pick<Place, 'kind' | 'id' | 'name' | 'code' | 'mode'>;
+
+/** A board that loaded, for the place it belongs to. */
+interface ShownBoard {
+  place: string;
+  board: Board;
+  /** When its data arrived. */
+  updated: number;
+}
+
+/** The latest board response, parsed; null while none has arrived. */
+type Fresh = Board | 'notFound' | 'error' | null;
+
+const placeKey = (place: PlaceRef | null) => (place ? `${place.kind}:${place.id}` : '');
 
 const MODE_KEYS: Record<Mode, TranslationKey> = {
   BUS: 'departures.mode.bus',
@@ -114,7 +136,7 @@ const OPTION_CLASS =
                 [attr.aria-label]="i18n.t('departures.searchPlaceholder')"
                 aria-describedby="departures-search-help"
                 autocomplete="off"
-                maxlength="60"
+                [attr.maxlength]="searchMaxLength"
                 class="flex-1 min-w-0 bg-bg-card border-2 border-ink px-4 py-2 text-sm text-text-primary placeholder-text-secondary/70 shadow-brutal-sm"
                 data-testid="departures-search"
               />
@@ -263,9 +285,16 @@ const OPTION_CLASS =
                       </p>
                     </div>
                     <div class="sm:ml-auto flex items-center gap-2">
-                      <span class="text-xs text-text-secondary" data-testid="departures-updated">{{
-                        i18n.t('departures.updated', { time: clock(state.updated, true) })
-                      }}</span>
+                      <span
+                        class="text-xs"
+                        [class]="state.failed ? 'text-red-400' : 'text-text-secondary'"
+                        data-testid="departures-updated"
+                        >{{
+                          i18n.t(state.failed ? 'departures.refreshFailed' : 'departures.updated', {
+                            time: clock(state.updated, true),
+                          })
+                        }}</span
+                      >
                       <button
                         type="button"
                         [class]="optionClass"
@@ -522,6 +551,7 @@ export class DeparturesPageComponent {
 
   protected readonly optionClass = OPTION_CLASS;
   protected readonly suggestions = SUGGESTIONS;
+  protected readonly searchMaxLength = SEARCH_MAX_LENGTH;
   protected readonly recents = signal<RecentPlace[]>(this.loadRecents());
 
   /** Ticks so countdowns stay right between refreshes. */
@@ -553,43 +583,69 @@ export class DeparturesPageComponent {
   });
 
   /** The place in the address, or the one seen most recently when the address has none. */
-  protected readonly selected = computed((): PlaceRef | null => {
-    const params = this.params();
-    const station = params.get('station');
-    const stop = params.get('stop');
-    if (station) return { kind: 'station', id: station };
-    if (stop) return { kind: 'stop', id: stop };
-    const [recent] = this.recents();
-    return recent ? { kind: recent.kind, id: recent.id } : null;
-  });
+  protected readonly selected = computed(
+    (): PlaceRef | null => {
+      const params = this.params();
+      const station = params.get('station');
+      const stop = params.get('stop');
+      if (station) return { kind: 'station', id: station };
+      if (stop) return { kind: 'stop', id: stop };
+      const [recent] = this.recents();
+      return recent ? { kind: recent.kind, id: recent.id } : null;
+    },
+    // The same place again (say, once it's also in the address) must not refetch the board.
+    { equal: (a, b) => placeKey(a) === placeKey(b) },
+  );
 
   protected readonly board = httpResource<BoardResponse>(() => {
     const place = this.selected();
     return place ? this.post(boardRequest(place.kind, place.id)) : undefined;
   });
 
-  /** When the board's data last arrived. */
-  private readonly updated = signal(0);
+  /** The raw response; the same object while a refresh is in flight, so it isn't parsed again. */
+  private readonly response = computed(() =>
+    this.board.hasValue() ? this.board.value() : undefined,
+  );
+
+  private readonly fresh = computed((): Fresh => {
+    const response = this.response();
+    if (!response) return this.board.error() ? 'error' : null;
+    try {
+      return parseBoard(response, this.selected()?.kind ?? 'stop') ?? 'notFound';
+    } catch {
+      return 'error';
+    }
+  });
+
+  /** The last board that loaded for this place, kept on screen while a refresh fails. */
+  private readonly shown = linkedSignal<{ place: string; fresh: Fresh }, ShownBoard | null>({
+    source: () => ({ place: placeKey(this.selected()), fresh: this.fresh() }),
+    computation: ({ place, fresh }, previous) => {
+      if (fresh && typeof fresh === 'object') return { place, board: fresh, updated: Date.now() };
+      const kept = previous?.value;
+      return fresh !== 'notFound' && kept?.place === place ? kept : null;
+    },
+  });
 
   protected readonly boardState = computed(
     ():
       | { kind: 'loading' }
       | { kind: 'error'; key: TranslationKey }
-      | { kind: 'ready'; board: Board; updated: number } => {
-      const place = this.selected();
-      if (!this.board.hasValue()) {
-        return this.board.error()
-          ? { kind: 'error', key: 'departures.loadError' }
-          : { kind: 'loading' };
+      | { kind: 'ready'; board: Board; updated: number; failed: boolean } => {
+      const fresh = this.fresh();
+      const shown = this.shown();
+      if (shown) {
+        return {
+          kind: 'ready',
+          board: shown.board,
+          updated: shown.updated,
+          failed: fresh === 'error',
+        };
       }
-      try {
-        const board = parseBoard(this.board.value(), place?.kind ?? 'stop');
-        return board
-          ? { kind: 'ready', board, updated: this.updated() }
-          : { kind: 'error', key: 'departures.notFound' };
-      } catch {
-        return { kind: 'error', key: 'departures.loadError' };
-      }
+      if (fresh === 'notFound') return { kind: 'error', key: 'departures.notFound' };
+      return fresh === 'error'
+        ? { kind: 'error', key: 'departures.loadError' }
+        : { kind: 'loading' };
     },
   );
 
@@ -639,14 +695,6 @@ export class DeparturesPageComponent {
       onCleanup(() => clearTimeout(timer));
     });
 
-    // Note when fresh departures arrive.
-    effect(() => {
-      if (this.board.hasValue() && this.board.status() === 'resolved') {
-        this.board.value();
-        this.updated.set(Date.now());
-      }
-    });
-
     // Keep the board fresh while it's on screen; a hidden tab doesn't poll.
     const clock = setInterval(() => this.now.set(Date.now()), CLOCK_MS);
     const poll = setInterval(() => {
@@ -655,7 +703,7 @@ export class DeparturesPageComponent {
     const onVisible = () => {
       if (this.document.visibilityState !== 'visible') return;
       this.now.set(Date.now());
-      if (Date.now() - this.updated() >= REFRESH_MS) this.refresh();
+      if (Date.now() - (this.shown()?.updated ?? 0) >= REFRESH_MS) this.refresh();
     };
     this.document.addEventListener('visibilitychange', onVisible);
     destroyRef.onDestroy(() => {

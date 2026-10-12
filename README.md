@@ -126,7 +126,7 @@ The `/departures` page is a departure board for any HSL stop or station.
 - **Board.** The next 12 departures from the Digitransit routing API (`stoptimesWithoutPatterns`, cancellations included, drop-off-only calls left out), shown like HSL's own displays: `now`, minutes up to 10, then the clock time. Real-time estimates are marked with a dot, delays of a minute or more get a `+N min` tag, cancellations are struck through, and stations show the platform. Trams wear their line's colour from the tram map.
 - **Refresh.** The board reloads every 30 seconds while the tab is visible, at once when it becomes visible again after that, and on **Refresh**. Countdowns tick every 10 seconds between loads.
 - **Addresses and recents.** The chosen stop is in the address (`?stop=HSL:1130446` or `?station=HSL:1000202`), so boards can be bookmarked and shared. The last five stops are kept in `localStorage` (`departures-recent`); without a stop in the address the page opens the most recent one.
-- **API key.** Digitransit needs a subscription key, which must not ship in the browser bundle. [workers/digitransit-proxy/worker.js](workers/digitransit-proxy/worker.js) adds it on Cloudflare, forwards only the page's three named GraphQL operations (`Search`, `StopDepartures`, `StationDepartures`) from this site's origins (and localhost), and refuses bodies over 4 KB. Data © Digitransit, CC BY 4.0.
+- **API key.** Digitransit needs a subscription key, which must not ship in the browser bundle. [workers/digitransit-proxy/worker.js](workers/digitransit-proxy/worker.js) adds it on Cloudflare, forwards only the page's three GraphQL queries (`Search`, `StopDepartures`, `StationDepartures`), matched word for word with their variables checked (`allowedRequest()` in `src/app/departures/digitransit.ts`), from this site's origins (and localhost), and refuses bodies over 4 KB. Data © Digitransit, CC BY 4.0.
 
 ## Tram Map Page
 
@@ -266,9 +266,9 @@ For deployment, configure:
 - GitHub Pages to use **GitHub Actions** as its source.
 - A repository **variable** named `PORSSISAHKO_WORKER_URL` containing the electricity proxy's base URL, for example `https://porssisahko-proxy.janimeister.workers.dev`.
 
-- Optionally, a repository **variable** named `DIGITRANSIT_PROXY_URL` with the departures proxy's URL. Without it the build uses `https://digitransit-proxy.janimeister.workers.dev`.
+- A repository **variable** named `DIGITRANSIT_PROXY_URL` containing the departures proxy's URL, for example `https://digitransit-proxy.janimeister.workers.dev`. Set it only once that Worker is deployed (below).
 
-The deployment build requires `PORSSISAHKO_WORKER_URL` and generates `src/environments/environment.prod.ts` from both variables. The electricity Worker is managed outside this repository.
+The deployment build requires both variables, fails without them, and generates `src/environments/environment.prod.ts` from them. The electricity Worker is managed outside this repository.
 
 The departures Worker lives in [workers/digitransit-proxy](workers/digitransit-proxy) and is deployed by hand with [Wrangler](https://developers.cloudflare.com/workers/wrangler/):
 
@@ -276,7 +276,9 @@ The departures Worker lives in [workers/digitransit-proxy](workers/digitransit-p
 cd workers/digitransit-proxy
 npx wrangler secret put DIGITRANSIT_SUBSCRIPTION_KEY   # the key from portal-api.digitransit.fi
 npx wrangler deploy
-``` The workflow builds with base href `/` and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
+```
+
+The workflow builds with base href `/` and publishes `dist/janiheikkinen-com/browser/`. The custom domain is recorded in [public/CNAME](public/CNAME).
 
 ### Pages, titles and the sitemap
 

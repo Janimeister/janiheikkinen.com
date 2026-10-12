@@ -1,7 +1,8 @@
 /**
  * HSL departures from the Digitransit routing API (GraphQL, OpenTripPlanner 2). The API needs a
  * subscription key, so the browser talks to a proxy that adds it: the dev server in development
- * (`proxy.conf.mjs`) and a Cloudflare Worker in production (`workers/digitransit-proxy.js`).
+ * (`proxy.conf.mjs`) and a Cloudflare Worker in production (`workers/digitransit-proxy/worker.js`).
+ * The Worker imports {@link allowedRequest} from here, so this file has no imports of its own.
  */
 
 export type Mode = 'BUS' | 'TRAM' | 'SUBWAY' | 'RAIL' | 'FERRY' | 'OTHER';
@@ -46,6 +47,8 @@ export const DEPARTURE_COUNT = 12;
 export const SEARCH_LIMIT = 12;
 /** Shorter names match thousands of stops. */
 export const SEARCH_MIN_LENGTH = 3;
+/** The search field's `maxlength`. */
+export const SEARCH_MAX_LENGTH = 60;
 
 const PLACE_FIELDS = `
   gtfsId
@@ -99,6 +102,35 @@ export function boardRequest(kind: Place['kind'], id: string): GraphQlRequest {
     query: kind === 'station' ? STATION_QUERY : STOP_QUERY,
     variables: { id, count: DEPARTURE_COUNT },
   };
+}
+
+/**
+ * What the proxy may forward: one of the queries above, character for character, with the
+ * variables this page sends. Returns the request rebuilt from those parts only, or null.
+ */
+export function allowedRequest(body: unknown): GraphQlRequest | null {
+  if (!body || typeof body !== 'object') return null;
+  const { query, variables } = body as { query?: unknown; variables?: unknown };
+  if (!variables || typeof variables !== 'object') return null;
+  const vars = variables as Record<string, unknown>;
+  const names = Object.keys(vars).sort().join();
+  const isText = (value: unknown, min: number, max: number): value is string =>
+    typeof value === 'string' && value.length >= min && value.length <= max;
+
+  if (query === SEARCH_QUERY) {
+    return names === 'name' && isText(vars['name'], SEARCH_MIN_LENGTH, SEARCH_MAX_LENGTH)
+      ? searchRequest(vars['name'])
+      : null;
+  }
+  if (query === STOP_QUERY || query === STATION_QUERY) {
+    const { id, count } = vars;
+    const countOk =
+      Number.isInteger(count) && Number(count) >= 1 && Number(count) <= DEPARTURE_COUNT;
+    return names === 'count,id' && isText(id, 1, 64) && countOk
+      ? { query, variables: { id, count: Number(count) } }
+      : null;
+  }
+  return null;
 }
 
 // ── Raw response shapes (only the fields asked for above) ──
@@ -235,7 +267,7 @@ export function minutesUntil(time: number, now: number): number {
 
 /**
  * What the board shows for a departure, like HSL's own displays: `now` within a minute, minutes
- * up to 10, the clock time after that.
+ * below 10, the clock time from then on.
  */
 export function countdown(
   time: number,
