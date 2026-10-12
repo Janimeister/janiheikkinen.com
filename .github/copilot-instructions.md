@@ -36,10 +36,10 @@ Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electrici
 
 ### Testing
 
-- Playwright for e2e tests in `e2e/app.spec.ts`
+- Vitest unit tests sit next to the code (`*.spec.ts`); data shaping and game rules live in plain modules so they can be tested without Angular
+- Playwright e2e tests: one `e2e/<page>.spec.ts` per page
 - Config: `playwright.config.ts` with auto webServer (`ng serve --port 4200`)
-- Tests use helper functions for common assertions (see test file)
-- API-dependent tests accept either data or error states to handle rate limits/outages
+- E2E tests import `test` from `e2e/api-mocks.ts`, which serves fixed API responses and fails on unmocked third-party requests; error states are tested on purpose with `failApi()`
 
 ### Build & Dev
 

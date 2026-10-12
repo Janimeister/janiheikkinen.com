@@ -1,5 +1,69 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './api-mocks';
 import AxeBuilder from '@axe-core/playwright';
+
+/** Nav link labels and their expected route / page heading */
+const NAV_ROUTES = [
+  { label: 'Sorting', path: '/sorting', heading: 'Sorting Algorithms' },
+  { label: 'Searching', path: '/searching', heading: 'Search Algorithms' },
+  { label: 'Pathfinding', path: '/pathfinding', heading: 'Pathfinding Algorithms' },
+  { label: 'Weather', path: '/weather', heading: 'Weather Conditions' },
+  { label: 'Electricity', path: '/electricity', heading: 'Electricity Prices' },
+  { label: 'Tram Map', path: '/trams', heading: 'Tram Map' },
+  { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
+  { label: 'ASCII', path: '/ascii', heading: 'ASCII Art' },
+  { label: 'Snake', path: '/snake', heading: 'Snake Game' },
+  { label: 'Pet', path: '/pet', heading: 'Virtual Pet' },
+] as const;
+
+test.describe('Routes', () => {
+  test('page has correct title', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveTitle(/Jani Heikkinen/);
+  });
+
+  test('compact header opens the page launcher', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('app-navbar nav')).toBeVisible();
+    await expect(page.locator('app-navbar a').first()).toContainText('JH');
+
+    await page.getByRole('button', { name: 'Explore', exact: true }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    for (const { label } of NAV_ROUTES) {
+      await expect(page.locator('app-navbar a', { hasText: label })).toBeVisible();
+    }
+  });
+
+  for (const { label, path, heading } of NAV_ROUTES) {
+    test(`"${label}" link navigates to ${path}`, async ({ page }) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: 'Explore', exact: true }).click();
+      await page.locator(`dialog a[href="${path}"]`).click();
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+      await expect(page).toHaveURL(new RegExp(path));
+      await expect(page.locator('h1')).toContainText(heading);
+    });
+  }
+
+  test('unknown route shows a not-found page with a way home', async ({ page }) => {
+    await page.goto('/nonexistent');
+    await expect(page.locator('h1')).toContainText('Page not found');
+    await expect(page).toHaveTitle('Page not found · Jani Heikkinen');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+    await page.getByRole('link', { name: 'Go to the home page' }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  });
+
+  test('each page has its own title, description and canonical link', async ({ page }) => {
+    await page.goto('/weather');
+    await expect(page).toHaveTitle('Weather Conditions · Jani Heikkinen');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://janiheikkinen.com/weather',
+    );
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Open-Meteo/);
+  });
+});
 
 test.describe('Explore navigation', () => {
   test.beforeEach(async ({ page }) => {

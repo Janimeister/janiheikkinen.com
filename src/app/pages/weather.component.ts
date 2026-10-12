@@ -371,6 +371,7 @@ import {
               <div class="space-y-3">
                 @for (day of dailyForecast(); track day.date) {
                   <div
+                    data-testid="forecast-day"
                     class="flex items-center gap-4 p-3 border-2 border-ink shadow-brutal-sm transition-colors"
                     [class]="
                       day.isToday

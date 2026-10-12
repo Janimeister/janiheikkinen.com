@@ -223,6 +223,7 @@ import {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   @for (repo of repoList; track repo.name) {
                     <a
+                      data-testid="repo"
                       [href]="repo.html_url"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -293,6 +294,7 @@ import {
                 <div class="space-y-3">
                   @for (event of recentActivity(); track event.id) {
                     <div
+                      data-testid="activity"
                       class="flex items-start gap-3 p-3 bg-bg-card-hover border-2 border-ink shadow-brutal-sm"
                     >
                       <span class="text-lg mt-0.5">{{ event.icon }}</span>
