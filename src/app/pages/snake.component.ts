@@ -13,12 +13,17 @@ import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 import { LanguageService } from '../i18n/language.service';
 
-type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
-
-interface Point {
-  x: number;
-  y: number;
-}
+import {
+  initialSnake,
+  isOpposite,
+  KEY_DIRECTIONS,
+  placeFood,
+  speedTier,
+  step,
+  swipeDirection,
+  type Direction,
+  type Point,
+} from '../snake/snake-game';
 
 @Component({
   selector: 'app-snake-page',
@@ -360,6 +365,7 @@ export class SnakePageComponent implements OnDestroy {
   // Grid dimensions
   private readonly COLS = 20;
   private readonly ROWS = 20;
+  private readonly board = { cols: this.COLS, rows: this.ROWS };
   private readonly CELL_SIZE = 20;
 
   // Canvas sizing
@@ -372,25 +378,7 @@ export class SnakePageComponent implements OnDestroy {
   gameState = signal<'idle' | 'playing' | 'paused' | 'over' | 'won'>('idle');
   score = signal(0);
   highScore = signal(this.loadHighScore());
-  private static readonly SPEED_TIERS: readonly {
-    minScore: number;
-    level: number;
-    interval: number;
-  }[] = [
-    { minScore: 50, level: 5, interval: 70 },
-    { minScore: 30, level: 4, interval: 90 },
-    { minScore: 15, level: 3, interval: 110 },
-    { minScore: 5, level: 2, interval: 130 },
-    { minScore: 0, level: 1, interval: 150 },
-  ];
-
-  private readonly speedTier = computed(() => {
-    const s = this.score();
-    return (
-      SnakePageComponent.SPEED_TIERS.find((t) => s >= t.minScore) ??
-      SnakePageComponent.SPEED_TIERS.at(-1)!
-    );
-  });
+  private readonly speedTier = computed(() => speedTier(this.score()));
 
   speed = computed(() => this.speedTier().level);
 
@@ -398,7 +386,7 @@ export class SnakePageComponent implements OnDestroy {
   private snake: Point[] = [];
   private direction: Direction = 'RIGHT';
   private nextDirection: Direction = 'RIGHT';
-  private food: Point = { x: 0, y: 0 };
+  private food: Point | null = null;
   private animFrameId = 0;
   private lastTick = 0;
   private touchStartX = 0;
@@ -413,15 +401,11 @@ export class SnakePageComponent implements OnDestroy {
   }
 
   startGame() {
-    this.snake = [
-      { x: Math.floor(this.COLS / 2), y: Math.floor(this.ROWS / 2) },
-      { x: Math.floor(this.COLS / 2) - 1, y: Math.floor(this.ROWS / 2) },
-      { x: Math.floor(this.COLS / 2) - 2, y: Math.floor(this.ROWS / 2) },
-    ];
+    this.snake = initialSnake(this.board);
     this.direction = 'RIGHT';
     this.nextDirection = 'RIGHT';
     this.score.set(0);
-    this.placeFood();
+    this.food = placeFood(this.snake, this.board);
     this.gameState.set('playing');
     this.lastTick = 0;
     this.startLoop();
@@ -447,7 +431,7 @@ export class SnakePageComponent implements OnDestroy {
 
   setDirection(dir: Direction) {
     if (this.gameState() !== 'playing') return;
-    if (!this.isOppositeDirection(dir, this.direction)) {
+    if (!isOpposite(dir, this.direction)) {
       this.nextDirection = dir;
     }
   }
@@ -485,22 +469,7 @@ export class SnakePageComponent implements OnDestroy {
 
     if (state !== 'playing') return;
 
-    const dirMap: Record<string, Direction> = {
-      ArrowUp: 'UP',
-      ArrowDown: 'DOWN',
-      ArrowLeft: 'LEFT',
-      ArrowRight: 'RIGHT',
-      w: 'UP',
-      W: 'UP',
-      s: 'DOWN',
-      S: 'DOWN',
-      a: 'LEFT',
-      A: 'LEFT',
-      d: 'RIGHT',
-      D: 'RIGHT',
-    };
-
-    const dir = dirMap[key];
+    const dir = KEY_DIRECTIONS[key];
     if (dir) {
       event.preventDefault();
       this.setDirection(dir);
@@ -518,15 +487,8 @@ export class SnakePageComponent implements OnDestroy {
     const touch = event.changedTouches[0];
     const dx = touch.clientX - this.touchStartX;
     const dy = touch.clientY - this.touchStartY;
-    const minSwipe = 30;
-
-    if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-      this.setDirection(dx > 0 ? 'RIGHT' : 'LEFT');
-    } else {
-      this.setDirection(dy > 0 ? 'DOWN' : 'UP');
-    }
+    const dir = swipeDirection(dx, dy);
+    if (dir) this.setDirection(dir);
   }
 
   /** Pauses when the tab is hidden, so the snake isn't lost while nobody is watching. */
@@ -541,70 +503,17 @@ export class SnakePageComponent implements OnDestroy {
     this.stopLoop();
   }
 
-  private placeFood(): boolean {
-    const totalCells = this.COLS * this.ROWS;
-    if (this.snake.length >= totalCells) return false;
-
-    const occupied = new Set(this.snake.map((s) => s.y * this.COLS + s.x));
-    const free: Point[] = [];
-    for (let y = 0; y < this.ROWS; y++) {
-      for (let x = 0; x < this.COLS; x++) {
-        if (!occupied.has(y * this.COLS + x)) {
-          free.push({ x, y });
-        }
-      }
-    }
-    this.food = free[Math.floor(Math.random() * free.length)];
-    return true;
-  }
-
   private tick() {
     this.direction = this.nextDirection;
-    const head = this.snake[0];
-    const newHead: Point = { ...head };
-
-    switch (this.direction) {
-      case 'UP':
-        newHead.y--;
-        break;
-      case 'DOWN':
-        newHead.y++;
-        break;
-      case 'LEFT':
-        newHead.x--;
-        break;
-      case 'RIGHT':
-        newHead.x++;
-        break;
-    }
-
-    // Wall collision
-    if (newHead.x < 0 || newHead.x >= this.COLS || newHead.y < 0 || newHead.y >= this.ROWS) {
+    const result = step(this.snake, this.direction, this.food, this.board);
+    this.snake = result.snake;
+    this.food = result.food;
+    if (result.outcome === 'crashed') {
       this.endGame();
       return;
     }
-
-    // Determine if snake will eat food this tick
-    const eatsFood = newHead.x === this.food.x && newHead.y === this.food.y;
-
-    // Self collision — exclude tail when not eating, since it will move away
-    const checkSegments = eatsFood ? this.snake : this.snake.slice(0, -1);
-    if (checkSegments.some((s) => s.x === newHead.x && s.y === newHead.y)) {
-      this.endGame();
-      return;
-    }
-
-    this.snake.unshift(newHead);
-
-    if (eatsFood) {
-      this.score.update((s) => s + 1);
-      if (!this.placeFood()) {
-        this.winGame();
-        return;
-      }
-    } else {
-      this.snake.pop();
-    }
+    if (result.outcome === 'ate' || result.outcome === 'won') this.score.update((s) => s + 1);
+    if (result.outcome === 'won') this.winGame();
   }
 
   private endGame() {
@@ -679,16 +588,18 @@ export class SnakePageComponent implements OnDestroy {
       ctx.stroke();
     }
 
-    // Food
-    const fx = this.food.x * cs + cs / 2;
-    const fy = this.food.y * cs + cs / 2;
-    ctx.fillStyle = '#d6336c';
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.arc(fx, fy, cs / 2 - 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    // Food (none once the snake fills the board)
+    if (this.food) {
+      const fx = this.food.x * cs + cs / 2;
+      const fy = this.food.y * cs + cs / 2;
+      ctx.fillStyle = '#d6336c';
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.arc(fx, fy, cs / 2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
 
     // Snake
     this.snake.forEach((segment, i) => {
@@ -712,15 +623,6 @@ export class SnakePageComponent implements OnDestroy {
       ctx.fill();
     });
     ctx.shadowBlur = 0;
-  }
-
-  private isOppositeDirection(a: Direction, b: Direction): boolean {
-    return (
-      (a === 'UP' && b === 'DOWN') ||
-      (a === 'DOWN' && b === 'UP') ||
-      (a === 'LEFT' && b === 'RIGHT') ||
-      (a === 'RIGHT' && b === 'LEFT')
-    );
   }
 
   private loadHighScore(): number {

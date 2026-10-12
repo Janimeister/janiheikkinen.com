@@ -7,89 +7,19 @@ import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 import { LanguageService } from '../i18n/language.service';
 import type { TranslationKey } from '../i18n/translations';
-
-interface WeatherCurrent {
-  time: string;
-  temperature_2m: number;
-  weather_code: number;
-  wind_speed_10m: number;
-  wind_direction_10m: number;
-  wind_gusts_10m: number;
-  relative_humidity_2m: number;
-  apparent_temperature: number;
-  precipitation: number;
-  cloud_cover: number;
-  surface_pressure: number;
-  is_day: number;
-}
-
-interface WeatherHourly {
-  time: string[];
-  temperature_2m: number[];
-  weather_code: number[];
-  precipitation_probability: number[];
-  precipitation: number[];
-  wind_speed_10m: number[];
-  relative_humidity_2m: number[];
-  cloud_cover: number[];
-}
-
-interface WeatherDaily {
-  time: string[];
-  weather_code: number[];
-  temperature_2m_max: number[];
-  temperature_2m_min: number[];
-  sunrise: string[];
-  sunset: string[];
-  uv_index_max: number[];
-  precipitation_sum: number[];
-  precipitation_probability_max: number[];
-  wind_speed_10m_max: number[];
-  wind_gusts_10m_max: number[];
-  wind_direction_10m_dominant: number[];
-  sunshine_duration: number[];
-}
-
-interface WeatherResponse {
-  current: WeatherCurrent;
-  hourly: WeatherHourly;
-  daily: WeatherDaily;
-}
-
-interface GeocodingResponse {
-  results?: Array<{
-    latitude: number;
-    longitude: number;
-    name: string;
-  }>;
-}
-
-const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> = {
-  0: { labelKey: 'weather.clearSky', icon: '☀️' },
-  1: { labelKey: 'weather.mainlyClear', icon: '🌤️' },
-  2: { labelKey: 'weather.partlyCloudy', icon: '⛅' },
-  3: { labelKey: 'weather.overcast', icon: '☁️' },
-  45: { labelKey: 'weather.foggy', icon: '🌫️' },
-  48: { labelKey: 'weather.rimeFog', icon: '🌫️' },
-  51: { labelKey: 'weather.lightDrizzle', icon: '🌦️' },
-  53: { labelKey: 'weather.drizzle', icon: '🌦️' },
-  55: { labelKey: 'weather.denseDrizzle', icon: '🌧️' },
-  61: { labelKey: 'weather.slightRain', icon: '🌧️' },
-  63: { labelKey: 'weather.moderateRain', icon: '🌧️' },
-  65: { labelKey: 'weather.heavyRain', icon: '🌧️' },
-  71: { labelKey: 'weather.slightSnow', icon: '🌨️' },
-  73: { labelKey: 'weather.moderateSnow', icon: '❄️' },
-  75: { labelKey: 'weather.heavySnow', icon: '❄️' },
-  77: { labelKey: 'weather.snowGrains', icon: '🌨️' },
-  80: { labelKey: 'weather.rainShowers', icon: '🌦️' },
-  81: { labelKey: 'weather.moderateShowers', icon: '🌧️' },
-  82: { labelKey: 'weather.violentShowers', icon: '⛈️' },
-  85: { labelKey: 'weather.snowShowers', icon: '🌨️' },
-  86: { labelKey: 'weather.heavySnowShowers', icon: '❄️' },
-  95: { labelKey: 'weather.thunderstorm', icon: '⛈️' },
-  96: { labelKey: 'weather.thunderstormHail', icon: '⛈️' },
-  99: { labelKey: 'weather.thunderstormHeavyHail', icon: '⛈️' },
-};
+import {
+  compassKey,
+  dailyForecast,
+  formatDuration,
+  next24Hours,
+  sanitizeLocation,
+  tempRange,
+  todaySummary,
+  uvColor,
+  weatherInfo,
+  type GeocodingResponse,
+  type WeatherResponse,
+} from '../weather/forecast';
 
 @Component({
   selector: 'app-weather-page',
@@ -441,6 +371,7 @@ const WEATHER_ICONS: Record<number, { labelKey: TranslationKey; icon: string }> 
               <div class="space-y-3">
                 @for (day of dailyForecast(); track day.date) {
                   <div
+                    data-testid="forecast-day"
                     class="flex items-center gap-4 p-3 border-2 border-ink shadow-brutal-sm transition-colors"
                     [class]="
                       day.isToday
@@ -526,8 +457,7 @@ export class WeatherPageComponent {
     const raw = location.trim();
     if (!raw) return;
 
-    // Sanitize: allow only letters, spaces, hyphens, apostrophes, periods, and digits
-    const sanitized = raw.replace(/[^\p{L}\p{N}\s.'-]/gu, '').substring(0, 100);
+    const sanitized = sanitizeLocation(raw);
     if (!sanitized) {
       this.searchError.set({ key: 'weather.searchInvalid' });
       return;
@@ -582,23 +512,17 @@ export class WeatherPageComponent {
     };
   });
 
+  private readonly data = computed(() =>
+    this.weather.hasValue() ? this.weather.value() : undefined,
+  );
+
   weatherInfo(code: number) {
-    const weather = WEATHER_ICONS[code] ?? { labelKey: 'common.unknown' as const, icon: '🌍' };
+    const weather = weatherInfo(code);
     return { label: this.i18n.t(weather.labelKey), icon: weather.icon };
   }
 
   windDirection(deg: number): string {
-    const dirKeys: TranslationKey[] = [
-      'weather.windN',
-      'weather.windNE',
-      'weather.windE',
-      'weather.windSE',
-      'weather.windS',
-      'weather.windSW',
-      'weather.windW',
-      'weather.windNW',
-    ];
-    return this.i18n.t(dirKeys[Math.round(deg / 45) % 8]);
+    return this.i18n.t(compassKey(deg));
   }
 
   formatTime(isoString: string): string {
@@ -609,110 +533,43 @@ export class WeatherPageComponent {
   }
 
   formatDuration(seconds: number): string {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.round((seconds % 3600) / 60);
-    return this.i18n.language() === 'fi' ? `${h} t ${m} min` : `${h}h ${m}m`;
+    return formatDuration(seconds, this.i18n.language());
   }
 
-  uvColor(uv: number): string {
-    if (uv < 3) return 'text-data-green';
-    if (uv < 6) return 'text-data-orange';
-    if (uv < 8) return 'text-data-orange-deep';
-    return 'text-red-400';
-  }
+  protected readonly uvColor = uvColor;
 
   todayDaily = computed(() => {
-    const data = this.weather.hasValue() ? this.weather.value() : undefined;
-    if (!data?.daily) return null;
-    return {
-      sunrise: data.daily.sunrise[0],
-      sunset: data.daily.sunset[0],
-      uvIndex: data.daily.uv_index_max[0],
-      precipSum: data.daily.precipitation_sum[0],
-      precipProb: data.daily.precipitation_probability_max[0],
-      sunshineDuration: data.daily.sunshine_duration[0],
-    };
+    const data = this.data();
+    return data ? todaySummary(data) : null;
   });
 
   next24Hours = computed(() => {
-    const data = this.weather.hasValue() ? this.weather.value() : undefined;
-    if (!data?.hourly) return [];
-    // Open-Meteo returns times in the *location's* timezone without an offset,
-    // so compare the raw strings against current.time instead of parsing with Date
-    // (which would apply the browser's timezone).
-    const nextHourIdx = data.hourly.time.findIndex((t) => t > data.current.time);
-    const startIdx = Math.max(
-      0,
-      nextHourIdx === -1 ? data.hourly.time.length - 1 : nextHourIdx - 1,
-    );
-    const slice = Array.from({ length: 24 }, (_, i) => startIdx + i).filter(
-      (i) => i < data.hourly.time.length,
-    );
-
-    const temps = slice.map((i) => data.hourly.temperature_2m[i]);
-    const minTemp = Math.min(...temps);
-    const maxTemp = Math.max(...temps);
-    const range = maxTemp - minTemp || 1;
-
-    return slice.map((i, idx) => ({
-      time: data.hourly.time[i],
-      timeLabel:
-        idx === 0
-          ? this.i18n.t('common.now')
-          : new Date(data.hourly.time[i]).toLocaleTimeString(this.i18n.locale(), {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-      temp: Math.round(data.hourly.temperature_2m[i]),
-      tempPct: Math.max(8, ((data.hourly.temperature_2m[i] - minTemp) / range) * 85 + 15),
-      weatherCode: data.hourly.weather_code[i],
-      precipProb: data.hourly.precipitation_probability[i],
-      windSpeed: Math.round(data.hourly.wind_speed_10m[i]),
-      isNow: idx === 0,
+    const data = this.data();
+    if (!data) return [];
+    return next24Hours(data).map((hour) => ({
+      ...hour,
+      timeLabel: hour.isNow
+        ? this.i18n.t('common.now')
+        : new Date(hour.time).toLocaleTimeString(this.i18n.locale(), {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
     }));
   });
 
-  tempRange = computed(() => {
-    const hours = this.next24Hours();
-    if (!hours.length) return { min: 0, mid: 0, max: 0 };
-    const temps = hours.map((h) => h.temp);
-    const min = Math.min(...temps);
-    const max = Math.max(...temps);
-    return { min, mid: Math.round((min + max) / 2), max };
-  });
+  tempRange = computed(() => tempRange(this.next24Hours()));
 
   dailyForecast = computed(() => {
-    const data = this.weather.hasValue() ? this.weather.value() : undefined;
-    if (!data?.daily) return [];
-    // Use the location-local date reported by the API, not the browser's UTC date.
-    const today = data.current.time.split('T')[0];
-
-    const allMin = Math.min(...data.daily.temperature_2m_min);
-    const allMax = Math.max(...data.daily.temperature_2m_max);
-    const totalRange = allMax - allMin || 1;
-
-    return data.daily.time.map((date, i) => ({
-      date,
-      dayLabel:
-        date === today
-          ? this.i18n.t('common.today')
-          : new Date(date + 'T00:00').toLocaleDateString(this.i18n.locale(), {
-              weekday: 'short',
-              day: 'numeric',
-            }),
-      isToday: date === today,
-      weatherCode: data.daily.weather_code[i],
-      min: Math.round(data.daily.temperature_2m_min[i]),
-      max: Math.round(data.daily.temperature_2m_max[i]),
-      barLeft: ((data.daily.temperature_2m_min[i] - allMin) / totalRange) * 100,
-      barWidth: Math.max(
-        5,
-        ((data.daily.temperature_2m_max[i] - data.daily.temperature_2m_min[i]) / totalRange) * 100,
-      ),
-      precip: data.daily.precipitation_sum[i],
-      precipProb: data.daily.precipitation_probability_max[i],
-      wind: Math.round(data.daily.wind_speed_10m_max[i]),
-      uv: data.daily.uv_index_max[i],
+    const data = this.data();
+    if (!data) return [];
+    return dailyForecast(data).map((day) => ({
+      ...day,
+      dayLabel: day.isToday
+        ? this.i18n.t('common.today')
+        : new Date(day.date + 'T00:00').toLocaleDateString(this.i18n.locale(), {
+            weekday: 'short',
+            day: 'numeric',
+          }),
     }));
   });
 }

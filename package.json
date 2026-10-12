@@ -10,6 +10,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
+    "test:coverage": "ng test --watch=false --coverage",
     "test:production": "playwright test --config=playwright.production.config.ts",
     "format": "prettier --write src e2e scripts playwright.config.ts playwright.production.config.ts",
     "format:check": "prettier --check src e2e scripts playwright.config.ts playwright.production.config.ts"
@@ -37,6 +38,7 @@
     "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.4",
+    "@vitest/coverage-v8": "^5.0.3",
     "jsdom": "^30.1.2",
     "postcss": "^8.5.29",
     "prettier": "^3.9.9",
