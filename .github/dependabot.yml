@@ -28,7 +28,7 @@ updates:
         update-types:
           - version-update:semver-major
           - version-update:semver-minor
-      # Angular's build integration currently requires Vitest 4.
+      # @angular/build 22 accepts Vitest ^4 or ^5; Vitest 6+ needs review.
       - dependency-name: vitest
         update-types:
           - version-update:semver-major
