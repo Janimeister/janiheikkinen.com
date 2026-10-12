@@ -4,59 +4,17 @@ import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 import { LanguageService } from '../i18n/language.service';
-import type { TranslationKey } from '../i18n/translations';
-
-interface GitHubUser {
-  login: string;
-  name: string | null;
-  public_repos: number;
-  followers: number;
-  following: number;
-  avatar_url: string;
-  html_url: string;
-  bio: string | null;
-  location: string | null;
-  company: string | null;
-  blog: string | null;
-  created_at: string;
-  updated_at: string;
-  public_gists: number;
-}
-
-interface GitHubRepo {
-  name: string;
-  description: string | null;
-  html_url: string;
-  language: string | null;
-  stargazers_count: number;
-  forks_count: number;
-  updated_at: string;
-  topics: string[];
-  fork: boolean;
-}
-
-interface GitHubEvent {
-  id: string;
-  type: string;
-  repo: { name: string };
-  created_at: string;
-  payload: Record<string, unknown>;
-}
-
-/** Language swatch colors restricted to the design-system pop palette (docs/design-system.md §2). */
-const LANG_COLORS: Record<string, string> = {
-  TypeScript: 'bg-pop-sky',
-  JavaScript: 'bg-pop-yellow',
-  Python: 'bg-pop-lime',
-  HTML: 'bg-pop-orange',
-  CSS: 'bg-pop-pink',
-  PHP: 'bg-accent-secondary',
-  Java: 'bg-red-400',
-  'C#': 'bg-pop-lime',
-  Go: 'bg-pop-sky',
-  Rust: 'bg-pop-orange',
-  Shell: 'bg-pop-lime',
-};
+import {
+  activityItems,
+  blogUrl,
+  langColor,
+  languageShares,
+  ownRepos,
+  relativeAge,
+  type GitHubEvent,
+  type GitHubRepo,
+  type GitHubUser,
+} from '../github/github-data';
 
 @Component({
   selector: 'app-github-page',
@@ -379,12 +337,7 @@ export class GithubPageComponent {
       params: { sort: 'updated', per_page: 30 },
       timeout: 10_000,
     }),
-    {
-      parse: (value) =>
-        (value as GitHubRepo[])
-          .filter((repo) => !repo.fork)
-          .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    },
+    { parse: (value) => ownRepos(value as GitHubRepo[]) },
   );
 
   private events = httpResource<GitHubEvent[]>(() => ({
@@ -399,69 +352,25 @@ export class GithubPageComponent {
   /** Safe view of the repos resource - value() throws while in the error state. */
   protected repoList = computed(() => (this.repos.hasValue() ? this.repos.value() : undefined));
 
-  languages = computed(() => {
-    const repoList = this.repoList();
-    if (!repoList?.length) return [];
-    const counts: Record<string, number> = {};
-    repoList.forEach((r) => {
-      if (r.language) counts[r.language] = (counts[r.language] || 0) + 1;
-    });
-    const total = Object.values(counts).reduce((s, v) => s + v, 0);
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([name, count]) => ({ name, count, pct: (count / total) * 100 }));
-  });
+  languages = computed(() => languageShares(this.repoList() ?? []));
 
   recentActivity = computed(() => {
     const eventList = this.events.hasValue() ? this.events.value() : undefined;
-    if (!eventList?.length) return [];
-
-    const eventMap: Record<string, { icon: string; actionKey: TranslationKey }> = {
-      PushEvent: { icon: '🚀', actionKey: 'github.eventPush' },
-      CreateEvent: { icon: '🌱', actionKey: 'github.eventCreate' },
-      DeleteEvent: { icon: '🗑️', actionKey: 'github.eventDelete' },
-      IssuesEvent: { icon: '📝', actionKey: 'github.eventIssues' },
-      IssueCommentEvent: { icon: '💬', actionKey: 'github.eventIssueComment' },
-      PullRequestEvent: { icon: '🔀', actionKey: 'github.eventPullRequest' },
-      PullRequestReviewEvent: { icon: '👀', actionKey: 'github.eventPullRequestReview' },
-      WatchEvent: { icon: '⭐', actionKey: 'github.eventWatch' },
-      ForkEvent: { icon: '🍴', actionKey: 'github.eventFork' },
-      ReleaseEvent: { icon: '🏷️', actionKey: 'github.eventRelease' },
-    };
-
-    return eventList.slice(0, 10).map((e) => {
-      const info = eventMap[e.type];
-      return {
-        id: e.id,
-        type: e.type,
-        icon: info?.icon ?? '📌',
-        action: info ? this.i18n.t(info.actionKey) : this.i18n.t('github.eventUnknown'),
-        repo: e.repo.name.split('/')[1] || e.repo.name,
-        date: e.created_at,
-      };
-    });
+    return activityItems(eventList ?? []).map(({ actionKey, ...item }) => ({
+      ...item,
+      action: this.i18n.t(actionKey),
+    }));
   });
 
-  langColor(lang: string): string {
-    return LANG_COLORS[lang] ?? 'bg-gray-400';
-  }
-
-  blogUrl(blog: string): string {
-    return blog.startsWith('http') ? blog : `https://${blog}`;
-  }
+  protected readonly langColor = langColor;
+  protected readonly blogUrl = blogUrl;
 
   memberYear(dateStr: string): number {
     return new Date(dateStr).getFullYear();
   }
 
   relativeDate(dateStr: string): string {
-    const diff = Math.max(0, Date.now() - new Date(dateStr).getTime());
-    const days = Math.floor(diff / 86400000);
-    if (days === 0) return this.i18n.t('github.today');
-    if (days === 1) return this.i18n.t('github.yesterday');
-    if (days < 30) return this.i18n.t('github.daysAgo', { count: days });
-    const months = Math.floor(days / 30);
-    if (months < 12) return this.i18n.t('github.monthsAgo', { count: months });
-    return this.i18n.t('github.yearsAgo', { count: Math.floor(months / 12) });
+    const { key, count } = relativeAge(dateStr, Date.now());
+    return count === undefined ? this.i18n.t(key) : this.i18n.t(key, { count });
   }
 }
