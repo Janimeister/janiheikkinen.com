@@ -15,7 +15,7 @@
     "format:check": "prettier --check src e2e scripts playwright.config.ts playwright.production.config.ts"
   },
   "private": true,
-  "packageManager": "npm@11.19.0",
+  "packageManager": "npm@12.2.0",
   "dependencies": {
     "@angular/common": "^22.2.1",
     "@angular/compiler": "^22.2.1",
