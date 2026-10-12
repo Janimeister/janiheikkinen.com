@@ -208,6 +208,16 @@ To run in watch mode during development:
 npm run test:watch
 ```
 
+Specs sit next to the code they test. Data shaping and game rules live in plain modules (for example `src/app/weather/forecast.ts`, `src/app/snake/snake-game.ts`) so they can be tested without rendering a page.
+
+To see which files no unit test touches, run:
+
+```bash
+npm run test:coverage
+```
+
+It prints the files that aren't fully covered and writes an HTML report to `coverage/`. CI runs the same command and uploads the report; there are no thresholds, since pages like the tram map are mostly covered by the browser tests instead.
+
 ### End-to-end tests
 
 Install the browser binaries and required system libraries once, then run the suite:
@@ -217,7 +227,9 @@ npx playwright install --with-deps
 npx playwright test
 ```
 
-Tests cover navigation, page structure, API data loading, and the algorithm visualizers in Chromium, Firefox, and WebKit. Playwright starts the local development server automatically. HTML reports are written to `playwright-report/`.
+Tests cover navigation, page structure, what each page renders, and the algorithm visualizers in Chromium, Firefox, and WebKit. Playwright starts the local development server automatically. HTML reports are written to `playwright-report/`.
+
+There is one spec file per page (`e2e/weather.spec.ts`, `e2e/snake.spec.ts`, …). The tests never call the live APIs: [e2e/api-mocks.ts](e2e/api-mocks.ts) answers Open-Meteo, Pörssisähkö, GitHub and the cat-fact service from fixtures in [e2e/fixtures/api-data.ts](e2e/fixtures/api-data.ts), and fails a test if a page reaches any other third-party host. Error cards are tested on purpose with `failApi()`, and pages that depend on the time freeze the clock at a fixed moment in Helsinki.
 
 ### Accessibility tests
 
@@ -233,7 +245,7 @@ These checks run as part of the full Playwright suite. Navigation tests also exe
 
 [Tests](.github/workflows/test.yml) runs on pull requests to `main`, on manual dispatch, and when called by the deployment workflow. It checks formatting (`npm run format:check`; `npm run format` fixes it), the production build, Vitest unit tests, and Playwright end-to-end/accessibility tests. Browser and production smoke reports are retained for seven days.
 
-CI uses Node.js 24 and installs the exact npm version declared in `package.json` (`npm@12.2.0`). Actions are pinned to reviewed commit SHAs and updated through Dependabot. Playwright rejects focused (`test.only`) tests in CI and uploads HTML reports for every completed, non-cancelled run, including successful retries.
+CI uses Node.js 24 and installs the exact npm version declared in `package.json` (`npm@12.2.0`). Actions are pinned to reviewed commit SHAs and updated through Dependabot. Playwright rejects focused (`test.only`) tests in CI and uploads HTML reports for every completed, non-cancelled run, including successful retries. Its GitHub reporter annotates the run with failures and with flaky tests, ones that only passed on a retry, so retries don't hide them.
 
 Chromium, Firefox, and WebKit run in separate CI jobs, each installing only its browser. The existing **E2E & Accessibility Tests** check remains the aggregate gate and succeeds only when every browser passes.
 
