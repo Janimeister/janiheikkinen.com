@@ -26,11 +26,8 @@ import { SITE_PAGES } from '../../navigation/page-registry';
   template: `
     <nav [class.nav-scrolled]="scrolled()" [attr.aria-label]="i18n.t('explore.navigation')">
       <div class="header-content">
-        <a
-          routerLink="/"
-          class="logo brutal-hover brutal-press"
-          [attr.aria-label]="i18n.t('nav.home')"
-          >JH.</a
+        <a routerLink="/" class="logo brutal-hover brutal-press"
+          >JH.<span class="sr-only"> {{ i18n.t('nav.home') }}</span></a
         >
         <span class="current-location">{{ currentLabel() }}</span>
         <app-language-toggle />

@@ -77,7 +77,7 @@ test.describe('Sorting', () => {
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
-    await page.getByRole('button', { name: 'Suomi', exact: true }).click();
+    await page.getByRole('button', { name: 'FI Suomi', exact: true }).click();
     await expect(page.locator('h1')).toHaveText('Lajittelualgoritmit');
   });
 });
