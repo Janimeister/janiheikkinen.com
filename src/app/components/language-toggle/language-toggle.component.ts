@@ -11,12 +11,12 @@ import type { Language } from '../../i18n/translations';
           type="button"
           (click)="setLanguage(language.code)"
           [class.active]="i18n.isLanguage(language.code)"
-          [attr.aria-label]="language.nativeName"
           [attr.aria-pressed]="i18n.isLanguage(language.code)"
           [attr.title]="language.nativeName"
           [attr.data-testid]="'language-' + language.code"
         >
-          {{ language.label }}
+          {{ language.label
+          }}<span class="sr-only" [attr.lang]="language.code"> {{ language.nativeName }}</span>
         </button>
       }
     </div>

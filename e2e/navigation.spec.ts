@@ -87,7 +87,7 @@ test.describe('Explore navigation', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 640 });
-    await page.getByRole('button', { name: 'Suomi', exact: true }).click();
+    await page.getByRole('button', { name: 'FI Suomi', exact: true }).click();
     await page.getByRole('button', { name: 'Tutustu', exact: true }).click();
     const dialog = page.getByRole('dialog');
     const box = await dialog.boundingBox();
