@@ -11,6 +11,7 @@ const NAV_ROUTES = [
   { label: 'Weather', path: '/weather', heading: 'Weather Conditions' },
   { label: 'Electricity', path: '/electricity', heading: 'Electricity Prices' },
   { label: 'Tram Map', path: '/trams', heading: 'Tram Map' },
+  { label: 'Departures', path: '/departures', heading: 'Departures' },
   { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
   { label: 'ASCII', path: '/ascii', heading: 'ASCII Art' },
   { label: 'Snake', path: '/snake', heading: 'Snake Game' },

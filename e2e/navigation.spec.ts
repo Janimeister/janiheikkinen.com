@@ -109,7 +109,7 @@ test.describe('Explore navigation', () => {
   test('homepage cards expose all destinations and use normal links', async ({ page }) => {
     await page.goto('/');
     const directory = page.locator('app-home app-page-directory');
-    await expect(directory.getByRole('link')).toHaveCount(11);
+    await expect(directory.getByRole('link')).toHaveCount(12);
     await expect(directory.getByRole('heading', { level: 3 })).toHaveText([
       'Everyday',
       'Experiments',

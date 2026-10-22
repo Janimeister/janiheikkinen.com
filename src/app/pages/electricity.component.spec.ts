@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -77,12 +78,57 @@ describe('ElectricityPageComponent', () => {
 
   it('labels every chart bar with its day, and marks negative prices', async () => {
     const page = await render();
-    const bars = [...page.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')];
+    const bars = [...page.querySelectorAll<HTMLButtonElement>('[aria-label="Price chart"] button')];
     const labels = bars.map((bar) => bar.getAttribute('aria-label'));
     expect(bars.length).toBe(192);
     expect(new Set(labels).size).toBe(192);
     expect(labels[5]).toMatch(/01:15: -0\.50 c\/kWh$/);
     expect(page.textContent).toContain('Negative');
     expect(bars[5].querySelector('.bg-pop-sky')).toBeTruthy();
+  });
+
+  describe('best time to run', () => {
+    const result = (page: HTMLElement) =>
+      page.querySelector('[data-testid="run-result"]')!.textContent!.replace(/\s+/g, ' ');
+
+    it('finds the cheapest start for the dishwasher and marks it on the chart', async () => {
+      const page = await render();
+      // Prices cycle 1…20 c/kWh every 5 hours; the next cycle starts at 15:00.
+      expect(result(page)).toContain('Cheapest start');
+      expect(result(page)).toContain('Today 15:00');
+      expect(result(page)).toContain('ready Today 18:00');
+      expect(result(page)).toContain('Delay start by 1 h 55 min');
+      expect(result(page)).toContain('6.50 c/kWh');
+      expect(page.querySelectorAll('[data-run]').length).toBe(12);
+    });
+
+    it('switches appliances and remembers the choice', async () => {
+      const page = await render();
+      const sauna = [...page.querySelectorAll<HTMLButtonElement>('button')].find((b) =>
+        b.textContent?.includes('Sauna'),
+      )!;
+      sauna.click();
+      await vi.waitFor(() => {
+        TestBed.inject(ApplicationRef).tick();
+        expect(sauna.getAttribute('aria-pressed')).toBe('true');
+        expect(page.querySelector('output')?.textContent).toContain('1 h 30 min');
+        expect(page.querySelectorAll('[data-run]').length).toBe(6);
+      });
+      expect(JSON.parse(localStorage.getItem('electricity-run')!)).toMatchObject({
+        appliance: 'sauna',
+        minutes: 90,
+        kwh: 8,
+      });
+    });
+
+    it('explains when the run cannot finish by the ready-by time', async () => {
+      localStorage.setItem(
+        'electricity-run',
+        JSON.stringify({ appliance: 'dishwasher', minutes: 180, kwh: 1, readyBy: '14:00' }),
+      );
+      const page = await render();
+      expect(result(page)).toContain("The run can't finish by then");
+      expect(page.querySelectorAll('[data-run]').length).toBe(0);
+    });
   });
 });

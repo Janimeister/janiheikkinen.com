@@ -16,6 +16,7 @@ const PAGES = [
   { path: '/weather', name: 'Weather', waitSection: '24-Hour Forecast' },
   { path: '/electricity', name: 'Electricity', waitSection: 'Current Price' },
   { path: '/trams', name: 'Trams', waitSection: 'Legend' },
+  { path: '/departures', name: 'Departures', waitSection: 'Find a Stop' },
   { path: '/github', name: 'GitHub', waitSection: 'Repositories' },
   { path: '/ascii', name: 'ASCII', waitSection: null },
   { path: '/snake', name: 'Snake', waitSection: null },

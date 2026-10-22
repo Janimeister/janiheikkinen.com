@@ -31,6 +31,7 @@ jobs:
     timeout-minutes: 10
     env:
       PORSSISAHKO_WORKER_URL: ${{ vars.PORSSISAHKO_WORKER_URL }}
+      DIGITRANSIT_PROXY_URL: ${{ vars.DIGITRANSIT_PROXY_URL }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -60,10 +61,15 @@ jobs:
           if (!workerUrl) {
             throw new Error('PORSSISAHKO_WORKER_URL repository variable is required.');
           }
+          // Set it once workers/digitransit-proxy is deployed, so /departures never ships without one.
+          const digitransitUrl = process.env.DIGITRANSIT_PROXY_URL;
+          if (!digitransitUrl) {
+            throw new Error('DIGITRANSIT_PROXY_URL repository variable is required.');
+          }
 
           writeFileSync(
             'src/environments/environment.prod.ts',
-            `export const environment = {\n  workerUrl: ${JSON.stringify(workerUrl)}\n};\n`
+            `export const environment = {\n  workerUrl: ${JSON.stringify(workerUrl)},\n  digitransitUrl: ${JSON.stringify(digitransitUrl)}\n};\n`
           );
           EOF
 
