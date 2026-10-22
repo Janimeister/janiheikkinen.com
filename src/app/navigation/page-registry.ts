@@ -83,6 +83,17 @@ export const SITE_PAGES: readonly SitePage[] = [
     loadComponent: () => import('../pages/trams.component').then((m) => m.TramsPageComponent),
   },
   {
+    path: 'departures',
+    titleKey: 'departures.title',
+    metaKey: 'meta.departures',
+    labelKey: 'departures.title',
+    descriptionKey: 'explore.departuresDescription',
+    keywordsKey: 'explore.departuresKeywords',
+    group: 'everyday',
+    loadComponent: () =>
+      import('../pages/departures.component').then((m) => m.DeparturesPageComponent),
+  },
+  {
     path: 'github',
     titleKey: 'github.title',
     metaKey: 'meta.github',

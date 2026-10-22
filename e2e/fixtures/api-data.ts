@@ -140,3 +140,11 @@ export const GITHUB_EVENTS = [
 // ── Cat facts ───────────────────────────────────────────────────────
 
 export const CAT_FACT = { fact: 'A group of cats is called a clowder.', length: 36 };
+
+// ── Digitransit ─────────────────────────────────────────────────────
+
+/**
+ * What every GraphQL query gets unless a test says otherwise: no search results, and no stop
+ * for a board. departures.spec.ts answers with real stops and departures.
+ */
+export const DIGITRANSIT_EMPTY = { data: { stations: [], stops: [], place: null } };

@@ -30,7 +30,7 @@ Create a new routed detail page for this Angular portfolio site.
    - For a new API, add its URL pattern and fixture to `e2e/api-mocks.ts` and `e2e/fixtures/api-data.ts`
    - Add the route to `NAV_ROUTES` in `e2e/navigation.spec.ts` and to `PAGES` in `e2e/accessibility.spec.ts`
 
-5. **Handle CORS**: If the API has CORS issues, add a proxy entry in `proxy.conf.json` instead of calling the API directly
+5. **Handle CORS**: If the API has CORS issues, add a proxy entry in `proxy.conf.mjs` instead of calling the API directly
 
 6. **Attribution**: If the API requires attribution, add a visible link and update `THIRD-PARTY-NOTICES.md`
 

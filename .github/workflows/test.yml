@@ -103,6 +103,9 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Test the Cloudflare Workers
+        run: npm run test:workers
+
   e2e-browsers:
     name: E2E & Accessibility Tests (${{ matrix.browser }})
     strategy:

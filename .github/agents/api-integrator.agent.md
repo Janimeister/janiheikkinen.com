@@ -17,11 +17,11 @@ You are an API integration specialist for this Angular portfolio site. Your job 
 ## CORS Handling
 
 If an API has CORS issues:
-1. Add a proxy entry in `proxy.conf.json`
+1. Add a proxy entry in `proxy.conf.mjs`
 2. Use the proxied path in the component (e.g., `/api/servicename/...`)
 3. Configure `pathRewrite` to strip the prefix
 4. Set `changeOrigin: true`
-5. Verify `angular.json` has `serve.options.proxyConfig` set to `proxy.conf.json`
+5. Verify `angular.json` has `serve.options.proxyConfig` set to `proxy.conf.mjs`
 
 ## Integration Checklist
 

@@ -1,0 +1,5 @@
+name = "digitransit-proxy"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# The key is a secret, never committed: npx wrangler secret put DIGITRANSIT_SUBSCRIPTION_KEY

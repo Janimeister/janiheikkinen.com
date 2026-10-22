@@ -1,6 +1,7 @@
 import { test as base, expect, type Page, type Route } from '@playwright/test';
 import {
   CAT_FACT,
+  DIGITRANSIT_EMPTY,
   ELECTRICITY,
   FIXED_NOW,
   GEOCODING_TAMPERE,
@@ -10,7 +11,7 @@ import {
   WEATHER,
 } from './fixtures/api-data';
 
-/** URL patterns of the APIs the site reads. Electricity goes through the dev server's proxy. */
+/** URL patterns of the APIs the site reads. Electricity and Digitransit go through the dev server's proxy. */
 export const API = {
   weather: 'https://api.open-meteo.com/v1/forecast**',
   geocoding: 'https://geocoding-api.open-meteo.com/v1/search**',
@@ -19,6 +20,9 @@ export const API = {
   githubRepos: 'https://api.github.com/users/Janimeister/repos**',
   githubEvents: 'https://api.github.com/users/Janimeister/events/public**',
   catFact: 'https://catfact.ninja/fact**',
+  // On localhost, so the third-party guard wouldn't see it, but the dev server forwards it to
+  // the real Digitransit API.
+  digitransit: '**/api/digitransit',
 } as const;
 
 export type Api = keyof typeof API;
@@ -31,6 +35,7 @@ const RESPONSES: Record<Api, unknown> = {
   githubRepos: GITHUB_REPOS,
   githubEvents: GITHUB_EVENTS,
   catFact: CAT_FACT,
+  digitransit: DIGITRANSIT_EMPTY,
 };
 
 const CORS = { 'access-control-allow-origin': '*' };

@@ -9,6 +9,7 @@ const NAV_ROUTES = [
   { label: 'Weather', path: '/weather', heading: 'Weather Conditions' },
   { label: 'Electricity', path: '/electricity', heading: 'Electricity Prices' },
   { label: 'Tram Map', path: '/trams', heading: 'Tram Map' },
+  { label: 'Departures', path: '/departures', heading: 'Departures' },
   { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
   { label: 'ASCII', path: '/ascii', heading: 'ASCII Art' },
   { label: 'Snake', path: '/snake', heading: 'Snake Game' },
@@ -151,7 +152,7 @@ test.describe('Explore navigation', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 640 });
-    await page.getByRole('button', { name: 'Suomi', exact: true }).click();
+    await page.getByRole('button', { name: 'FI Suomi', exact: true }).click();
     await page.getByRole('button', { name: 'Tutustu', exact: true }).click();
     const dialog = page.getByRole('dialog');
     const box = await dialog.boundingBox();
@@ -173,7 +174,7 @@ test.describe('Explore navigation', () => {
   test('homepage cards expose all destinations and use normal links', async ({ page }) => {
     await page.goto('/');
     const directory = page.locator('app-home app-page-directory');
-    await expect(directory.getByRole('link')).toHaveCount(11);
+    await expect(directory.getByRole('link')).toHaveCount(12);
     await expect(directory.getByRole('heading', { level: 3 })).toHaveText([
       'Everyday',
       'Experiments',

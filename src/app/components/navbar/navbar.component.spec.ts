@@ -74,7 +74,7 @@ describe('NavbarComponent', () => {
     component.open();
     fixture.detectChanges();
     expect(search.value).toBe('');
-    expect(element.querySelectorAll('dialog a')).toHaveLength(11);
+    expect(element.querySelectorAll('dialog a')).toHaveLength(12);
   });
 
   it('reacts to language changes in labels, groups, and search', async () => {
