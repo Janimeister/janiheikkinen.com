@@ -5,8 +5,26 @@ import { GlowCardComponent } from '../components/shared/glow-card.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
 import { LanguageService } from '../i18n/language.service';
 import type { TranslationKey } from '../i18n/translations';
-
-type LifeStage = 'egg' | 'baby' | 'child' | 'teen' | 'adult' | 'ghost';
+import {
+  ageLabel,
+  applyAction,
+  decay,
+  lifeStage,
+  moodKey,
+  needsCare,
+  newPet,
+  RANDOM_EVENT_CHANCE,
+  RANDOM_EVENTS,
+  restorePet,
+  SPECIES,
+  speciesById,
+  STORAGE_KEY,
+  TICK_MS,
+  type Action,
+  type LifeStage,
+  type PetState,
+  type Species,
+} from '../pet/pet-state';
 
 interface EventLogEntry {
   readonly id: number;
@@ -19,93 +37,6 @@ interface EventLogEntry {
    */
   readonly speciesNameKey?: TranslationKey;
 }
-
-interface Species {
-  readonly id: string;
-  readonly nameKey: TranslationKey;
-  /** Emoji per life stage. Egg is shared across species (🥚). */
-  readonly sprites: Readonly<Record<Exclude<LifeStage, 'egg' | 'ghost'>, string>>;
-  readonly accent: string; // Tailwind text color class
-  readonly traitKey: TranslationKey; // short personality description
-}
-
-interface PetState {
-  speciesId: string;
-  name: string;
-  bornAt: number; // ms epoch when hatched
-  lastTick: number; // ms epoch of last stat update
-  hunger: number; // 0..100 (0 = starving, 100 = full)
-  happiness: number; // 0..100
-  energy: number; // 0..100
-  cleanliness: number; // 0..100
-  health: number; // 0..100
-  dead: boolean;
-  asleep: boolean;
-}
-
-const SPECIES: readonly Species[] = [
-  {
-    id: 'cat',
-    nameKey: 'pet.species.cat.name',
-    sprites: { baby: '🐱', child: '🐈', teen: '🐈', adult: '🐈‍⬛' },
-    accent: 'text-accent-light',
-    traitKey: 'pet.species.cat.trait',
-  },
-  {
-    id: 'dog',
-    nameKey: 'pet.species.dog.name',
-    sprites: { baby: '🐶', child: '🐕', teen: '🐕', adult: '🐕‍🦺' },
-    accent: 'text-accent-light',
-    traitKey: 'pet.species.dog.trait',
-  },
-  {
-    id: 'dragon',
-    nameKey: 'pet.species.dragon.name',
-    sprites: { baby: '🦎', child: '🐲', teen: '🐉', adult: '🐲' },
-    accent: 'text-ink',
-    traitKey: 'pet.species.dragon.trait',
-  },
-  {
-    id: 'alien',
-    nameKey: 'pet.species.alien.name',
-    sprites: { baby: '👾', child: '👽', teen: '🛸', adult: '👽' },
-    accent: 'text-accent-secondary',
-    traitKey: 'pet.species.alien.trait',
-  },
-  {
-    id: 'fox',
-    nameKey: 'pet.species.fox.name',
-    sprites: { baby: '🦊', child: '🦊', teen: '🦊', adult: '🦊' },
-    accent: 'text-accent-light',
-    traitKey: 'pet.species.fox.trait',
-  },
-  {
-    id: 'bunny',
-    nameKey: 'pet.species.bunny.name',
-    sprites: { baby: '🐰', child: '🐇', teen: '🐇', adult: '🐇' },
-    accent: 'text-accent-secondary',
-    traitKey: 'pet.species.bunny.trait',
-  },
-  {
-    id: 'chick',
-    nameKey: 'pet.species.chick.name',
-    sprites: { baby: '🐥', child: '🐤', teen: '🐔', adult: '🦅' },
-    accent: 'text-ink',
-    traitKey: 'pet.species.chick.trait',
-  },
-  {
-    id: 'axolotl',
-    nameKey: 'pet.species.axolotl.name',
-    sprites: { baby: '🐣', child: '🐸', teen: '🐲', adult: '🐊' },
-    accent: 'text-accent-secondary',
-    traitKey: 'pet.species.axolotl.trait',
-  },
-];
-
-const STORAGE_KEY = 'virtual-pet-v1';
-const TICK_MS = 1000; // update cadence
-const DECAY_PER_MINUTE = 4; // stat point loss per minute (approx, per stat)
-const MAX_OFFLINE_MINUTES = 60 * 8; // cap offline decay at 8 hours so returning users aren't wiped
 
 @Component({
   selector: 'app-pet-page',
@@ -477,8 +408,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
 
   protected readonly species = computed<Species | null>(() => {
     const p = this.pet();
-    if (!p) return null;
-    return SPECIES.find((s) => s.id === p.speciesId) ?? SPECIES[0];
+    return p ? speciesById(p.speciesId) : null;
   });
 
   protected readonly speciesAccent = computed(() => this.species()?.accent ?? 'text-text-primary');
@@ -487,16 +417,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     return species ? this.i18n.t(species.traitKey) : '';
   });
 
-  protected readonly lifeStage = computed<LifeStage>(() => {
-    const p = this.pet();
-    if (!p) return 'egg';
-    if (p.dead) return 'ghost';
-    const ageMin = Math.max(0, (Date.now() - p.bornAt) / 60_000);
-    if (ageMin < 2) return 'baby';
-    if (ageMin < 10) return 'child';
-    if (ageMin < 30) return 'teen';
-    return 'adult';
-  });
+  protected readonly lifeStage = computed<LifeStage>(() => lifeStage(this.pet(), Date.now()));
 
   protected readonly stageLabel = computed(() => {
     const stage = this.lifeStage();
@@ -523,12 +444,8 @@ export class PetPageComponent implements OnInit, OnDestroy {
   protected readonly ageLabel = computed(() => {
     const p = this.pet();
     if (!p) return '';
-    const seconds = Math.max(0, Math.floor((Date.now() - p.bornAt) / 1000));
-    if (seconds < 60) return this.i18n.t('pet.ageSeconds', { count: seconds });
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return this.i18n.t('pet.ageMinutes', { count: minutes });
-    const hours = Math.floor(minutes / 60);
-    return this.i18n.t('pet.ageHours', { hours, minutes: minutes % 60 });
+    const { key, params } = ageLabel(p.bornAt, Date.now());
+    return this.i18n.t(key, params);
   });
 
   protected readonly spriteFilter = computed(() => {
@@ -542,27 +459,12 @@ export class PetPageComponent implements OnInit, OnDestroy {
 
   protected readonly moodMessage = computed(() => {
     const p = this.pet();
-    if (!p) return '';
-    if (p.dead) return this.i18n.t('pet.moodDead', { name: p.name });
-    if (p.asleep) return this.i18n.t('pet.moodSleeping', { name: p.name });
-    if (p.health < 25) return this.i18n.t('pet.moodSick', { name: p.name });
-    if (p.hunger < 20) return this.i18n.t('pet.moodStarving', { name: p.name });
-    if (p.cleanliness < 20) return this.i18n.t('pet.moodDirty', { name: p.name });
-    if (p.energy < 20) return this.i18n.t('pet.moodExhausted', { name: p.name });
-    if (p.happiness < 20) return this.i18n.t('pet.moodLonely', { name: p.name });
-    if (p.hunger > 80 && p.happiness > 70 && p.cleanliness > 70)
-      return this.i18n.t('pet.moodThriving', { name: p.name });
-    return this.i18n.t('pet.moodOkay', { name: p.name });
+    return p ? this.i18n.t(moodKey(p), { name: p.name }) : '';
   });
 
   protected readonly moodColorClass = computed(() => {
     const p = this.pet();
-    if (!p) return 'text-text-secondary';
-    if (p.dead) return 'text-text-secondary';
-    if (p.health < 25 || p.hunger < 20 || p.cleanliness < 20 || p.energy < 20 || p.happiness < 20) {
-      return 'text-red-400';
-    }
-    return 'text-text-secondary';
+    return p && needsCare(p) ? 'text-red-400' : 'text-text-secondary';
   });
 
   protected readonly stats = computed(() => {
@@ -623,21 +525,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     const name = this.nameModel().name.trim().slice(0, 16);
     if (!name) return;
     const species = SPECIES[Math.floor(Math.random() * SPECIES.length)];
-    const now = Date.now();
-    const pet: PetState = {
-      speciesId: species.id,
-      name,
-      bornAt: now,
-      lastTick: now,
-      hunger: 80,
-      happiness: 80,
-      energy: 80,
-      cleanliness: 90,
-      health: 100,
-      dead: false,
-      asleep: false,
-    };
-    this.pet.set(pet);
+    this.pet.set(newPet(name, species.id, Date.now()));
     this.eventLog.set([]);
     this.logEvent('pet.hatchedEvent', { name }, species.nameKey);
     this.persist();
@@ -665,39 +553,13 @@ export class PetPageComponent implements OnInit, OnDestroy {
     this.persist();
   }
 
-  private applyAction(kind: 'feed' | 'play' | 'clean' | 'heal') {
+  private applyAction(action: Action) {
     const p = this.pet();
-    if (!p || p.dead) return;
-    const next: PetState = { ...p };
-
-    switch (kind) {
-      case 'feed':
-        next.hunger = clamp(next.hunger + 25);
-        next.happiness = clamp(next.happiness + 3);
-        next.cleanliness = clamp(next.cleanliness - 4);
-        this.logEvent('pet.feedEvent', { name: p.name });
-        break;
-      case 'play':
-        if (next.asleep) return;
-        next.happiness = clamp(next.happiness + 20);
-        next.energy = clamp(next.energy - 12);
-        next.hunger = clamp(next.hunger - 5);
-        this.logEvent('pet.playEvent', { name: p.name });
-        break;
-      case 'clean':
-        next.cleanliness = clamp(next.cleanliness + 30);
-        next.happiness = clamp(next.happiness - 2);
-        this.logEvent('pet.cleanEvent', { name: p.name });
-        break;
-      case 'heal':
-        if (next.health >= 100) return;
-        next.health = clamp(next.health + 30);
-        next.happiness = clamp(next.happiness - 3);
-        this.logEvent('pet.healEvent', { name: p.name });
-        break;
-    }
-
-    this.pet.set(next);
+    if (!p) return;
+    const result = applyAction(p, action);
+    if (!result) return;
+    this.logEvent(result.eventKey, { name: p.name });
+    this.pet.set(result.pet);
     this.persist();
   }
 
@@ -718,55 +580,25 @@ export class PetPageComponent implements OnInit, OnDestroy {
     if (!p || p.dead) return;
 
     const now = Date.now();
-    // If the system clock moved backwards, reset lastTick to now so
-    // stat decay doesn't freeze until the clock catches up again.
-    if (now < p.lastTick) {
-      this.pet.update((s) => (s ? { ...s, lastTick: now, bornAt: Math.min(s.bornAt, now) } : s));
+    const result = decay(p, now);
+    if (result.kind === 'wait') return;
+    if (result.kind === 'clockReset') {
+      this.pet.set(result.pet);
       return;
     }
-    const elapsedMs = now - p.lastTick;
-    if (elapsedMs < 500) return;
 
-    const minutes = Math.min(elapsedMs / 60_000, MAX_OFFLINE_MINUTES);
-    const decay = minutes * DECAY_PER_MINUTE;
-    // Energy regenerates while asleep, still decays while awake.
-    const energyDelta = p.asleep ? +minutes * DECAY_PER_MINUTE * 2 : -decay;
-
-    const next: PetState = {
-      ...p,
-      lastTick: now,
-      hunger: clamp(p.hunger - decay),
-      happiness: clamp(p.happiness - decay * (p.asleep ? 0.5 : 1)),
-      energy: clamp(p.energy + energyDelta),
-      cleanliness: clamp(p.cleanliness - decay * 0.6),
-    };
-
-    // Health effects from critical stats
-    const critical = [next.hunger, next.cleanliness, next.happiness].filter((v) => v <= 0).length;
-    if (critical > 0) {
-      next.health = clamp(next.health - critical * decay * 0.5);
-    } else if (
-      next.hunger > 60 &&
-      next.cleanliness > 60 &&
-      next.happiness > 60 &&
-      next.energy > 40
-    ) {
-      // Gentle passive recovery when well cared for
-      next.health = clamp(next.health + minutes * 1);
-    }
-
-    if (next.health <= 0) {
-      next.health = 0;
-      next.dead = true;
+    let next = result.pet;
+    if (result.died) {
       this.pet.set(next);
       this.logEvent('pet.deathEvent', { name: p.name });
       this.persist();
       return;
     }
 
-    // Random events: small chance each second, but only when enough time passed (≈1/120 per tick).
-    if (!next.asleep && Math.random() < 0.008) {
-      this.triggerRandomEvent(next);
+    if (!next.asleep && Math.random() < RANDOM_EVENT_CHANCE) {
+      const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+      next = event.apply(next);
+      this.logEvent(event.messageKey, { name: next.name });
     }
 
     this.pet.set(next);
@@ -774,62 +606,6 @@ export class PetPageComponent implements OnInit, OnDestroy {
     if (Math.floor(now / 15_000) !== Math.floor(p.lastTick / 15_000)) {
       this.persist();
     }
-  }
-
-  private triggerRandomEvent(pet: PetState) {
-    const events: readonly { messageKey: TranslationKey; apply: (p: PetState) => void }[] = [
-      {
-        messageKey: 'pet.randomSnack',
-        apply: (p) => {
-          p.hunger = clamp(p.hunger + 10);
-        },
-      },
-      {
-        messageKey: 'pet.randomDream',
-        apply: (p) => {
-          p.happiness = clamp(p.happiness + 8);
-        },
-      },
-      {
-        messageKey: 'pet.randomMud',
-        apply: (p) => {
-          p.cleanliness = clamp(p.cleanliness - 12);
-        },
-      },
-      {
-        messageKey: 'pet.randomEnergy',
-        apply: (p) => {
-          p.energy = clamp(p.energy + 15);
-        },
-      },
-      {
-        messageKey: 'pet.randomHiccups',
-        apply: (p) => {
-          p.happiness = clamp(p.happiness - 4);
-        },
-      },
-      {
-        messageKey: 'pet.randomFriend',
-        apply: (p) => {
-          p.happiness = clamp(p.happiness + 12);
-        },
-      },
-      {
-        messageKey: 'pet.randomSneeze',
-        apply: (p) => {
-          p.health = clamp(p.health - 3);
-        },
-      },
-      {
-        messageKey: 'pet.randomTrick',
-        apply: (p) => {
-          p.happiness = clamp(p.happiness + 6);
-        },
-      },
-    ];
-    const ev = events[Math.floor(Math.random() * events.length)];
-    ev.apply(pet);
-    this.logEvent(ev.messageKey, { name: pet.name });
   }
 
   // ── Event log ────────────────────────────────────────────────────
@@ -880,52 +656,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     } catch {
       raw = null;
     }
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw) as Partial<PetState>;
-      if (!parsed || typeof parsed !== 'object') return;
-      if (!parsed.speciesId || !SPECIES.some((s) => s.id === parsed.speciesId)) return;
-      // Sanitize
-      const now = Date.now();
-      const persistedBornAt =
-        typeof parsed.bornAt === 'number' && Number.isFinite(parsed.bornAt) ? parsed.bornAt : now;
-      const persistedLastTick =
-        typeof parsed.lastTick === 'number' && Number.isFinite(parsed.lastTick)
-          ? parsed.lastTick
-          : now;
-      const lastTick = Math.min(persistedLastTick, now);
-      const bornAt = Math.min(persistedBornAt, lastTick);
-
-      const pet: PetState = {
-        speciesId: parsed.speciesId,
-        name:
-          typeof parsed.name === 'string' && parsed.name.trim()
-            ? parsed.name.trim().slice(0, 16)
-            : 'Pet',
-        bornAt,
-        lastTick,
-        hunger: clamp(asNumber(parsed.hunger, 80)),
-        happiness: clamp(asNumber(parsed.happiness, 80)),
-        energy: clamp(asNumber(parsed.energy, 80)),
-        cleanliness: clamp(asNumber(parsed.cleanliness, 80)),
-        health: clamp(asNumber(parsed.health, 100)),
-        dead: !!parsed.dead,
-        asleep: !!parsed.asleep,
-      };
-      this.pet.set(pet);
-    } catch {
-      // Corrupt state — ignore and leave pet null
-    }
+    const pet = restorePet(raw, Date.now());
+    if (pet) this.pet.set(pet);
   }
-}
-
-function clamp(value: number, min = 0, max = 100): number {
-  if (Number.isNaN(value)) return min;
-  if (value < min) return min;
-  if (value > max) return max;
-  return value;
-}
-
-function asNumber(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }

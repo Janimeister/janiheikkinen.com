@@ -5,7 +5,11 @@ export default defineConfig({
   timeout: 30000,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
-  reporter: [['html', { open: 'never' }]],
+  // In CI, `github` annotates failures and tests that only passed on a retry (flaky), so a
+  // retry can't hide them; `list` keeps the log readable.
+  reporter: process.env['CI']
+    ? [['list'], ['github'], ['html', { open: 'never' }]]
+    : [['html', { open: 'never' }]],
   use: {
     baseURL: 'http://localhost:4200',
     headless: true,

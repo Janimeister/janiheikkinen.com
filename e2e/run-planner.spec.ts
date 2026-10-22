@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from './api-mocks';
 
 // A fixed clock and zone, so the cheapest window is always the same one.
 test.use({ timezoneId: 'Europe/Helsinki' });

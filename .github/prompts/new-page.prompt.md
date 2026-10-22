@@ -24,9 +24,11 @@ Create a new routed detail page for this Angular portfolio site.
 
 3. **Add the copy** in English to `src/app/i18n/translations.ts` and in Finnish to `src/app/i18n/translations.fi.ts`
 
-4. **Add Playwright tests** in `e2e/app.spec.ts`:
-   - Add the route to the `NAV_ROUTES` array
-   - Add a test describe block with heading/back-link test, data sections test using `expectSectionOrError()`, and attribution test if applicable
+4. **Add tests**:
+   - Put data shaping in a plain module (like `src/app/weather/forecast.ts`) with a Vitest spec beside it
+   - Add `e2e/{name}.spec.ts` importing `test` from `./api-mocks`: heading/back-link, the data a fixture response renders, the error card via `failApi()`, and attribution if applicable
+   - For a new API, add its URL pattern and fixture to `e2e/api-mocks.ts` and `e2e/fixtures/api-data.ts`
+   - Add the route to `NAV_ROUTES` in `e2e/navigation.spec.ts` and to `PAGES` in `e2e/accessibility.spec.ts`
 
 5. **Handle CORS**: If the API has CORS issues, add a proxy entry in `proxy.conf.mjs` instead of calling the API directly
 

@@ -1,13 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
-export const API_TIMEOUT = 15_000;
-
-/** Assert that a section heading OR a fallback error is visible (for API-driven pages) */
-export async function expectSectionOrError(page: Page, headingText: string, timeout = API_TIMEOUT) {
-  const section = page.locator('h2', { hasText: headingText });
-  const error = page.locator('p.text-red-400', { hasText: 'Could not load' });
-  await expect(section.or(error).first()).toBeVisible({ timeout });
-}
+/** For work that takes a while to settle, like the ASCII animation. */
+export const SLOW_TIMEOUT = 15_000;
 
 /** Assert that a detail page has the standard "Back to Home" link */
 export async function expectBackLink(page: Page) {

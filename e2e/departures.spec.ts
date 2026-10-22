@@ -1,4 +1,5 @@
-import { test, expect, type Page, type Route } from '@playwright/test';
+import type { Page, Route } from '@playwright/test';
+import { expect, test } from './api-mocks';
 import AxeBuilder from '@axe-core/playwright';
 import { expectAttribution, expectBackLink } from './helpers';
 

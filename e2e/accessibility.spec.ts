@@ -1,12 +1,9 @@
-import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { expectSectionOrError } from './helpers';
+import { expect, test } from './api-mocks';
 
 /**
- * For each API-driven page, the first stable h2 heading that appears once data
- * (or an error card) has rendered. Using `expectSectionOrError` is more
- * deterministic than `waitForLoadState('networkidle')` because it directly
- * asserts either a known success element or the error fallback.
+ * For each data-driven page, an h2 that only appears once its data has rendered. The APIs answer
+ * from fixtures (see api-mocks.ts), so the scan always covers the loaded page, never an error card.
  */
 const PAGES = [
   { path: '/sorting', name: 'Sorting', waitSection: null },
@@ -39,11 +36,8 @@ test.describe('Accessibility', () => {
       // Wait for the page h1 heading to confirm initial render is complete
       await expect(page.locator('h1').first()).toBeVisible();
 
-      // For API-backed pages, wait for a known section h2 OR error card to appear
-      // before running the axe scan — ensures the scan covers fully-loaded state.
-      // Use a 30s timeout here since each accessibility test already has a 60s budget.
       if (waitSection) {
-        await expectSectionOrError(page, waitSection, 30_000);
+        await expect(page.locator('h2', { hasText: waitSection })).toBeVisible({ timeout: 30_000 });
       }
 
       const results = await new AxeBuilder({ page })

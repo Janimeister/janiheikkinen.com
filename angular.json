@@ -115,6 +115,22 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "tsconfig.spec.json",
+            "coverageInclude": [
+              "src/app/**/*.ts"
+            ],
+            "coverageExclude": [
+              "src/app/**/*.spec.ts",
+              "src/app/i18n/translations*.ts"
+            ],
+            "coverageReporters": [
+              [
+                "text",
+                {
+                  "skipFull": true
+                }
+              ],
+              "html"
+            ],
             "setupFiles": [
               "src/test-setup.ts"
             ]

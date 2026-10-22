@@ -21,7 +21,7 @@ You are a read-only codebase explorer for this Angular portfolio site. Your job 
 2. Trace imports and references to build a complete picture
 3. Search across `src/**/*.ts` for usage patterns
 4. Check `styles.css` for relevant theme tokens and animations
-5. Check `e2e/app.spec.ts` for test coverage of the area
+5. Check the area's `*.spec.ts` unit tests and `e2e/<page>.spec.ts` for test coverage
 
 ## Output Format
 

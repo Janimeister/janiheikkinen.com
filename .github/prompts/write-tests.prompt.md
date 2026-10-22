@@ -1,52 +1,42 @@
 ---
-description: "Write or update Playwright e2e tests. Use when adding tests for new pages, updating tests after refactoring, or improving test coverage."
-agent: "agent"
-argument-hint: "What to test: new page, updated component, or full suite"
----
-
-Write or update Playwright e2e tests in `e2e/app.spec.ts`.
+description: "Write or update Playwright e2e tests in `e2e/<page>.spec.ts`, one file per page.
 
 ## Conventions
 
 ### Test Structure
+- Import `test` and `expect` from `./api-mocks` (not `@playwright/test`)
 - Group tests by page/feature using `test.describe()`
-- Use `test.beforeEach()` for common navigation
 - Keep test names descriptive and concise
 
-### Helper Functions
-Use and extend these existing helpers defined at the top of the test file:
-
-```typescript
-// Assert section heading OR error fallback (for API-driven content)
-async function expectSectionOrError(page: Page, headingText: string) { ... }
-
-// Assert "Back to Home" link is present
-async function expectBackLink(page: Page) { ... }
-
-// Assert attribution link exists
-async function expectAttribution(page: Page, href: string) { ... }
-```
+### Helpers
+- `e2e/helpers.ts`: `expectBackLink(page)`, `expectAttribution(page, href)`, `SLOW_TIMEOUT`
+- `e2e/api-mocks.ts`:
+  - The auto fixture serves every API from `e2e/fixtures/api-data.ts` and fails the test on a request to any unmocked third-party host
+  - `failApi(page, api, status?)` makes one API fail; `respondWith(page, api, body)` swaps its response. Call them before `page.goto()`
+  - `freezeClock(page)` fixes `Date` at `FIXED_NOW`; pair it with `test.use({ timezoneId: TIME_ZONE })`
+  - `page.waitForRequest(API.weather)` checks what a page asked for
 
 ### Data-Driven Tests
-- Use the `NAV_ROUTES` constant for navigation link tests
-- Use the `SOCIAL_LINKS` constant for social link tests
+- `NAV_ROUTES` in `navigation.spec.ts` for navigation link tests
+- `SOCIAL_LINKS` in `home.spec.ts` for social link tests
+- `PAGES` in `accessibility.spec.ts` for axe scans
 - Add new entries to these arrays when adding new pages/links
 
 ### API-Dependent Tests
-- Always accept EITHER success data OR error state — never assume APIs are available
-- Use `.or()` to combine success and error locators
-- Set generous timeouts for API calls: `{ timeout: 15_000 }`
+- Assert the exact values the fixture produces: numbers, counts, order, labels
+- Cover the error card and empty or odd responses in their own tests
+- For a new API, add its pattern to `API` and its fixture to `RESPONSES`
 
 ### What to Test
 - Navigation: links exist and navigate to correct routes
 - Page structure: heading, back link, key sections visible
-- Data loading: sections load or show graceful error
+- Data rendering: what the page shows for a known response, and for a failed one
 - Attribution: required attribution links are present
 - Responsive: critical content visible on mobile viewports
 
 ### What NOT to Test
 - CSS animation names or computed styles
-- Exact API response content (it changes)
+- Data shaping in detail: move it into a plain module with a Vitest spec beside it
 - Internal component implementation details
 
 ## After Writing Tests
