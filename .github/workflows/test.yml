@@ -96,13 +96,45 @@ jobs:
       - name: Test the Cloudflare Workers
         run: npm run test:workers
 
+  # The E2E jobs run in the official Playwright image, which ships the browsers
+  # and their system libraries, so they never wait on the runner's apt mirror.
+  # Its tag must match the locked Playwright version, so read it from the
+  # lockfile and Dependabot bumps carry the image along.
+  playwright-image:
+    name: Resolve Playwright image
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: package-lock.json
+          sparse-checkout-cone-mode: false
+
+      - id: image
+        run: |
+          version="$(node -p 'require("./package-lock.json").packages["node_modules/playwright-core"].version')"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Unexpected playwright-core version in package-lock.json: $version"
+            exit 1
+          fi
+          echo "image=mcr.microsoft.com/playwright:v$version-noble" >> "$GITHUB_OUTPUT"
+
   e2e-browsers:
     name: E2E & Accessibility Tests (${{ matrix.browser }})
+    needs: playwright-image
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
     runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.playwright-image.outputs.image }}
+      # Run as the runner user so the workspace and tool cache stay writable,
+      # and share the host IPC namespace so Chromium has enough shared memory.
+      options: --user 1001 --ipc=host
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -122,9 +154,6 @@ jobs:
           npm --version
 
       - run: npm ci
-
-      - name: Install Playwright browsers
-        run: bash scripts/install-playwright.sh ${{ matrix.browser }}
 
       - name: Run Playwright tests
         run: npx playwright test --project=${{ matrix.browser }}
