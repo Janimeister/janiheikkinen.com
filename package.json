@@ -11,6 +11,7 @@
     "test": "ng test --watch=false",
     "test:watch": "ng test",
     "test:production": "playwright test --config=playwright.production.config.ts",
+    "test:workers": "node --test \"workers/**/*.test.mjs\"",
     "format": "prettier --write src e2e scripts playwright.config.ts playwright.production.config.ts",
     "format:check": "prettier --check src e2e scripts playwright.config.ts playwright.production.config.ts"
   },

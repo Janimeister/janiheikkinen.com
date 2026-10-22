@@ -93,6 +93,9 @@ jobs:
       - name: Run unit tests
         run: npm test
 
+      - name: Test the Cloudflare Workers
+        run: npm run test:workers
+
   e2e-browsers:
     name: E2E & Accessibility Tests (${{ matrix.browser }})
     strategy:
