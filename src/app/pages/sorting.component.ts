@@ -1,25 +1,36 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { injectPrerendered } from '../platform';
+import { SORTING_EN } from '../i18n/pages/sorting.en';
 import { SORTING_ALGORITHMS, SortStep } from '../sorting/sorting-algorithms';
 import { VisualizationPlayback } from '../visualization/playback-controller';
 import { VisualizerNavComponent } from '../visualization/visualizer-nav.component';
 
+/** The numbers 1 to `size`, in random order. */
+function shuffledNumbers(size: number): number[] {
+  const numbers = Array.from({ length: size }, (_, index) => index + 1);
+  for (let i = numbers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+  }
+  return numbers;
+}
+
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', SORTING_EN);
+
 @Component({
   selector: 'app-sorting-page',
-  imports: [RouterLink, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
+  imports: [PageHeaderComponent, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
   template: `
     <section class="relative max-w-6xl mx-auto px-6 md:px-12 pt-28 pb-16">
-      <a routerLink="/" class="text-accent-light font-bold">← {{ i18n.t('common.backToHome') }}</a>
-      <header class="my-8 animate-fade-slide-up">
-        <h1 class="text-3xl md:text-5xl mb-4">
-          <span class="marker marker-sky">{{ i18n.t('sorting.title') }}</span>
-        </h1>
-        <p class="text-text-secondary max-w-2xl">{{ i18n.t('sorting.subtitle') }}</p>
+      <app-page-header titleKey="sorting.title" subtitleKey="sorting.subtitle" marker="sky">
         <app-visualizer-nav category="sorting" />
-      </header>
+      </app-page-header>
       <app-glow-card>
         <div class="grid gap-6 md:grid-cols-3">
           <div>
@@ -403,7 +414,8 @@ export class SortingPageComponent implements OnDestroy {
         this.prefixEnd.set(-1);
       },
     );
-    this.shuffle();
+    this.original = injectPrerendered('sorting-values', () => shuffledNumbers(this.size()));
+    this.reset();
   }
 
   selectAlgorithm(id: string): void {
@@ -424,11 +436,7 @@ export class SortingPageComponent implements OnDestroy {
   }
 
   shuffle(): void {
-    this.original = Array.from({ length: this.size() }, (_, index) => index + 1);
-    for (let i = this.original.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.original[i], this.original[j]] = [this.original[j], this.original[i]];
-    }
+    this.original = shuffledNumbers(this.size());
     this.reset();
   }
 

@@ -152,7 +152,8 @@ test.describe('Explore navigation', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 640 });
-    await page.getByRole('button', { name: 'FI Suomi', exact: true }).click();
+    await page.getByRole('link', { name: 'FI Suomi', exact: true }).click();
+    await expect(page).toHaveURL(/\/fi\/sorting$/);
     await page.getByRole('button', { name: 'Tutustu', exact: true }).click();
     const dialog = page.getByRole('dialog');
     const box = await dialog.boundingBox();
@@ -163,7 +164,7 @@ test.describe('Explore navigation', () => {
     await page.getByRole('searchbox', { name: 'Etsi sivu' }).fill('  ELÄIN  ');
     await expect(dialog.getByRole('link')).toHaveCount(1);
     await dialog.getByRole('link').click();
-    await expect(page).toHaveURL(/\/pet$/);
+    await expect(page).toHaveURL(/\/fi\/pet$/);
     await expect(page.locator('h1')).toHaveText('Virtuaalilemmikki');
     await expect(page.getByRole('button', { name: 'Tutustu', exact: true })).toBeFocused();
     expect(

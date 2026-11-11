@@ -1,0 +1,33 @@
+import type { SNAKE_EN } from './snake.en';
+
+// Finnish copy for /snake, fetched when the page opens in Finnish.
+export const SNAKE_FI = {
+  'snake.subtitle': 'Klassinen matopeli - pelaa näppäimistöllä tai pyyhkäisemällä',
+  'snake.score': 'Pisteet',
+  'snake.highScore': 'Ennätys',
+  'snake.speed': 'Nopeus',
+  'snake.startGame': 'Aloita peli',
+  'snake.controlHint': 'Käytä nuolinäppäimiä tai WASD-näppäimiä - mobiilissa voit pyyhkäistä',
+  'snake.gameOver': 'Peli päättyi!',
+  'snake.finalScore': 'Lopulliset pisteet: {score}',
+  'snake.playAgain': 'Pelaa uudelleen',
+  'snake.youWin': '🎉 Voitit!',
+  'snake.perfectScore': 'Täydet pisteet: {score}',
+  'snake.paused': 'Tauolla',
+  'snake.resume': 'Jatka',
+  'snake.directionalControls': 'Suuntapainikkeet',
+  'snake.moveUp': 'Liiku ylös',
+  'snake.moveLeft': 'Liiku vasemmalle',
+  'snake.moveRight': 'Liiku oikealle',
+  'snake.moveDown': 'Liiku alas',
+  'snake.pauseGame': 'Tauota peli',
+  'snake.howToPlay': 'Pelaaminen',
+  'snake.desktop': '🖥️ Työpöytä',
+  'snake.mobile': '📱 Mobiili',
+  'snake.desktopMove': 'Liiku nuolinäppäimillä tai WASD-näppäimillä',
+  'snake.desktopPause': 'Keskeytä tai jatka Space- tai P-näppäimellä',
+  'snake.desktopStart': 'Aloita tai käynnistä uudelleen Enterillä',
+  'snake.mobileSwipe': 'Vaihda suuntaa pyyhkäisemällä pelialueella',
+  'snake.mobileDpad': 'Käytä pelin alla olevia suuntapainikkeita',
+  'snake.mobileCenter': 'Keskeytä tai aloita keskimmäisestä painikkeesta',
+} satisfies Record<keyof typeof SNAKE_EN, string>;

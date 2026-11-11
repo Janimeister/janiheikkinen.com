@@ -8,10 +8,12 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { SNAKE_EN } from '../i18n/pages/snake.en';
 
 import {
   initialSnake,
@@ -25,9 +27,12 @@ import {
   type Point,
 } from '../snake/snake-game';
 
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', SNAKE_EN);
+
 @Component({
   selector: 'app-snake-page',
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
+  imports: [GlowCardComponent, FloatingOrbComponent, PageHeaderComponent],
   host: {
     '(window:keydown)': 'onKeyDown($event)',
     '(document:visibilitychange)': 'onVisibilityChange()',
@@ -52,28 +57,7 @@ import {
       />
 
       <div class="relative z-10 max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 animate-fade-slide-up">
-          <a
-            routerLink="/"
-            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {{ i18n.t('common.backToHome') }}
-          </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="marker marker-lime">{{ i18n.t('snake.title') }}</span>
-          </h1>
-          <p class="text-text-secondary mt-2">{{ i18n.t('snake.subtitle') }}</p>
-        </div>
+        <app-page-header titleKey="snake.title" subtitleKey="snake.subtitle" marker="lime" />
 
         <!-- Score & Controls -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6 animate-fade-slide-up stagger-1">
@@ -627,7 +611,9 @@ export class SnakePageComponent implements OnDestroy {
 
   private loadHighScore(): number {
     try {
-      return parseInt(localStorage.getItem('snake-highscore') ?? '0', 10) || 0;
+      return (
+        parseInt(this.document.defaultView?.localStorage.getItem('snake-highscore') ?? '0', 10) || 0
+      );
     } catch {
       return 0;
     }
@@ -635,7 +621,7 @@ export class SnakePageComponent implements OnDestroy {
 
   private saveHighScore(score: number) {
     try {
-      localStorage.setItem('snake-highscore', String(score));
+      this.document.defaultView?.localStorage.setItem('snake-highscore', String(score));
     } catch {
       // Storage unavailable
     }

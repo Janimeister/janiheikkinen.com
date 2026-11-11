@@ -11,7 +11,7 @@ import type { VisualizerCategory } from './algorithm-metadata';
     <nav class="visualizer-nav" [attr.aria-label]="i18n.t('algorithms.navigation')">
       @for (item of items; track item.id) {
         <a
-          [routerLink]="item.path"
+          [routerLink]="i18n.path(item.path)"
           [attr.aria-current]="category() === item.id ? 'page' : null"
           [class.current]="category() === item.id"
         >

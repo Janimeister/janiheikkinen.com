@@ -1,9 +1,12 @@
-import { Component, signal, computed, inject, OnDestroy, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { DOCUMENT } from '@angular/common';
+import { afterNextRender, Component, signal, computed, inject, OnDestroy } from '@angular/core';
 import { FormField, form, maxLength, required } from '@angular/forms/signals';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { PET_EN } from '../i18n/pages/pet.en';
 import type { TranslationKey } from '../i18n/translations';
 import {
   ageLabel,
@@ -38,9 +41,12 @@ interface EventLogEntry {
   readonly speciesNameKey?: TranslationKey;
 }
 
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', PET_EN);
+
 @Component({
   selector: 'app-pet-page',
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormField],
+  imports: [GlowCardComponent, FloatingOrbComponent, PageHeaderComponent, FormField],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <app-floating-orb
@@ -61,28 +67,7 @@ interface EventLogEntry {
       />
 
       <div class="relative z-10 max-w-5xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 animate-fade-slide-up">
-          <a
-            routerLink="/"
-            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {{ i18n.t('common.backToHome') }}
-          </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="marker marker-orange">{{ i18n.t('pet.title') }}</span>
-          </h1>
-          <p class="text-text-secondary mt-2">{{ i18n.t('pet.subtitle') }}</p>
-        </div>
+        <app-page-header titleKey="pet.title" subtitleKey="pet.subtitle" marker="orange" />
 
         @if (pet(); as p) {
           <!-- Pet dashboard -->
@@ -249,7 +234,7 @@ interface EventLogEntry {
               }
             </app-glow-card>
           </div>
-        } @else {
+        } @else if (ready()) {
           <!-- No pet yet: show egg hatching card -->
           <div class="animate-fade-slide-up stagger-1">
             <app-glow-card>
@@ -362,11 +347,14 @@ interface EventLogEntry {
     }
   `,
 })
-export class PetPageComponent implements OnInit, OnDestroy {
+export class PetPageComponent implements OnDestroy {
   protected readonly i18n = inject(LanguageService);
 
   // ── State ─────────────────────────────────────────────────────────
   protected readonly pet = signal<PetState | null>(null);
+  /** Whether the saved pet, if any, has been read. */
+  protected readonly ready = signal(false);
+  private readonly storage = inject(DOCUMENT).defaultView?.localStorage;
   private readonly nameModel = signal({ name: '' });
   protected readonly nameForm = form(this.nameModel, (name) => {
     required(name.name);
@@ -378,16 +366,21 @@ export class PetPageComponent implements OnInit, OnDestroy {
   private logSeq = 0;
 
   // ── Lifecycle ─────────────────────────────────────────────────────
-  ngOnInit() {
-    this.loadFromStorage();
-    this.tickHandle = setInterval(() => {
-      const pet = this.pet();
-      if (!pet || pet.dead) {
-        return;
-      }
+  constructor() {
+    // The saved pet lives in this browser, so the prerendered page holds neither a pet nor the
+    // hatching form; whichever applies appears once the page is running.
+    afterNextRender(() => {
+      this.loadFromStorage();
+      this.ready.set(true);
+      this.tickHandle = setInterval(() => {
+        const pet = this.pet();
+        if (!pet || pet.dead) {
+          return;
+        }
 
-      this.tick();
-    }, TICK_MS);
+        this.tick();
+      }, TICK_MS);
+    });
   }
 
   ngOnDestroy() {
@@ -568,7 +561,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     this.nameModel.set({ name: '' });
     this.eventLog.set([]);
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      this.storage?.removeItem(STORAGE_KEY);
     } catch {
       /* ignore */
     }
@@ -643,7 +636,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
     const p = this.pet();
     if (!p) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+      this.storage?.setItem(STORAGE_KEY, JSON.stringify(p));
     } catch {
       /* ignore */
     }
@@ -652,7 +645,7 @@ export class PetPageComponent implements OnInit, OnDestroy {
   private loadFromStorage() {
     let raw: string | null = null;
     try {
-      raw = localStorage.getItem(STORAGE_KEY);
+      raw = this.storage?.getItem(STORAGE_KEY) ?? null;
     } catch {
       raw = null;
     }

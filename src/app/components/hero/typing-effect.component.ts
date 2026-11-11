@@ -1,5 +1,7 @@
+import { DOCUMENT } from '@angular/common';
 import { Component, signal, OnDestroy, effect, inject } from '@angular/core';
 import { LanguageService } from '../../i18n/language.service';
+import { injectIsBrowser } from '../../platform';
 
 @Component({
   selector: 'app-typing-effect',
@@ -12,8 +14,9 @@ import { LanguageService } from '../../i18n/language.service';
 })
 export class TypingEffectComponent implements OnDestroy {
   private readonly i18n = inject(LanguageService);
-  private readonly prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')
-    ?.matches;
+  private readonly prefersReducedMotion = inject(DOCUMENT).defaultView?.matchMedia?.(
+    '(prefers-reduced-motion: reduce)',
+  )?.matches;
 
   displayText = signal('');
   private roleIndex = 0;
@@ -22,6 +25,8 @@ export class TypingEffectComponent implements OnDestroy {
   private timerId: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    // The prerendered page holds just the cursor; typing starts in the browser.
+    if (!injectIsBrowser()) return;
     if (this.prefersReducedMotion) {
       effect(() => this.displayText.set(this.roles()[0]));
       return;

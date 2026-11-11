@@ -1,8 +1,11 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { injectPrerendered } from '../platform';
+import { SEARCHING_EN } from '../i18n/pages/searching.en';
 import {
   SearchAlgorithm,
   SearchResult,
@@ -12,19 +15,25 @@ import {
 import { VisualizationPlayback } from '../visualization/playback-controller';
 import { VisualizerNavComponent } from '../visualization/visualizer-nav.component';
 
+/** `size` distinct values in rising order, each a random step above the last ten. */
+function orderedValues(size: number): number[] {
+  return Array.from(
+    { length: size },
+    (_, index) => (index + 1) * 10 + Math.floor(Math.random() * 9),
+  );
+}
+
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', SEARCHING_EN);
+
 @Component({
   selector: 'app-searching-page',
-  imports: [RouterLink, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
+  imports: [PageHeaderComponent, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
   template: `
     <section class="relative max-w-6xl mx-auto px-6 md:px-12 pt-28 pb-16">
-      <a routerLink="/" class="text-accent-light font-bold">← {{ i18n.t('common.backToHome') }}</a>
-      <header class="my-8 animate-fade-slide-up">
-        <h1 class="text-3xl md:text-5xl mb-4">
-          <span class="marker marker-pink">{{ i18n.t('searching.title') }}</span>
-        </h1>
-        <p class="text-text-secondary max-w-2xl">{{ i18n.t('searching.subtitle') }}</p>
+      <app-page-header titleKey="searching.title" subtitleKey="searching.subtitle" marker="pink">
         <app-visualizer-nav category="searching" />
-      </header>
+      </app-page-header>
       <app-glow-card>
         <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           <div>
@@ -393,7 +402,7 @@ export class SearchingPageComponent implements OnDestroy {
       (event) => this.applyStep(event),
       (result) => this.result.set(result),
     );
-    this.generate();
+    this.show(injectPrerendered('searching-values', () => orderedValues(this.size())));
   }
 
   selectAlgorithm(id: string): void {
@@ -429,10 +438,10 @@ export class SearchingPageComponent implements OnDestroy {
   }
 
   generate(): void {
-    const values = Array.from(
-      { length: this.size() },
-      (_, index) => (index + 1) * 10 + Math.floor(Math.random() * 9),
-    );
+    this.show(orderedValues(this.size()));
+  }
+
+  private show(values: number[]): void {
     this.values.set(values);
     this.target.set(values[Math.floor(values.length / 2)] ?? 1);
     this.reset();

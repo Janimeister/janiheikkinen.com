@@ -1,11 +1,14 @@
 import { Component, computed, signal, inject } from '@angular/core';
 import { HttpClient, httpResource } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
 import { FormField, FormRoot, form, maxLength, required } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { injectIsBrowser, isWaiting } from '../platform';
+import { WEATHER_EN } from '../i18n/pages/weather.en';
 import type { TranslationKey } from '../i18n/translations';
 import {
   compassKey,
@@ -21,9 +24,12 @@ import {
   type WeatherResponse,
 } from '../weather/forecast';
 
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', WEATHER_EN);
+
 @Component({
   selector: 'app-weather-page',
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, FormField, FormRoot],
+  imports: [GlowCardComponent, FloatingOrbComponent, PageHeaderComponent, FormField, FormRoot],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <!-- Decorative shapes -->
@@ -45,27 +51,7 @@ import {
       />
 
       <div class="relative z-10 max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 animate-fade-slide-up">
-          <a
-            routerLink="/"
-            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {{ i18n.t('common.backToHome') }}
-          </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="marker marker-sky">{{ i18n.t('weather.title') }}</span>
-          </h1>
-          <p class="text-text-secondary mt-2">{{ i18n.t('weather.subtitle') }}</p>
+        <app-page-header titleKey="weather.title" subtitleKey="weather.subtitle" marker="sky">
           <!-- Location search -->
           <form [formRoot]="searchForm" class="mt-4 flex gap-2 max-w-sm">
             <input
@@ -94,9 +80,9 @@ import {
           @if (searchError(); as err) {
             <p class="text-xs text-red-400 mt-2">{{ i18n.t(err.key, err.params) }}</p>
           }
-        </div>
+        </app-page-header>
 
-        @if (weather.isLoading()) {
+        @if (waiting()) {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @for (i of [1, 2, 3, 4, 5, 6]; track i) {
               <app-glow-card>
@@ -492,7 +478,10 @@ export class WeatherPageComponent {
     }
   }
 
+  private readonly isBrowser = injectIsBrowser();
+
   weather = httpResource<WeatherResponse>(() => {
+    if (!this.isBrowser) return undefined;
     const { lat, lon } = this.coords();
     return {
       url: 'https://api.open-meteo.com/v1/forecast',
@@ -511,6 +500,8 @@ export class WeatherPageComponent {
       timeout: 10_000,
     };
   });
+
+  protected readonly waiting = computed(() => isWaiting(this.weather));
 
   private readonly data = computed(() =>
     this.weather.hasValue() ? this.weather.value() : undefined,

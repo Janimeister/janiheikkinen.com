@@ -10,10 +10,13 @@ import {
 } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { injectIsBrowser, isWaiting } from '../platform';
+import { ELECTRICITY_EN } from '../i18n/pages/electricity.en';
 import type { PriceSlot } from '../electricity/cheapest-run';
 import { RunPlannerComponent } from '../electricity/run-planner.component';
 
@@ -32,9 +35,12 @@ function localDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', ELECTRICITY_EN);
+
 @Component({
   selector: 'app-electricity-page',
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, RunPlannerComponent],
+  imports: [GlowCardComponent, FloatingOrbComponent, PageHeaderComponent, RunPlannerComponent],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20">
       <!-- Decorative shapes -->
@@ -56,30 +62,13 @@ function localDateKey(d: Date): string {
       />
 
       <div class="relative z-10 max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 animate-fade-slide-up">
-          <a
-            routerLink="/"
-            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {{ i18n.t('common.backToHome') }}
-          </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-2">
-            <span class="marker marker-orange">{{ i18n.t('electricity.title') }}</span>
-          </h1>
-          <p class="text-text-secondary mt-2">{{ i18n.t('electricity.subtitle') }}</p>
-        </div>
+        <app-page-header
+          titleKey="electricity.title"
+          subtitleKey="electricity.subtitle"
+          marker="orange"
+        />
 
-        @if (priceData.isLoading()) {
+        @if (waiting()) {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @for (i of [1, 2, 3]; track i) {
               <app-glow-card>
@@ -416,8 +405,10 @@ export class ElectricityPageComponent {
   protected readonly nowTick = signal(Date.now());
 
   constructor() {
-    const timer = setInterval(() => this.nowTick.set(Date.now()), 60_000);
-    this.destroyRef.onDestroy(() => clearInterval(timer));
+    if (this.isBrowser) {
+      const timer = setInterval(() => this.nowTick.set(Date.now()), 60_000);
+      this.destroyRef.onDestroy(() => clearInterval(timer));
+    }
 
     // Centre the current price once; after that the visitor's scroll position is left alone.
     let centred = false;
@@ -435,10 +426,14 @@ export class ElectricityPageComponent {
     });
   }
 
-  priceData = httpResource<PriceResponse>(() => ({
-    url: `${environment.workerUrl}/v2/latest-prices.json`,
-    timeout: 10_000,
-  }));
+  private readonly isBrowser = injectIsBrowser();
+
+  priceData = httpResource<PriceResponse>(() =>
+    this.isBrowser
+      ? { url: `${environment.workerUrl}/v2/latest-prices.json`, timeout: 10_000 }
+      : undefined,
+  );
+  protected readonly waiting = computed(() => isWaiting(this.priceData));
 
   private sortedPrices = computed(() => {
     const data = this.priceData.hasValue() ? this.priceData.value() : undefined;

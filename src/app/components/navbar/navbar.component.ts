@@ -8,13 +8,15 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, NavigationStart, Router, RouterLink } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router, RouterLink } from '@angular/router';
+import { filter } from 'rxjs';
 import { LanguageService } from '../../i18n/language.service';
+import { stripLanguage } from '../../i18n/localized-url';
 import { LanguageToggleComponent } from '../language-toggle/language-toggle.component';
+import { injectCurrentUrl } from '../../navigation/current-url';
 import { PageDirectoryComponent } from '../../navigation/page-directory.component';
-import { SITE_PAGES } from '../../navigation/page-registry';
+import { NOT_FOUND_PAGE, NOTICES_PAGE, SITE_PAGES } from '../../navigation/page-registry';
 
 @Component({
   selector: 'app-navbar',
@@ -26,7 +28,7 @@ import { SITE_PAGES } from '../../navigation/page-registry';
   template: `
     <nav [class.nav-scrolled]="scrolled()" [attr.aria-label]="i18n.t('explore.navigation')">
       <div class="header-content">
-        <a routerLink="/" class="logo brutal-hover brutal-press"
+        <a [routerLink]="i18n.path('/')" class="logo brutal-hover brutal-press"
           >JH.<span class="sr-only"> {{ i18n.t('nav.home') }}</span></a
         >
         <span class="current-location">{{ currentLabel() }}</span>
@@ -228,23 +230,22 @@ export class NavbarComponent implements OnDestroy {
   readonly isOpen = signal(false);
   readonly query = signal('');
   readonly scrolled = signal(false);
-  private readonly url = toSignal(
-    this.router.events.pipe(
-      filter((event) => event instanceof NavigationEnd),
-      map((event) => event.urlAfterRedirects),
-    ),
-    { initialValue: this.router.url },
-  );
+  private readonly url = injectCurrentUrl();
+  /** The page's path without its language prefix, as the page registry lists it. */
   readonly currentPath = computed(
     () =>
       this.router
-        .parseUrl(this.url())
+        .parseUrl(stripLanguage(this.url()))
         .root.children['primary']?.segments.map((segment) => segment.path)
         .join('/') ?? '',
   );
   readonly currentLabel = computed(() => {
-    const page = SITE_PAGES.find((page) => page.path === this.currentPath());
-    return this.i18n.t(page?.labelKey ?? 'thirdParty.title');
+    const path = this.currentPath();
+    const page = SITE_PAGES.find((page) => page.path === path);
+    if (page) return this.i18n.t(page.labelKey);
+    return this.i18n.t(
+      path === NOTICES_PAGE.path ? NOTICES_PAGE.titleKey : NOT_FOUND_PAGE.titleKey,
+    );
   });
 
   constructor() {
@@ -345,7 +346,7 @@ export class NavbarComponent implements OnDestroy {
         (page.group === 'experiments' || page.group === 'play') && page.path !== this.currentPath(),
     );
     const page = pages[Math.floor(Math.random() * pages.length)];
-    if (page) void this.router.navigateByUrl('/' + page.path);
+    if (page) void this.router.navigateByUrl(this.i18n.path('/' + page.path));
   }
 
   onScroll(): void {

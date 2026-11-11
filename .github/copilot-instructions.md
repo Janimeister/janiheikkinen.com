@@ -8,14 +8,18 @@ This is **janiheikkinen.com** — a personal portfolio/dashboard site built with
 ### Architecture
 
 - **Root shell** (`app.ts`): Navbar + `<router-outlet>` + Footer. Uses inline template/styles.
-- **Pages** (`src/app/pages/`): Routed page components — `home`, `weather`, `electricity`, `github`.
-- **Shared components** (`src/app/components/shared/`): `GlowCardComponent`, `FloatingOrbComponent`.
+- **Pages** (`src/app/pages/`): Routed page components, one per entry in `src/app/navigation/page-registry.ts`. Large pages keep their parts beside their logic (`src/app/trams/components/`, `src/app/departures/components/`).
+- **Shared components** (`src/app/components/shared/`): `PageHeaderComponent`, `GlowCardComponent`, `FloatingOrbComponent`.
 - **Hero components** (`src/app/components/hero/`): `HeroComponent`, `TypingEffectComponent`.
 - **Layout components**: `NavbarComponent`, `FooterComponent`.
 
 ### Routing
 
-Routes are defined in `app.routes.ts`. Each detail page (`/weather`, `/electricity`, `/github`) has a "Back to Home" link and fetches data from external APIs using `httpResource()`.
+Routes are built in `app.routes.ts` from the page registry, once per language: English at the root (`/weather`), Finnish under `/fi` (`/fi/weather`). The address decides the language; link with `[routerLink]="i18n.path('/weather')"`. Each detail page starts with `<app-page-header>` and fetches data from external APIs using `httpResource()`.
+
+### Prerendering
+
+Every page is prerendered to static HTML at build time (`@angular/ssr`, `outputMode: "static"`) and hydrated in the browser. Pages are written without calling any API: gate requests with `injectIsBrowser()` and show loading placeholders while `isWaiting(resource)` (`src/app/platform.ts`). Read `localStorage`, start timers and touch `window` only in the browser (`afterNextRender`).
 
 ### Styling
 

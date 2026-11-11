@@ -1,4 +1,5 @@
-import { Component, signal, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { afterNextRender, Component, signal, inject } from '@angular/core';
 import { LanguageService } from '../../i18n/language.service';
 
 @Component({
@@ -34,11 +35,17 @@ import { LanguageService } from '../../i18n/language.service';
 })
 export class CookieNoticeComponent {
   protected readonly i18n = inject(LanguageService);
-  visible = signal(!this.hasConsented());
+  private readonly storage = inject(DOCUMENT).defaultView?.localStorage;
+  /** Hidden in the prerendered page, so a visitor who has read the note never sees it flash. */
+  visible = signal(false);
+
+  constructor() {
+    afterNextRender(() => this.visible.set(!this.hasConsented()));
+  }
 
   accept() {
     try {
-      localStorage.setItem('cookie-consent', 'accepted');
+      this.storage?.setItem('cookie-consent', 'accepted');
     } catch {
       // Storage may be unavailable (e.g. private browsing) - still dismiss the notice.
     }
@@ -47,7 +54,7 @@ export class CookieNoticeComponent {
 
   private hasConsented(): boolean {
     try {
-      return localStorage.getItem('cookie-consent') === 'accepted';
+      return this.storage?.getItem('cookie-consent') === 'accepted';
     } catch {
       return false;
     }

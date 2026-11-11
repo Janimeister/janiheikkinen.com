@@ -13,7 +13,7 @@ import { LanguageService } from '../../i18n/language.service';
         <span>&copy; {{ year }} Jani Heikkinen</span>
         <div class="flex items-center gap-4">
           <a
-            routerLink="/third-party-notices"
+            [routerLink]="i18n.path('/third-party-notices')"
             class="text-text-primary font-semibold underline decoration-2 decoration-pop-pink underline-offset-4 hover:bg-pop-pink hover:no-underline transition-colors"
           >
             {{ i18n.t('footer.thirdPartyNotices') }}

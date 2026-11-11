@@ -16,7 +16,7 @@ import { findPageGroups } from './page-registry';
               <li>
                 <a
                   class="brutal-hover brutal-press"
-                  [routerLink]="'/' + page.path"
+                  [routerLink]="i18n.path('/' + page.path)"
                   routerLinkActive="current-page"
                   [routerLinkActiveOptions]="{
                     paths: 'exact',
