@@ -7,11 +7,11 @@ import {
   TitleStrategy,
 } from '@angular/router';
 import { LanguageService } from '../i18n/language.service';
-import { canonicalUrl, pageTitle, type PageMeta } from './page-registry';
+import { alternateUrls, canonicalUrl, pageTitle, type PageMeta } from './page-registry';
 
 /**
- * Keeps the document title, description, canonical link and social tags in step with the route
- * and the chosen language.
+ * Keeps the document title, description, canonical link, `hreflang` alternates and social tags
+ * in step with the route and its language.
  */
 @Injectable({ providedIn: 'root' })
 export class PageTitleStrategy extends TitleStrategy {
@@ -46,6 +46,12 @@ export class PageTitleStrategy extends TitleStrategy {
     this.meta.updateTag({ name: 'twitter:description', content: description });
 
     let canonical = this.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const alternates = this.document.head.querySelectorAll('link[rel="alternate"][hreflang]');
+    alternates.forEach((link) => link.remove());
+    this.meta.updateTag({
+      property: 'og:locale',
+      content: this.i18n.language() === 'fi' ? 'fi_FI' : 'en_GB',
+    });
     if (data.noindex) {
       canonical?.remove();
       this.meta.removeTag('property="og:url"');
@@ -61,5 +67,12 @@ export class PageTitleStrategy extends TitleStrategy {
     canonical.href = href;
     this.meta.updateTag({ property: 'og:url', content: href });
     this.meta.removeTag('name="robots"');
+    for (const { hreflang, href } of alternateUrls(url)) {
+      const link = this.document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = hreflang;
+      link.href = href;
+      this.document.head.appendChild(link);
+    }
   }
 }

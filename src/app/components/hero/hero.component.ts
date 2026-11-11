@@ -3,6 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { TypingEffectComponent } from './typing-effect.component';
 import { FloatingOrbComponent } from '../shared/floating-orb.component';
 import { LanguageService } from '../../i18n/language.service';
+import { injectIsBrowser } from '../../platform';
 
 interface CatFact {
   fact: string;
@@ -164,9 +165,11 @@ interface CatFact {
 export class HeroComponent {
   protected readonly i18n = inject(LanguageService);
 
-  catFact = httpResource<CatFact>(() => ({
-    url: 'https://catfact.ninja/fact',
-    params: { max_length: 120 },
-    timeout: 10_000,
-  }));
+  private readonly isBrowser = injectIsBrowser();
+
+  catFact = httpResource<CatFact>(() =>
+    this.isBrowser
+      ? { url: 'https://catfact.ninja/fact', params: { max_length: 120 }, timeout: 10_000 }
+      : undefined,
+  );
 }

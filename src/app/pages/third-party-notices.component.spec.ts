@@ -54,7 +54,7 @@ describe('ThirdPartyNoticesComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('a[href="/"]')?.textContent).toContain('Takaisin etusivulle');
+    expect(compiled.querySelector('a[href="/fi"]')?.textContent).toContain('Takaisin etusivulle');
     expect(compiled.querySelector('h1')?.textContent).toContain(
       'Kolmansien osapuolten ilmoitukset',
     );

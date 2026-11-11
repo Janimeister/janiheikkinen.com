@@ -1,0 +1,73 @@
+// English copy for /pathfinding; it travels with the page's own chunk.
+export const PATHFINDING_EN = {
+  'pathfinding.subtitle':
+    'Compare routes on a four-direction grid. Terrain costs apply when entering a tile: plain 1, medium 3, high 8.',
+  'pathfinding.algorithm': 'Algorithm',
+  'pathfinding.speed': 'Speed',
+  'pathfinding.speedHelp': '1–100 visualization steps per second.',
+  'pathfinding.start': 'Start search',
+  'pathfinding.pause': 'Pause',
+  'pathfinding.resume': 'Resume',
+  'pathfinding.step': 'Single step',
+  'pathfinding.resetRun': 'Reset run',
+  'pathfinding.editTools': 'Grid editing tools',
+  'pathfinding.moveStart': 'Move start',
+  'pathfinding.moveDestination': 'Move destination',
+  'pathfinding.wallTool': 'Toggle wall',
+  'pathfinding.mediumTool': 'Medium cost ×3',
+  'pathfinding.highTool': 'High cost ×8',
+  'pathfinding.eraseTool': 'Erase terrain',
+  'pathfinding.clearGrid': 'Clear grid',
+  'pathfinding.newLayout': 'New example layout',
+  'pathfinding.editHelp':
+    'Choose a tool, then click or focus a tile and press Enter. Use the arrow keys to move between tiles. Walls block movement; diagonal moves are disabled.',
+  'pathfinding.ready': 'Ready',
+  'pathfinding.running': 'Exploring…',
+  'pathfinding.paused': 'Paused',
+  'pathfinding.done': 'Search complete',
+  'pathfinding.found': 'Path found',
+  'pathfinding.noRoute': 'No route available',
+  'pathfinding.costModel': 'Tile cost: 1 / 3 / 8',
+  'pathfinding.elapsed': 'Elapsed visualization time',
+  'pathfinding.elapsedHelp':
+    'This includes playback delays and shows how long the animation took. It is not raw algorithm performance.',
+  'pathfinding.gridLabel': 'Editable pathfinding grid',
+  'pathfinding.legend':
+    'S: start · G: destination · ■: wall · 3 / 8: terrain cost · O: frontier · V: visited · C: current · striped green: final path',
+  'pathfinding.visitedCount': 'Nodes visited',
+  'pathfinding.pathLength': 'Path length (steps)',
+  'pathfinding.pathCost': 'Path cost',
+  'pathfinding.complexity': 'Time complexity',
+  'pathfinding.space': 'Space',
+  'pathfinding.algorithms': 'Algorithm tradeoffs',
+  'pathfinding.time': 'Time',
+  'pathfinding.characteristics': 'How it chooses',
+  'pathfinding.bfs': 'Breadth-First Search',
+  'pathfinding.dijkstra': "Dijkstra's algorithm",
+  'pathfinding.astar': 'A* Search',
+  'pathfinding.bfsDescription':
+    'Explore layer by layer. BFS finds a route with the fewest moves when every move has equal cost; it ignores terrain weights when choosing the route.',
+  'pathfinding.dijkstraDescription':
+    'Always expand the cheapest known route so far. Dijkstra respects terrain costs and finds a minimum-cost route, even if it is longer.',
+  'pathfinding.astarDescription':
+    'Choose the lowest estimated total cost: distance so far plus Manhattan distance to the goal. This admissible heuristic guides the weighted search without diagonal moves.',
+  'pathfinding.bfsRequirement':
+    'Unweighted shortest path by number of moves; terrain weights do not affect route choice.',
+  'pathfinding.weightedRequirement':
+    'Weighted shortest path; enters medium and high terrain at costs 3 and 8.',
+  'pathfinding.astarRequirement':
+    'Weighted shortest path guided by Manhattan distance; optimal for these four-direction moves and positive terrain costs.',
+  'pathfinding.startNode': 'Start node',
+  'pathfinding.startAndDestinationNode': 'Start and destination',
+  'pathfinding.destinationNode': 'Destination node',
+  'pathfinding.wallNode': 'Wall, blocked',
+  'pathfinding.normalNode': 'Normal terrain, cost 1',
+  'pathfinding.mediumNode': 'Medium terrain, cost 3',
+  'pathfinding.highNode': 'High terrain, cost 8',
+  'pathfinding.pathState': 'final path',
+  'pathfinding.currentState': 'current node',
+  'pathfinding.visitedState': 'visited node',
+  'pathfinding.frontierState': 'frontier node',
+  'pathfinding.row': 'Row',
+  'pathfinding.column': 'column',
+} as const;

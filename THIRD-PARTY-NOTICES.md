@@ -9,8 +9,8 @@ Their licenses and attribution requirements are reproduced below.
 
 ### Angular
 - **Packages:** `@angular/common`, `@angular/compiler`, `@angular/core`, `@angular/forms`,
-  `@angular/platform-browser`, `@angular/router`, `@angular/build`, `@angular/cli`,
-  `@angular/compiler-cli`
+  `@angular/platform-browser`, `@angular/platform-server`, `@angular/router`, `@angular/ssr`,
+  `@angular/build`, `@angular/cli`, `@angular/compiler-cli`
 - **License:** MIT
 - **Copyright:** © Google LLC
 

@@ -1,5 +1,9 @@
 import type { Route } from '@angular/router';
-import type { TranslationKey } from '../i18n/translations';
+import { localizeUrl } from '../i18n/localized-url';
+import { SUPPORTED_LANGUAGES, type CoreTranslationKey } from '../i18n/translations';
+
+// Everything the registry names ships in the main bundle, so the launcher never waits for a page.
+type TranslationKey = CoreTranslationKey;
 
 export const PAGE_GROUPS = [
   { id: 'everyday', labelKey: 'explore.everyday' },
@@ -25,10 +29,26 @@ export function pageTitle(heading: string | null): string {
   return heading ? `${heading} · ${SITE_NAME}` : SITE_NAME;
 }
 
-/** The address search engines should index for a path, without query or fragment. */
+/**
+ * The address search engines should index for a path, without query or fragment. Pages are
+ * published as `weather.html` and served at `/weather`; only the two home pages, `/` and `/fi/`,
+ * are directory indexes and keep their trailing slash.
+ */
 export function canonicalUrl(url: string): string {
   const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
-  return `${SITE_URL}${path || '/'}`;
+  return `${SITE_URL}${path === '/fi' ? '/fi/' : path || '/'}`;
+}
+
+/** The same page in each language, for `hreflang` links; `x-default` is the English one. */
+export function alternateUrls(url: string): { hreflang: string; href: string }[] {
+  const english = canonicalUrl(localizeUrl(url, 'en'));
+  return [
+    ...SUPPORTED_LANGUAGES.map(({ code }) => ({
+      hreflang: code,
+      href: canonicalUrl(localizeUrl(url, code)),
+    })),
+    { hreflang: 'x-default', href: english },
+  ];
 }
 
 export interface SitePage extends PageMeta {
@@ -173,6 +193,9 @@ export const NOTICES_PAGE = {
   titleKey: 'thirdParty.title',
   metaKey: 'meta.thirdParty',
 } as const satisfies PageMeta & { path: string };
+
+/** Where the not-found page can be opened directly; the build publishes it as `404.html`. */
+export const NOT_FOUND_PATH = '404';
 
 export const NOT_FOUND_PAGE = {
   titleKey: 'notFound.title',

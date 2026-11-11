@@ -1,9 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { injectIsBrowser, isWaiting } from '../platform';
+import { GITHUB_EN } from '../i18n/pages/github.en';
 import {
   activityItems,
   blogUrl,
@@ -16,9 +19,12 @@ import {
   type GitHubUser,
 } from '../github/github-data';
 
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', GITHUB_EN);
+
 @Component({
   selector: 'app-github-page',
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink],
+  imports: [GlowCardComponent, FloatingOrbComponent, PageHeaderComponent],
   template: `
     <section class="relative min-h-screen pt-24 pb-16 px-6 md:px-12 lg:px-20 overflow-hidden">
       <app-floating-orb
@@ -47,30 +53,9 @@ import {
       />
 
       <div class="relative z-10 max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 animate-fade-slide-up">
-          <a
-            routerLink="/"
-            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {{ i18n.t('common.backToHome') }}
-          </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-3 leading-tight">
-            <span class="marker marker-pink">{{ i18n.t('github.title') }}</span>
-          </h1>
-          <p class="text-text-secondary mt-3 text-lg">{{ i18n.t('github.subtitle') }}</p>
-        </div>
+        <app-page-header titleKey="github.title" subtitleKey="github.subtitle" marker="pink" />
 
-        @if (profile.isLoading()) {
+        @if (waiting()) {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             @for (i of [1, 2, 3]; track i) {
               <app-glow-card>
@@ -328,25 +313,36 @@ export class GithubPageComponent {
   protected readonly i18n = inject(LanguageService);
   private readonly username = 'Janimeister';
 
-  profile = httpResource<GitHubUser>(() => ({
-    url: `https://api.github.com/users/${this.username}`,
-    timeout: 10_000,
-  }));
+  private readonly isBrowser = injectIsBrowser();
+
+  profile = httpResource<GitHubUser>(() =>
+    this.isBrowser
+      ? { url: `https://api.github.com/users/${this.username}`, timeout: 10_000 }
+      : undefined,
+  );
+  protected readonly waiting = computed(() => isWaiting(this.profile));
 
   repos = httpResource<GitHubRepo[]>(
-    () => ({
-      url: `https://api.github.com/users/${this.username}/repos`,
-      params: { sort: 'updated', per_page: 30 },
-      timeout: 10_000,
-    }),
+    () =>
+      this.isBrowser
+        ? {
+            url: `https://api.github.com/users/${this.username}/repos`,
+            params: { sort: 'updated', per_page: 30 },
+            timeout: 10_000,
+          }
+        : undefined,
     { parse: (value) => ownRepos(value as GitHubRepo[]) },
   );
 
-  private events = httpResource<GitHubEvent[]>(() => ({
-    url: `https://api.github.com/users/${this.username}/events/public`,
-    params: { per_page: 15 },
-    timeout: 10_000,
-  }));
+  private events = httpResource<GitHubEvent[]>(() =>
+    this.isBrowser
+      ? {
+          url: `https://api.github.com/users/${this.username}/events/public`,
+          params: { per_page: 15 },
+          timeout: 10_000,
+        }
+      : undefined,
+  );
 
   protected reposError = computed(() => this.repos.error() !== undefined);
   protected activityError = computed(() => this.events.error() !== undefined);

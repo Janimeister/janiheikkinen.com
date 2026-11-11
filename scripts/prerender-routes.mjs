@@ -1,63 +1,74 @@
-// Runs after `ng build` (npm's postbuild). GitHub Pages serves `/weather` from `weather.html`
-// with HTTP 200, so every page gets its own copy of index.html with its own title, description
-// and canonical link. Anything else falls through to 404.html, which still boots the app (for its
-// not-found page) but tells search engines not to index it. The sitemap comes from the same list.
+// Runs after `ng build` (npm's postbuild). The build prerenders every page to
+// `<path>/index.html`; this lays those files out the way GitHub Pages serves them.
 //
-// Needs Node 23.6+ (or 22.18+) to import the TypeScript registry directly.
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { EN_TRANSLATIONS as en } from '../src/app/i18n/translations.ts';
-import {
-  canonicalUrl,
-  NOT_FOUND_PAGE,
-  NOTICES_PAGE,
-  pageTitle,
-  SITE_PAGES,
-} from '../src/app/navigation/page-registry.ts';
+// - Pages serves `/weather` from `weather.html` with HTTP 200, but answers a directory
+//   (`weather/index.html`) with a redirect to `/weather/`. So each page becomes `<path>.html`.
+//   The two home pages stay directory indexes, `/` and `/fi/`.
+// - The prerendered not-found page (`/404`) becomes `404.html`, which Pages serves, with HTTP
+//   404, for every address that has no file. It still boots the app.
+// - `sitemap.xml` lists every indexable page with its `hreflang` alternates, read from the
+//   pages themselves, so the sitemap can't disagree with them.
+import { readdir, readFile, rename, rm, rmdir, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 
 const dist = resolve(process.argv[2] ?? 'dist/janiheikkinen-com/browser');
-const template = await readFile(resolve(dist, 'index.html'), 'utf8');
+const { routes } = JSON.parse(await readFile(resolve(dist, '../prerendered-routes.json'), 'utf8'));
 
-const escape = (text) =>
-  text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/** Directory indexes: their address ends in a slash, which is also their canonical link. */
+const HOME_PAGES = new Set(['/', '/fi']);
 
-/** Replaces one attribute of the single tag matching `tag`, failing loudly if it's missing. */
-function setAttribute(html, tag, attribute, value) {
-  const pattern = new RegExp(`(<${tag}[^>]*\\s${attribute}=")[^"]*(")`);
-  if (!pattern.test(html)) throw new Error(`index.html has no <${tag}> with ${attribute}`);
-  return html.replace(pattern, `$1${escape(value)}$2`);
+/** `weather/index.html` becomes `weather.html`; the then-empty folder goes. */
+async function flatten(route) {
+  const index = resolve(dist, `.${route}`, 'index.html');
+  const file = resolve(dist, `.${route}.html`);
+  await rename(index, file);
+  if ((await readdir(dirname(index))).length === 0) await rmdir(dirname(index));
+  return file;
 }
 
-function render({ path, titleKey, metaKey, noindex }) {
-  const title = pageTitle(titleKey ? en[titleKey] : null);
-  const description = en[metaKey];
-  let html = template.replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`);
-  html = setAttribute(html, 'meta name="description"', 'content', description);
-  html = setAttribute(html, 'meta property="og:title"', 'content', title);
-  html = setAttribute(html, 'meta property="og:description"', 'content', description);
-  html = setAttribute(html, 'meta name="twitter:title"', 'content', title);
-  html = setAttribute(html, 'meta name="twitter:description"', 'content', description);
-  if (noindex) {
-    return html
-      .replace(/\s*<link rel="canonical"[^>]*>/, '')
-      .replace(/\s*<meta property="og:url"[^>]*>/, '')
-      .replace('</head>', '  <meta name="robots" content="noindex">\n</head>');
+const attribute = (tag, name) => tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
+
+const entries = [];
+for (const route of Object.keys(routes).sort()) {
+  let file;
+  if (HOME_PAGES.has(route)) {
+    file = resolve(dist, `.${route}`, 'index.html');
+    // The Finnish home page is published both ways: `/fi/` is its address, and `fi.html` answers
+    // `/fi` on hosts that prefer a file to a folder of the same name.
+    if (route !== '/') await writeFile(resolve(dist, `.${route}.html`), await readFile(file));
+  } else {
+    file = await flatten(route);
   }
-  const url = canonicalUrl(`/${path}`);
-  html = setAttribute(html, 'link rel="canonical"', 'href', url);
-  return setAttribute(html, 'meta property="og:url"', 'content', url);
+
+  const html = await readFile(file, 'utf8');
+  const canonical = html.match(/<link rel="canonical"[^>]*>/)?.[0];
+  const noindex = html.includes('<meta name="robots" content="noindex">');
+  if (!canonical === !noindex) {
+    throw new Error(`${route} must have either a canonical link or a noindex tag`);
+  }
+  if (noindex) continue;
+
+  const loc = attribute(canonical, 'href');
+  if (new URL(loc).pathname !== (HOME_PAGES.has(route) && route !== '/' ? `${route}/` : route)) {
+    throw new Error(`${route} was prerendered with the canonical link of another page: ${loc}`);
+  }
+  const alternates = [...html.matchAll(/<link rel="alternate"[^>]*hreflang[^>]*>/g)].map(
+    ([tag]) =>
+      `    <xhtml:link rel="alternate" hreflang="${attribute(tag, 'hreflang')}" href="${attribute(tag, 'href')}"/>`,
+  );
+  entries.push(`  <url>\n    <loc>${loc}</loc>\n${alternates.join('\n')}\n  </url>`);
 }
 
-const pages = [...SITE_PAGES, NOTICES_PAGE];
-for (const page of pages) {
-  await writeFile(resolve(dist, page.path ? `${page.path}.html` : 'index.html'), render(page));
+// Unknown addresses get the not-found page; it must exist and stay out of search results.
+if (!(await readFile(resolve(dist, '404.html'), 'utf8')).includes('content="noindex"')) {
+  throw new Error('404.html must tell search engines not to index it');
 }
-await writeFile(resolve(dist, '404.html'), render(NOT_FOUND_PAGE));
+// The app shell with no page in it; nothing serves it.
+await rm(resolve(dist, 'index.csr.html'), { force: true });
 
-const urls = pages.map((page) => `  <url><loc>${canonicalUrl(`/${page.path}`)}</loc></url>`);
 await writeFile(
   resolve(dist, 'sitemap.xml'),
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`,
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${entries.join('\n')}\n</urlset>\n`,
 );
 
-console.log(`Wrote ${pages.length} pages, 404.html and sitemap.xml to ${dist}`);
+console.log(`Laid out ${entries.length} pages, 404.html and sitemap.xml in ${dist}`);

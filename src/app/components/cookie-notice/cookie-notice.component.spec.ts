@@ -16,20 +16,32 @@ describe('CookieNoticeComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should be visible when no consent stored', () => {
+  /** The notice reads its stored consent once the page has rendered in a browser. */
+  function render() {
     const fixture = TestBed.createComponent(CookieNoticeComponent);
-    expect(fixture.componentInstance.visible()).toBe(true);
-  });
+    fixture.detectChanges();
+    fixture.detectChanges();
+    return fixture;
+  }
 
-  it('should not be visible when consent is already stored', () => {
-    localStorage.setItem('cookie-consent', 'accepted');
+  it('should stay hidden until it has checked for stored consent', () => {
     const fixture = TestBed.createComponent(CookieNoticeComponent);
     expect(fixture.componentInstance.visible()).toBe(false);
   });
 
+  it('should be visible when no consent stored', () => {
+    expect(render().componentInstance.visible()).toBe(true);
+  });
+
+  it('should not be visible when consent is already stored', () => {
+    localStorage.setItem('cookie-consent', 'accepted');
+    const fixture = render();
+    expect(fixture.componentInstance.visible()).toBe(false);
+    expect(fixture.nativeElement.querySelector('aside')).toBeNull();
+  });
+
   it('should hide and store consent when accept is called', () => {
-    const fixture = TestBed.createComponent(CookieNoticeComponent);
-    const component = fixture.componentInstance;
+    const component = render().componentInstance;
     expect(component.visible()).toBe(true);
 
     component.accept();
@@ -39,16 +51,14 @@ describe('CookieNoticeComponent', () => {
   });
 
   it('should render the accept button when visible', () => {
-    const fixture = TestBed.createComponent(CookieNoticeComponent);
-    fixture.detectChanges();
+    const fixture = render();
     const button = fixture.nativeElement.querySelector('button');
     expect(button).toBeTruthy();
     expect(button.textContent.trim()).toBe('Got it');
   });
 
   it('should be a labelled landmark that names the third-party services', () => {
-    const fixture = TestBed.createComponent(CookieNoticeComponent);
-    fixture.detectChanges();
+    const fixture = render();
     const aside = fixture.nativeElement.querySelector('aside') as HTMLElement;
     expect(aside).toBeTruthy();
     const title = aside.querySelector(`#${aside.getAttribute('aria-labelledby')}`);

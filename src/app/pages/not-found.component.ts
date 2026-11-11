@@ -14,7 +14,7 @@ import { LanguageService } from '../i18n/language.service';
         </h1>
         <p class="text-text-secondary mb-8">{{ i18n.t('notFound.body') }}</p>
         <a
-          routerLink="/"
+          [routerLink]="i18n.path('/')"
           class="inline-flex items-center gap-2 border-2 border-ink bg-pop-yellow px-5 py-3 font-semibold text-ink shadow-brutal-sm brutal-hover brutal-press"
         >
           {{ i18n.t('notFound.home') }}

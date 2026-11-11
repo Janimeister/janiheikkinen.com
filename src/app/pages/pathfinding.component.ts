@@ -1,8 +1,10 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { PATHFINDING_EN } from '../i18n/pages/pathfinding.en';
 import type { TranslationKey } from '../i18n/translations';
 import {
   PathfindingAlgorithm,
@@ -27,19 +29,21 @@ function exampleTerrain(rows: number, columns: number): Terrain[] {
   return terrain;
 }
 
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', PATHFINDING_EN);
+
 @Component({
   selector: 'app-pathfinding-page',
-  imports: [RouterLink, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
+  imports: [PageHeaderComponent, GlowCardComponent, DecimalPipe, VisualizerNavComponent],
   template: `
     <section class="relative max-w-6xl mx-auto px-4 md:px-12 pt-28 pb-16">
-      <a routerLink="/" class="text-accent-light font-bold">← {{ i18n.t('common.backToHome') }}</a>
-      <header class="my-8 animate-fade-slide-up">
-        <h1 class="text-3xl md:text-5xl mb-4">
-          <span class="marker marker-lime">{{ i18n.t('pathfinding.title') }}</span>
-        </h1>
-        <p class="text-text-secondary max-w-2xl">{{ i18n.t('pathfinding.subtitle') }}</p>
+      <app-page-header
+        titleKey="pathfinding.title"
+        subtitleKey="pathfinding.subtitle"
+        marker="lime"
+      >
         <app-visualizer-nav category="pathfinding" />
-      </header>
+      </app-page-header>
       <app-glow-card>
         <div class="grid gap-6 md:grid-cols-3">
           <div>

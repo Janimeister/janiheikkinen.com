@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Personal site of Jani Heikkinen - live weather, Finnish electricity spot prices, GitHub activity, ASCII art and small browser games, built with Angular."
+      content="Personal site of Jani Heikkinen: live weather, Finnish electricity spot prices, Helsinki trams, HSL departures, GitHub activity, algorithm visualizers, ASCII art and small browser games."
     />
     <meta name="theme-color" content="#f2efe5" />
     <link rel="canonical" href="https://janiheikkinen.com/" />
@@ -15,7 +15,7 @@
     <meta property="og:title" content="Jani Heikkinen" />
     <meta
       property="og:description"
-      content="Personal site of Jani Heikkinen - live weather, Finnish electricity spot prices, GitHub activity, ASCII art and small browser games."
+      content="Personal site of Jani Heikkinen: live weather, Finnish electricity spot prices, Helsinki trams, HSL departures, GitHub activity, algorithm visualizers, ASCII art and small browser games."
     />
     <meta property="og:url" content="https://janiheikkinen.com/" />
     <meta property="og:site_name" content="Jani Heikkinen" />
@@ -23,8 +23,23 @@
     <meta name="twitter:title" content="Jani Heikkinen" />
     <meta
       name="twitter:description"
-      content="Personal site of Jani Heikkinen - live weather, Finnish electricity spot prices, GitHub activity, ASCII art and small browser games."
+      content="Personal site of Jani Heikkinen: live weather, Finnish electricity spot prices, Helsinki trams, HSL departures, GitHub activity, algorithm visualizers, ASCII art and small browser games."
     />
+    <script>
+      // The language toggle remembers its last choice. A visitor who chose Finnish and opens an
+      // English address goes to the same page in Finnish, before anything is drawn.
+      try {
+        if (
+          localStorage.getItem('app-language') === 'fi' &&
+          !/^\/fi(\/|$)/.test(location.pathname)
+        ) {
+          var path = location.pathname.replace(/\/+$/, '');
+          location.replace('/fi' + (path || '/') + location.search + location.hash);
+        }
+      } catch (e) {
+        // No storage, no remembered choice.
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
   </head>

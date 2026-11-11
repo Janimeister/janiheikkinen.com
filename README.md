@@ -25,7 +25,8 @@ Open `http://localhost:4200/`. The development server automatically uses [proxy.
 | Language | [TypeScript 6](https://www.typescriptlang.org) |
 | Build tool | [Vite](https://vite.dev) via `@angular/build` |
 | Styling | [Tailwind CSS 4](https://tailwindcss.com) via `@tailwindcss/postcss` — neo-brutalist design system, see [docs/design-system.md](docs/design-system.md) |
-| Routing | Angular Router with lazy-loaded page components |
+| Routing | Angular Router with lazy-loaded page components, in English at the root and Finnish under `/fi` |
+| Rendering | Every page prerendered to static HTML at build time with `@angular/ssr`, then hydrated in the browser |
 | Data fetching | Angular `httpResource()` and `HttpClient` APIs |
 | E2E testing | [Playwright](https://playwright.dev) |
 | Accessibility testing | [axe-core/playwright](https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright) |
@@ -55,19 +56,27 @@ src/app/
 │   ├── navbar/              # Compact header and Explore dialog
 │   ├── language-toggle/     # EN/FI language switcher
 │   ├── footer/              # Site footer
-│   ├── shared/              # GlowCardComponent, FloatingOrbComponent
+│   ├── shared/              # PageHeaderComponent, GlowCardComponent, FloatingOrbComponent
 │   └── cookie-notice/       # Privacy note (storage and third-party services)
-├── navigation/              # Page registry, search, page cards, titles and meta tags
+├── navigation/              # Page registry, search, page cards, titles, meta tags and hreflang links
 ├── sorting/                  # Sorting algorithms, metadata and event generators
 ├── searching/                # Search algorithms and event generators
 ├── pathfinding/              # Weighted grid algorithms and event generators
 ├── trams/                    # Tram map grid, ASCII rasteriser, MQTT client, HFP parsing and live feed
-├── departures/               # Digitransit GraphQL queries and response parsing
+│   └── components/           # The tram page's parts: controls, toolbar, map canvas, details, legend
+├── departures/               # Digitransit GraphQL queries, response parsing and recent stops
+│   └── components/           # The departures page's parts: stop search and departure board
+├── ascii/                    # The ASCII art generators
 ├── electricity/              # Cheapest-run search and the "Best time to run" planner
 ├── visualization/            # Shared playback, metadata types and category nav
-├── i18n/                    # Signal-based runtime translations
-├── app.routes.ts            # Route definitions
-└── app.config.ts            # Application configuration
+├── i18n/                    # Signal-based runtime translations and language URLs
+│   └── pages/               # Each page's own copy, one file per page and language
+├── platform.ts              # Browser-only helpers for prerendered pages
+├── early-input.ts           # Keeps what is typed before the app has started
+├── app.routes.ts            # Route definitions, once per language
+├── app.routes.server.ts     # Which routes the build prerenders (all of them)
+├── app.config.ts            # Application configuration
+└── app.config.server.ts     # Additions for prerendering
 ```
 
 Theme tokens and animation keyframes are centralized in `src/styles.css`. The visual language ("Paper & Ink" neo-brutalism — cream background, 2px ink borders, hard offset shadows, flat pop-color fills) is documented in [docs/design-system.md](docs/design-system.md).
@@ -76,7 +85,7 @@ Theme tokens and animation keyframes are centralized in `src/styles.css`. The vi
 
 The compact header keeps the home logo, current page, language toggle and **Explore** button visible. Explore opens a searchable, grouped page launcher; on mobile it fills the screen. `Ctrl+K` / `Cmd+K` opens or closes it, and Escape dismisses it. The dialog contains keyboard focus, restores focus when dismissed and prevents background scrolling. Search matches translated titles, descriptions, categories and keywords. **Surprise me** opens a different experiment or game.
 
-The homepage displays the same page cards below the introduction. Add a page to `src/app/navigation/page-registry.ts` with its lazy component loader, category and translation keys, then add the English and Finnish copy to `src/app/i18n/translations.ts`. That single entry supplies the route, launcher and homepage card. Third-party notices remain a footer destination.
+The homepage displays the same page cards below the introduction. Add a page to `src/app/navigation/page-registry.ts` with its lazy component loader, category and translation keys. That single entry supplies the route in both languages, the launcher entry, the homepage card, the prerendered HTML files and the sitemap entries. The copy the launcher and browser tab need (heading, description, keywords, meta description) goes in `src/app/i18n/translations.ts` and `translations.fi.ts`; the rest of the page's copy goes in `src/app/i18n/pages/` (see [Language Support](#language-support)). Third-party notices remain a footer destination.
 
 Navigation behavior and dialog accessibility are covered in `e2e/navigation.spec.ts`; registry/search behavior and component state also have unit tests.
 
@@ -94,9 +103,24 @@ See [docs/algorithms-visualizer.md](docs/algorithms-visualizer.md) for event and
 
 ## Language Support
 
-The app supports English and Finnish through a small runtime i18n layer in `src/app/i18n/`. Users can switch language from the navbar using the EN/FI segmented control. The selected language is stored in `localStorage` under `app-language`, updates the document `<html lang>` attribute, and is applied immediately without changing routes or requiring a separate build. English ships in the main bundle; the Finnish strings (`translations.fi.ts`) are a separate chunk, fetched the first time Finnish is chosen, and before the app starts when it was chosen on an earlier visit. The browser tab title and meta description follow the chosen language.
+The app supports English and Finnish through a small runtime i18n layer in `src/app/i18n/`. Each language has its own address for every page: English at the root (`/weather`), Finnish under `/fi` (`/fi/weather`). The address decides the language, so a page can be shared, bookmarked and indexed in either one, and each page links to its twin with `hreflang`. The EN/FI control in the navbar is a pair of links to the current page in each language, keeping its query string.
+
+- **Links** inside the app are written with `LanguageService.path('/weather')`, which keeps a Finnish visitor under `/fi`.
+- **Remembering the choice:** clicking the control stores the language in `localStorage` under `app-language`. A small inline script in `index.html` sends a visitor who chose Finnish from an English address to the same page under `/fi`, before anything is drawn. Following a link to `/fi/...` does not change the stored choice.
+- **Loading:** the copy every page needs (navigation, launcher, page headings, meta descriptions) is in `translations.ts` and ships in the main bundle. Each page's own copy lives in `src/app/i18n/pages/{page}.en.ts`, which travels with that page's lazy chunk, and `{page}.fi.ts`, which the route fetches with the shared Finnish copy before the page is shown. An English visit never downloads Finnish, and no visit downloads the copy of pages it doesn't open.
+- The browser tab title, meta description, canonical link and `<html lang>` follow the address.
 
 Static UI copy is translated in the app. External content such as GitHub repository descriptions, cat facts, and third-party notice file contents is shown as returned by its source.
+
+## Prerendering
+
+`npm run build` writes every page, in both languages, to its own HTML file (`@angular/ssr` with `outputMode: "static"`), so the content is there before any JavaScript runs and for crawlers and link previews. The browser then hydrates that HTML instead of redrawing it.
+
+- **No API is called at build time.** Pages request data only in the browser (`injectIsBrowser()` in `src/app/platform.ts`), and the HTML holds their loading placeholders. A build never depends on a third-party service and never publishes stale data.
+- **Browser-only state waits for the browser.** Stored settings (the privacy note, the virtual pet, the tram view) are read after the first render, so a returning visitor never sees the default state flash by first. Random starting data (the visualizers' numbers) is handed from the prerendered page to the app, which starts from what is already on screen.
+- **Early input is kept.** Clicks made before the app has started are replayed by Angular; text typed and options picked in that time are restored by `src/app/early-input.ts`.
+- **Layout for GitHub Pages.** `scripts/prerender-routes.mjs` (npm's `postbuild`) turns `weather/index.html` into `weather.html`, which Pages serves at `/weather` without a redirect, turns the prerendered `/404` page into `404.html`, and writes `sitemap.xml` with each page's `hreflang` alternates. `scripts/serve-pages.mjs` serves the result the way Pages does, for `npm run test:production`.
+- `ng serve` renders pages on request the same way, so the e2e tests exercise hydration too (`e2e/prerender.spec.ts`).
 
 ## External APIs
 
@@ -296,11 +320,13 @@ The workflow builds with base href `/` and publishes `dist/janiheikkinen-com/bro
 
 ### Pages, titles and the sitemap
 
-GitHub Pages serves `/weather` from `weather.html` with HTTP 200, so `npm run build` finishes with [scripts/prerender-routes.mjs](scripts/prerender-routes.mjs) (npm's `postbuild`). It reads the page registry and writes a copy of `index.html` for every page, each with its own English title, meta description, canonical link and social tags, plus `sitemap.xml` and a `404.html` marked `noindex`. Unknown addresses load the app from `404.html` and show its not-found page. In the browser, `PageTitleStrategy` keeps the same tags up to date on navigation and language changes. Titles repeat each page's `<h1>` translation key (`titleKey`); descriptions use the `meta.*` keys.
+The build prerenders every page in both languages (see [Prerendering](#prerendering)), and [scripts/prerender-routes.mjs](scripts/prerender-routes.mjs) (npm's `postbuild`) lays the files out for GitHub Pages: `/weather` is served from `weather.html` and `/fi/weather` from `fi/weather.html`, both with HTTP 200, and the two home pages from `index.html` and `fi/index.html`. It also writes `sitemap.xml`, listing every page with its `hreflang` alternates, and checks that each page carries its own canonical link. Unknown addresses get `404.html`, the prerendered not-found page marked `noindex`, which still boots the app.
+
+`PageTitleStrategy` sets each page's title, meta description, canonical link, `hreflang` alternates and social tags, while prerendering and on every navigation in the browser. Titles repeat each page's `<h1>` translation key (`titleKey`); descriptions use the `meta.*` keys.
 
 ### Production smoke checks
 
-Browser system dependency installation has two bounded attempts and fails clearly if both fail. The production build job and the deployment build both run a Chromium smoke check before the Pages artifact is uploaded. It checks application startup, script, style and font loading, that every sitemap page is served with HTTP 200 and its own title and canonical link, and that unknown addresses get the not-found page with HTTP 404, independently of external APIs.
+Browser system dependency installation has two bounded attempts and fails clearly if both fail. The production build job and the deployment build both run a Chromium smoke check before the Pages artifact is uploaded. It checks application startup in both languages, script, style and font loading, that the app takes each prerendered page over without a hydration mismatch, that every sitemap page is served with HTTP 200, its own title, canonical link and content, and that unknown addresses get the not-found page with HTTP 404, independently of external APIs.
 
 Run the same smoke check locally after building:
 

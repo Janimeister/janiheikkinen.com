@@ -90,9 +90,12 @@ Fonts are self-hosted from the [Fontsource](https://fontsource.org) packages lis
 | `.sticker` | Small rotated mono label: pop-yellow fill, ink border, small shadow |
 
 ### Page marker color assignments
-home: yellow · weather: sky · electricity: orange · github: pink · ascii: lime · snake: lime · pet: orange · notices: yellow. New pages pick the pop color that fits their topic; reuse is fine.
+home: yellow · weather: sky · electricity: orange · trams: lime · departures: pink · github: pink · ascii: lime · snake: lime · pet: orange · sorting: sky · searching: pink · pathfinding: lime · notices: yellow. A page sets its color with the `marker` input of `app-page-header` (§6). New pages pick the pop color that fits their topic; reuse is fine.
 
 ## 6. Components
+
+### Page header — `PageHeaderComponent` (`app-page-header`)
+`src/app/components/shared/page-header.component.ts`. The top of every detail page: the "Back to Home" button (a link to the home page in the current language), the `h1` on its marker stripe and an optional subtitle. Inputs: `titleKey`, `subtitleKey`, `marker` (`yellow` · `pink` · `lime` · `sky` · `orange`). Anything placed inside it follows the subtitle: the weather page's location search, the visualizers' section nav. Don't hand-roll a page header.
 
 ### Card — `GlowCardComponent` (`app-glow-card`)
 `src/app/components/shared/glow-card.component.ts`. Card surface, 2px ink border, `shadow-brutal`, hover lift + `bg-card-hover`. Keeps the legacy `.glow-card` class name (unit + e2e tests rely on it). Use for every data section wrapper.
@@ -141,12 +144,13 @@ Game/art canvases use design-system colors in their draw code (e.g. Snake board 
 
 ## 9. Adding a new page — recipe
 
-1. Add an entry in `src/app/navigation/page-registry.ts` with the lazy component loader, path, category, title, description and search keyword translation keys. `app.routes.ts`, Explore and the homepage directory use this registry. Add the copy to `src/app/i18n/translations.ts` (EN + FI). Footer-only utility routes stay in `app.routes.ts`.
-2. Header: "Back to Home" link (`routerLink="/"`), `h1` with `<span class="marker marker-{color}">`, subtitle in `text-text-secondary`.
-3. Sections in `app-glow-card`, entrance via `animate-fade-slide-up stagger-N`, `h2` headings.
-4. Data with `resource()`; `animate-pulse bg-ink/10` shimmers while loading; `<p class="text-red-400">` + i18n message on error; attribution link if the API requires it.
-5. Optional: 1–3 `app-floating-orb` decos, a `.sticker` label.
-6. Add e2e coverage in `e2e/app.spec.ts` (heading, back link, sections via `expectSectionOrError`).
+1. Add an entry in `src/app/navigation/page-registry.ts` with the lazy component loader, path, category, title, description and search keyword translation keys. `app.routes.ts` (English at the root, Finnish under `/fi`), Explore, the homepage directory, the prerendered HTML files and the sitemap all follow this registry. Footer-only utility routes stay in `app.routes.ts`.
+2. Copy: the page's heading, launcher and meta description keys go in `src/app/i18n/translations.ts` and `translations.fi.ts` (they ship with the app). Everything else the page says goes in `src/app/i18n/pages/{name}.en.ts` and `{name}.fi.ts`; register the Finnish loader in `src/app/i18n/pages/index.ts` and call `registerTranslations('en', {NAME}_EN)` at the top of the page component.
+3. Header: `<app-page-header titleKey="{name}.title" subtitleKey="{name}.subtitle" marker="{color}" />`. Link to other pages with `[routerLink]="i18n.path('/somewhere')"`, never a bare `routerLink="/somewhere"`, so Finnish visitors stay in Finnish.
+4. Sections in `app-glow-card`, entrance via `animate-fade-slide-up stagger-N`, `h2` headings.
+5. Data with `httpResource()`, requested only in the browser (`injectIsBrowser()` from `src/app/platform.ts`) so the build never calls an API; `animate-pulse bg-ink/10` shimmers while `isWaiting(resource)`; `<p class="text-red-400">` + i18n message on error; attribution link if the API requires it. Read `localStorage` in `afterNextRender`, not while the page is being prerendered.
+6. Optional: 1–3 `app-floating-orb` decos, a `.sticker` label.
+7. Add e2e coverage in `e2e/{name}.spec.ts` (heading, back link, the data a fixture renders, the error card via `failApi()`), and add the route to `NAV_ROUTES` in `e2e/navigation.spec.ts` and to `PAGES` in `e2e/accessibility.spec.ts` and `e2e/prerender.spec.ts`.
 
 ## 10. Changing the system
 

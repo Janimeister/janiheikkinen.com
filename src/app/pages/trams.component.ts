@@ -12,53 +12,43 @@ import {
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
 import { GlowCardComponent } from '../components/shared/glow-card.component';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
 import { FloatingOrbComponent } from '../components/shared/floating-orb.component';
+import { registerTranslations } from '../i18n/dictionaries';
 import { LanguageService } from '../i18n/language.service';
+import { TRAMS_EN } from '../i18n/pages/trams.en';
 import type { TranslationKey } from '../i18n/translations';
-import { createGrid, defaultPreset, GRID_PRESETS, type PresetId } from '../trams/grid';
+import { injectIsBrowser } from '../platform';
+import { ASCII_GLYPHS, renderBaseMap, toRuns, UNICODE_GLYPHS } from '../trams/ascii-raster';
+import { TramCanvasComponent } from '../trams/components/tram-canvas.component';
+import { TramControlsComponent } from '../trams/components/tram-controls.component';
 import {
-  ASCII_GLYPHS,
-  lineClass,
-  renderBaseMap,
-  toRuns,
-  UNICODE_GLYPHS,
-} from '../trams/ascii-raster';
-import type { TramMapData } from '../trams/tram-map.model';
-import { CLUSTER_GLYPH, renderTramOverlay, TRAIL_GLYPH } from '../trams/tram-overlay';
-import { isStale, TramFeedService, type FeedStatus } from '../trams/tram-feed.service';
-import { lineOf, type TramState } from '../trams/hfp';
+  TramDetailsPanelComponent,
+  type TramDetailsView,
+} from '../trams/components/tram-details-panel.component';
+import { TramLegendComponent } from '../trams/components/tram-legend.component';
+import { PRE_INSET_PX, TRAM_MAP_STYLES, tramChipClass } from '../trams/components/tram-styles';
+import { TramToolbarComponent } from '../trams/components/tram-toolbar.component';
+import {
+  exitNativeFullscreen,
+  FULLSCREEN_EVENTS,
+  isNativeFullscreen,
+  requestNativeFullscreen,
+  trapFocus,
+} from '../trams/fullscreen';
+import { createGrid, defaultPreset, GRID_PRESETS, type PresetId } from '../trams/grid';
+import type { TramState } from '../trams/hfp';
 import { age, schedule, speedKmh, tramTargets } from '../trams/tram-details';
+import { isStale, TramFeedService, type FeedStatus } from '../trams/tram-feed.service';
+import type { TramMapData } from '../trams/tram-map.model';
 import { interpolate } from '../trams/tram-motion';
-
-type GlyphMode = 'ascii' | 'unicode';
-
-const PRESET_OPTIONS: readonly { id: PresetId; labelKey: TranslationKey }[] = [
-  { id: 'centre', labelKey: 'trams.presetCentre' },
-  { id: 'network', labelKey: 'trams.presetNetwork' },
-  { id: 'mobile', labelKey: 'trams.presetMobile' },
-];
-
-const GLYPH_OPTIONS: readonly { id: GlyphMode; labelKey: TranslationKey }[] = [
-  { id: 'ascii', labelKey: 'trams.glyphsAscii' },
-  { id: 'unicode', labelKey: 'trams.glyphsUnicode' },
-];
-
-/** The view settings a visitor chose, remembered in this browser. */
-interface ViewPrefs {
-  preset?: PresetId;
-  glyphs?: GlyphMode;
-  smooth?: boolean;
-  trails?: boolean;
-}
-const PREFS_KEY = 'trams-view';
+import { renderTramOverlay } from '../trams/tram-overlay';
+import { parseViewPrefs, PREFS_KEY, type GlyphMode, type ViewPrefs } from '../trams/view-prefs';
 
 /** How often gliding trams are redrawn in smooth mode: about as often as they report. */
 const FRAME_MS = 500;
 
-/** Padding plus border of the map `<pre>`, on each side. The characters start after it. */
-const PRE_INSET_PX = 12 + 2;
 const PRE_CHROME_PX = 2 * PRE_INSET_PX;
 const MIN_FONT_PX = 8;
 const MAX_FONT_PX = 16;
@@ -75,24 +65,26 @@ const STATUS: Readonly<Record<FeedStatus, { labelKey: TranslationKey; cls: strin
   paused: { labelKey: 'trams.statusPaused', cls: 'bg-pop-sky' },
 };
 
-const NO_LINES: ReadonlySet<string> = new Set();
-
-type FullscreenDocument = Document & {
-  webkitFullscreenElement?: Element | null;
-  webkitExitFullscreen?: () => Promise<void>;
-};
-type FullscreenElement = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
 const LOADING_DOTS = Array.from({ length: 14 }, (_, row) =>
   (row % 2 ? ' .' : '. ').repeat(36),
 ).join('\n');
 
-// Smaller on phones, so the controls leave room for the map.
-const OPTION_CLASS =
-  'px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-semibold text-ink border-2 border-ink shadow-brutal-sm brutal-hover brutal-press transition-transform';
+// This page's English copy; the Finnish copy is fetched by the route when it's needed.
+registerTranslations('en', TRAMS_EN);
 
 @Component({
   selector: 'app-trams-page',
-  imports: [GlowCardComponent, FloatingOrbComponent, RouterLink, NgTemplateOutlet],
+  imports: [
+    GlowCardComponent,
+    FloatingOrbComponent,
+    PageHeaderComponent,
+    NgTemplateOutlet,
+    TramControlsComponent,
+    TramToolbarComponent,
+    TramCanvasComponent,
+    TramDetailsPanelComponent,
+    TramLegendComponent,
+  ],
   providers: [TramFeedService],
   host: { '(document:keydown.escape)': 'onEscape()' },
   template: `
@@ -115,134 +107,24 @@ const OPTION_CLASS =
       />
 
       <div class="relative z-10 max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 animate-fade-slide-up">
-          <a
-            routerLink="/"
-            class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {{ i18n.t('common.backToHome') }}
-          </a>
-          <h1 class="text-4xl md:text-5xl font-bold mt-3 leading-tight">
-            <span class="marker marker-lime">{{ i18n.t('trams.title') }}</span>
-          </h1>
-          <p class="text-text-secondary mt-3 text-lg">{{ i18n.t('trams.subtitle') }}</p>
-        </div>
+        <app-page-header titleKey="trams.title" subtitleKey="trams.subtitle" marker="lime" />
 
         <!-- Controls -->
         <div class="mb-6 animate-fade-slide-up stagger-1">
           <app-glow-card>
-            <!-- Each group wraps as a unit, so a label never ends a line on its own. -->
-            <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="control-label">{{ i18n.t('trams.view') }}</span>
-                @for (option of presetOptions; track option.id) {
-                  <button
-                    type="button"
-                    (click)="choosePreset(option.id)"
-                    [class]="optionClass(presetId() === option.id)"
-                    [attr.aria-pressed]="presetId() === option.id"
-                  >
-                    {{ i18n.t(option.labelKey) }}
-                  </button>
-                }
-              </div>
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="control-label">{{ i18n.t('trams.glyphs') }}</span>
-                @for (option of glyphOptions; track option.id) {
-                  <button
-                    type="button"
-                    (click)="chooseGlyphs(option.id)"
-                    [class]="optionClass(glyphMode() === option.id)"
-                    [attr.aria-pressed]="glyphMode() === option.id"
-                  >
-                    {{ i18n.t(option.labelKey) }}
-                  </button>
-                }
-              </div>
-              <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <span class="control-label">{{ i18n.t('trams.motion') }}</span>
-                <label class="toggle-label">
-                  <input
-                    type="checkbox"
-                    class="control-toggle"
-                    [checked]="feed.smooth()"
-                    (change)="onSmoothToggle($event)"
-                    data-testid="tram-smooth"
-                  />
-                  {{ i18n.t('trams.smooth') }}
-                </label>
-                <label class="toggle-label">
-                  <input
-                    type="checkbox"
-                    class="control-toggle"
-                    [checked]="trails()"
-                    (change)="onTrailsToggle($event)"
-                    data-testid="tram-trails"
-                  />
-                  {{ i18n.t('trams.trails') }}
-                </label>
-              </div>
-            </div>
-            @if (feed.smooth()) {
-              <p class="text-sm text-text-secondary mt-2" data-testid="tram-smooth-note">
-                {{ i18n.t('trams.smoothNote') }}
-              </p>
-            }
-            @if (lineChoices().length > 0) {
-              <div class="flex flex-wrap items-center gap-2 mt-4" data-testid="tram-line-filter">
-                <span class="control-label">{{ i18n.t('trams.lines') }}</span>
-                <button
-                  type="button"
-                  (click)="lineSelection.set(null)"
-                  [class]="optionClass(lineSelection() === null)"
-                  [attr.aria-pressed]="lineSelection() === null"
-                >
-                  {{ i18n.t('trams.allLines') }}
-                </button>
-                <button
-                  type="button"
-                  (click)="lineSelection.set(noLines)"
-                  [class]="optionClass(lineSelection()?.size === 0)"
-                  [attr.aria-pressed]="lineSelection()?.size === 0"
-                >
-                  {{ i18n.t('trams.noLines') }}
-                </button>
-                @for (line of lineChoices(); track line) {
-                  <button
-                    type="button"
-                    (click)="toggleLine(line)"
-                    [class]="lineChipClass(line)"
-                    [attr.aria-pressed]="follows(line)"
-                    [attr.aria-label]="i18n.t('trams.line', { line })"
-                  >
-                    {{ line }}
-                  </button>
-                }
-                <label class="sm:ml-auto toggle-label">
-                  <input
-                    type="checkbox"
-                    class="control-toggle"
-                    [checked]="showDepotRuns()"
-                    (change)="onDepotToggle($event)"
-                  />
-                  {{ i18n.t('trams.showDepotRuns') }}
-                </label>
-              </div>
-              @if (lineSelection() !== null) {
-                <p class="text-sm text-text-secondary mt-2">{{ i18n.t('trams.filterNote') }}</p>
-              }
-            }
+            <app-tram-controls
+              [presetId]="presetId()"
+              [glyphMode]="glyphMode()"
+              [smooth]="feed.smooth()"
+              [trails]="trails()"
+              [lineChoices]="lineChoices()"
+              [(lineSelection)]="lineSelection"
+              [(showDepotRuns)]="showDepotRuns"
+              (presetChange)="choosePreset($event)"
+              (glyphModeChange)="chooseGlyphs($event)"
+              (smoothChange)="setSmooth($event)"
+              (trailsChange)="setTrails($event)"
+            />
           </app-glow-card>
         </div>
 
@@ -264,60 +146,12 @@ const OPTION_CLASS =
         @if (baseMap(); as map) {
           <div class="mb-6 animate-fade-slide-up stagger-3">
             <app-glow-card>
-              <h2 class="text-lg font-semibold mb-3">{{ i18n.t('trams.legend') }}</h2>
-              <ul class="flex flex-wrap gap-2 font-mono text-sm">
-                @for (desi of map.lines; track desi) {
-                  <li
-                    class="legend-chip"
-                    [class]="lineClass(desi)"
-                    [attr.aria-label]="i18n.t('trams.line', { line: desi })"
-                  >
-                    {{ desi }}
-                  </li>
-                }
-              </ul>
-              <ul class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-text-secondary">
-                <li>
-                  <span class="legend-glyph line-shared" aria-hidden="true">{{
-                    glyphs().track.h
-                  }}</span>
-                  {{ i18n.t('trams.legendShared') }}
-                </li>
-                <li>
-                  <span class="legend-glyph stop" aria-hidden="true">{{ glyphs().stop }}</span>
-                  {{ i18n.t('trams.legendStop') }}
-                </li>
-                <li>
-                  <span class="legend-glyph sea" aria-hidden="true">{{ glyphs().sea[0] }}</span>
-                  {{ i18n.t('trams.legendSea') }}
-                </li>
-                <li>
-                  <span class="legend-glyph park" aria-hidden="true">{{ glyphs().park }}</span>
-                  {{ i18n.t('trams.legendPark') }}
-                </li>
-                <li>
-                  <span class="legend-glyph tram line-4" aria-hidden="true">4</span>
-                  {{ i18n.t('trams.legendTram') }}
-                </li>
-                <li>
-                  <span class="legend-glyph tram tram-dim" aria-hidden="true">4</span>
-                  {{ i18n.t(feed.smooth() ? 'trams.legendDimmedSmooth' : 'trams.legendDimmed') }}
-                </li>
-                <li>
-                  <span class="legend-glyph tram tram-cluster" aria-hidden="true">{{
-                    clusterGlyph
-                  }}</span>
-                  {{ i18n.t('trams.legendCluster') }}
-                </li>
-                @if (trails()) {
-                  <li>
-                    <span class="legend-glyph trail line-4" aria-hidden="true">{{
-                      trailGlyph
-                    }}</span>
-                    {{ i18n.t('trams.legendTrail') }}
-                  </li>
-                }
-              </ul>
+              <app-tram-legend
+                [lines]="map.lines"
+                [glyphs]="glyphs()"
+                [smooth]="feed.smooth()"
+                [trails]="trails()"
+              />
             </app-glow-card>
           </div>
         }
@@ -385,99 +219,19 @@ const OPTION_CLASS =
     </section>
 
     <ng-template #toolbar>
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <span class="status-badge" [class]="status().cls" role="status" data-testid="tram-status">
-          <span
-            class="status-dot"
-            [class.animate-pulse]="feed.status() !== 'live' && feed.status() !== 'paused'"
-            aria-hidden="true"
-          ></span>
-          {{ i18n.t(status().labelKey) }}
-        </span>
-        <span class="text-sm font-semibold text-text-secondary" data-testid="tram-count">{{
-          i18n.t('trams.tramCount', { count: shownTrams().size })
-        }}</span>
-        <button
-          type="button"
-          (click)="togglePause()"
-          class="inline-flex items-center gap-2 bg-bg-card {{ optionBase }}"
-        >
-          @if (feed.paused()) {
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 4l13 8-13 8z" />
-            </svg>
-            {{ i18n.t('trams.resume') }}
-          } @else {
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
-            </svg>
-            {{ i18n.t('trams.pause') }}
-          }
-        </button>
-        @if (fullscreen()) {
-          <span class="ml-auto inline-flex gap-2">
-            <button
-              type="button"
-              (click)="zoomBy(-1)"
-              [disabled]="zoomStep() === 0"
-              [attr.aria-label]="i18n.t('trams.zoomOut')"
-              class="zoom-button {{ optionBase }}"
-            >
-              −
-            </button>
-            <button
-              type="button"
-              (click)="zoomBy(1)"
-              [disabled]="zoomStep() === zoomSteps.length - 1"
-              [attr.aria-label]="i18n.t('trams.zoomIn')"
-              class="zoom-button {{ optionBase }}"
-            >
-              +
-            </button>
-          </span>
-          <button
-            #exitButton
-            type="button"
-            (click)="exitFullscreen()"
-            class="inline-flex items-center gap-2 bg-pop-yellow {{ optionBase }}"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
-            </svg>
-            {{ i18n.t('trams.exitFullscreen') }}
-          </button>
-        } @else {
-          <button
-            #enterButton
-            type="button"
-            (click)="enterFullscreen()"
-            class="ml-auto inline-flex items-center gap-2 bg-bg-card {{ optionBase }}"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
-              />
-            </svg>
-            {{ i18n.t('trams.fullscreen') }}
-          </button>
-        }
-      </div>
+      <app-tram-toolbar
+        [status]="status()"
+        [pulsing]="feed.status() !== 'live' && feed.status() !== 'paused'"
+        [count]="shownTrams().size"
+        [paused]="feed.paused()"
+        [fullscreen]="fullscreen()"
+        [zoomStep]="zoomStep()"
+        [zoomSteps]="zoomSteps.length"
+        (pauseToggle)="togglePause()"
+        (zoom)="zoomBy($event)"
+        (enter)="enterFullscreen()"
+        (exit)="exitFullscreen()"
+      />
     </ng-template>
 
     <ng-template #mapView>
@@ -494,129 +248,38 @@ const OPTION_CLASS =
               [attr.aria-label]="i18n.t('trams.mapRegion')"
               data-testid="tram-map-region"
             >
-              <div class="relative w-max" [class.mx-auto]="fullscreen()">
-                <pre
-                  class="tram-map"
-                  role="img"
-                  data-testid="tram-map"
-                  [style.font-size.px]="fontSize()"
-                  [style.line-height.px]="lineHeight()"
-                  [attr.aria-label]="
-                    i18n.t('trams.mapLabel', { lines: map.lines.length, stops: map.stopCount }) +
-                    ' ' +
-                    i18n.t('trams.mapTrams', { count: overlay()?.count ?? 0 })
-                  "
-                >@for (row of rows(); track $index) {<span class="map-row">@for (run of row; track $index) {<span [class]="run.cls">{{ run.text }}</span>}</span>}</pre>
-                <pre
-                  class="tram-map tram-overlay"
-                  aria-hidden="true"
-                  data-testid="tram-overlay"
-                  [style.font-size.px]="fontSize()"
-                  [style.line-height.px]="lineHeight()"
-                >@for (row of overlayRows(); track $index) {<span class="map-row">@for (run of row; track $index) {<span [class]="run.cls">{{ run.text }}</span>}</span>}</pre>
-                <!-- One invisible button over each tram: the map's click targets and, for keyboards and screen readers, its list of trams. -->
-                <nav
-                  class="tram-targets"
-                  [attr.aria-label]="i18n.t('trams.tramList')"
-                  [style.font-size.px]="fontSize()"
-                  (keydown)="moveFocus($event)"
-                  data-testid="tram-list"
-                >
-                  @for (group of tramGroups(); track group.line) {
-                    <ul [attr.aria-label]="i18n.t('trams.line', { line: group.line })">
-                      @for (target of group.targets; track target.tram.key) {
-                        <li>
-                          <button
-                            type="button"
-                            class="tram-target"
-                            [style.left]="'calc(' + preInset + 'px + ' + target.col + 'ch)'"
-                            [style.top.px]="preInset + target.row * lineHeight()"
-                            [style.width.ch]="target.width"
-                            [style.height.px]="lineHeight()"
-                            [attr.tabindex]="target.tram.key === rovingKey() ? 0 : -1"
-                            [attr.aria-pressed]="target.tram.key === selectedKey()"
-                            [attr.aria-label]="tramName(target.tram)"
-                            [attr.data-tram-key]="target.tram.key"
-                            (focus)="focusedKey.set(target.tram.key)"
-                            (click)="select(target.tram.key)"
-                          ></button>
-                        </li>
-                      }
-                    </ul>
-                  }
-                </nav>
-              </div>
+              <app-tram-canvas
+                [class.mx-auto]="fullscreen()"
+                [rows]="rows()"
+                [overlayRows]="overlayRows()"
+                [groups]="tramGroups()"
+                [fontSize]="fontSize()"
+                [lineHeight]="lineHeight()"
+                [label]="
+                  i18n.t('trams.mapLabel', { lines: map.lines.length, stops: map.stopCount }) +
+                  ' ' +
+                  i18n.t('trams.mapTrams', { count: overlay()?.count ?? 0 })
+                "
+                [rovingKey]="rovingKey()"
+                [selectedKey]="selectedKey()"
+                (selectTram)="select($event)"
+                (focusTram)="focusedKey.set($event)"
+              />
             </div>
           </div>
           <p class="sr-only" aria-live="polite" data-testid="tram-announcement">
             {{ announcement() }}
           </p>
           @if (selectedKey()) {
-            <div #detailsPanel class="tram-details" data-testid="tram-details">
-              @if (details(); as d) {
-                <div class="flex items-start gap-3">
-                  <span class="legend-chip" [class]="d.chipClass" aria-hidden="true">{{
-                    d.desi
-                  }}</span>
-                  <h2 class="text-lg font-semibold leading-tight" [attr.aria-label]="d.name">
-                    {{ d.headsign }}
-                  </h2>
-                  @if (d.depotRun) {
-                    <span
-                      class="text-xs font-semibold uppercase tracking-wider border-2 border-ink px-1.5 py-0.5"
-                      >{{ i18n.t('trams.depotRun') }}</span
-                    >
-                  }
-                  <ng-container [ngTemplateOutlet]="closeButton" />
-                </div>
-                <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 mt-3 text-sm">
-                  <div>
-                    <dt class="text-text-secondary">{{ i18n.t('trams.speed') }}</dt>
-                    <dd class="font-semibold" data-testid="tram-speed">{{ d.speed ?? '—' }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-text-secondary">{{ i18n.t('trams.schedule') }}</dt>
-                    <dd class="font-semibold" data-testid="tram-schedule">
-                      {{ d.schedule ?? '—' }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-text-secondary">{{ i18n.t('trams.doors') }}</dt>
-                    <dd class="font-semibold">{{ d.doors }}</dd>
-                  </div>
-                  <div class="col-span-2 sm:col-span-2">
-                    <dt class="text-text-secondary">{{ i18n.t('trams.nextStop') }}</dt>
-                    <dd class="font-semibold" data-testid="tram-next-stop">
-                      {{ d.nextStop ?? '—' }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-text-secondary">{{ i18n.t('trams.updated') }}</dt>
-                    <dd class="font-semibold" data-testid="tram-updated">{{ d.updated }}</dd>
-                  </div>
-                </dl>
-                @if (companions().length > 0) {
-                  <div class="flex flex-wrap items-center gap-2 mt-3 text-sm">
-                    <span class="text-text-secondary">{{ i18n.t('trams.alsoHere') }}</span>
-                    @for (other of companions(); track other.key) {
-                      <button
-                        type="button"
-                        (click)="select(other.key)"
-                        [attr.aria-label]="tramName(other)"
-                        class="font-mono {{ optionBase }} {{ chipClass(other) }}"
-                      >
-                        {{ other.desi }}
-                      </button>
-                    }
-                  </div>
-                }
-              } @else {
-                <div class="flex items-start gap-3">
-                  <p class="text-text-secondary">{{ i18n.t('trams.tramGone') }}</p>
-                  <ng-container [ngTemplateOutlet]="closeButton" />
-                </div>
-              }
-            </div>
+            <app-tram-details-panel
+              #detailsPanel
+              class="tram-details"
+              data-testid="tram-details"
+              [details]="details()"
+              [companions]="companions()"
+              (selectTram)="select($event)"
+              (closed)="closeDetails()"
+            />
           } @else if (!fullscreen()) {
             <p class="text-sm text-text-secondary mt-3">{{ i18n.t('trams.selectHint') }}</p>
           }
@@ -628,274 +291,38 @@ const OPTION_CLASS =
         }}</pre>
       }
     </ng-template>
-
-    <ng-template #closeButton>
-      <button
-        type="button"
-        (click)="closeDetails()"
-        [attr.aria-label]="i18n.t('trams.closeDetails')"
-        class="ml-auto shrink-0 bg-bg-card {{ optionBase }}"
-      >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
-        </svg>
-      </button>
-    </ng-template>
   `,
-  styles: `
-    .tram-map {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      line-height: 14px;
-      color: var(--color-ink);
-      background: var(--color-bg-card);
-      border: 2px solid var(--color-ink);
-      padding: 12px;
-      margin: 0;
-      width: max-content;
-      white-space: pre;
-    }
-    .map-row {
-      display: block;
-    }
-    .control-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--color-text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-right: 0.25rem;
-    }
-    @media (min-width: 640px) {
-      .control-label {
-        font-size: 0.875rem;
+  styles: [
+    TRAM_MAP_STYLES,
+    `
+      .tram-probe {
+        position: absolute;
+        visibility: hidden;
+        font-family: var(--font-mono);
+        font-size: 100px;
+        white-space: pre;
+        top: 0;
+        left: 0;
       }
-    }
-    .toggle-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--color-ink);
-      cursor: pointer;
-    }
-    .tram-probe {
-      position: absolute;
-      visibility: hidden;
-      font-family: var(--font-mono);
-      font-size: 100px;
-      white-space: pre;
-      top: 0;
-      left: 0;
-    }
-    .sea {
-      color: var(--color-data-blue);
-    }
-    .park {
-      color: var(--color-data-green);
-    }
-    .stop,
-    .label,
-    .line-shared {
-      font-weight: 700;
-    }
-    .legend-chip {
-      min-width: 2.25rem;
-      padding: 0.125rem 0.5rem;
-      text-align: center;
-      font-weight: 700;
-      border: 2px solid var(--color-ink);
-      color: var(--color-ink);
-    }
-    .legend-glyph {
-      display: inline-block;
-      width: 1.5rem;
-      text-align: center;
-      font-family: var(--font-mono);
-      color: var(--color-ink);
-    }
-    .legend-glyph.sea {
-      color: var(--color-data-blue);
-    }
-    .legend-glyph.park {
-      color: var(--color-data-green);
-    }
-    .line-1 {
-      --line: var(--color-line-1);
-      background: var(--line);
-    }
-    .line-2 {
-      --line: var(--color-line-2);
-      background: var(--line);
-    }
-    .line-3 {
-      --line: var(--color-line-3);
-      background: var(--line);
-    }
-    .line-4 {
-      --line: var(--color-line-4);
-      background: var(--line);
-    }
-    .line-5 {
-      --line: var(--color-line-5);
-      background: var(--line);
-    }
-    .line-6 {
-      --line: var(--color-line-6);
-      background: var(--line);
-    }
-    .line-7 {
-      --line: var(--color-line-7);
-      background: var(--line);
-    }
-    .line-8 {
-      --line: var(--color-line-8);
-      background: var(--line);
-    }
-    .line-9 {
-      --line: var(--color-line-9);
-      background: var(--line);
-    }
-    .line-10 {
-      --line: var(--color-line-10);
-      background: var(--line);
-    }
-    .line-11 {
-      --line: var(--color-line-11);
-      background: var(--line);
-    }
-    .line-12 {
-      --line: var(--color-line-12);
-      background: var(--line);
-    }
-    .line-13 {
-      --line: var(--color-line-13);
-      background: var(--line);
-    }
-    .line-h {
-      --line: var(--color-line-h);
-      background: var(--line);
-    }
-    .tram-overlay {
-      position: absolute;
-      inset: 0;
-      background: transparent;
-      border-color: transparent;
-      pointer-events: none;
-    }
-    /* Ink with the line colour as text, so a tram stands out on its own coloured track. */
-    .tram {
-      background: var(--color-ink);
-      color: var(--line, var(--color-bg-card));
-      font-weight: 700;
-    }
-    .tram-dim {
-      background: var(--color-text-secondary);
-      color: var(--color-bg-card);
-    }
-    .tram-cluster {
-      color: var(--color-pop-yellow);
-    }
-    /* The track in the line's colour (the line-* class), dotted where the tram just was. */
-    .trail {
-      color: var(--color-ink);
-      font-weight: 700;
-    }
-    .tram-targets {
-      position: absolute;
-      inset: 0;
-      font-family: var(--font-mono);
-      pointer-events: none;
-    }
-    .tram-targets ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .tram-target {
-      position: absolute;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-    /* A few pixels more to aim at, since a cell can be tiny on a phone. */
-    .tram-target::before {
-      content: '';
-      position: absolute;
-      inset: -3px;
-    }
-    /* Fingers need more: a phone's cells are about 5 × 10 px. */
-    @media (pointer: coarse) {
-      .tram-target::before {
-        inset: -8px;
+      .tram-details {
+        margin-top: 0.75rem;
+        padding: 1rem;
+        background: var(--color-bg-card);
+        border: 2px solid var(--color-ink);
+        box-shadow: var(--shadow-brutal-sm);
       }
-    }
-    .tram-target[aria-pressed='true'] {
-      outline: 3px solid var(--color-accent-primary);
-      outline-offset: 1px;
-    }
-    .tram-target:focus-visible {
-      outline: 3px solid var(--color-ink);
-      outline-offset: 1px;
-      box-shadow: 0 0 0 5px var(--color-pop-yellow);
-    }
-    .tram-details {
-      margin-top: 0.75rem;
-      padding: 1rem;
-      background: var(--color-bg-card);
-      border: 2px solid var(--color-ink);
-      box-shadow: var(--shadow-brutal-sm);
-    }
-    .control-toggle {
-      width: 1.125rem;
-      height: 1.125rem;
-      accent-color: var(--color-ink);
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.25rem 0.625rem;
-      border: 2px solid var(--color-ink);
-      color: var(--color-ink);
-      font-size: 0.875rem;
-      font-weight: 700;
-    }
-    .zoom-button {
-      min-width: 2.5rem;
-      background: var(--color-bg-card);
-    }
-    .zoom-button:disabled {
-      color: var(--color-text-secondary);
-      box-shadow: none;
-      cursor: default;
-    }
-    .status-dot {
-      width: 0.625rem;
-      height: 0.625rem;
-      background: var(--color-ink);
-    }
-    .tram-fullscreen {
-      position: fixed;
-      inset: 0;
-      z-index: 60;
-      display: flex;
-      flex-direction: column;
-      padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
-        max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
-      background: var(--color-bg-primary);
-    }
-  `,
+      .tram-fullscreen {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        flex-direction: column;
+        padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+          max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+        background: var(--color-bg-primary);
+      }
+    `,
+  ],
 })
 export class TramsPageComponent {
   protected readonly i18n = inject(LanguageService);
@@ -907,24 +334,19 @@ export class TramsPageComponent {
   private readonly fullscreenArea = viewChild<ElementRef<HTMLElement>>('fullscreenArea');
   private readonly mapFit = viewChild<ElementRef<HTMLElement>>('mapFit');
   private readonly probe = viewChild.required<ElementRef<HTMLElement>>('probe');
-  private readonly enterButton = viewChild<ElementRef<HTMLButtonElement>>('enterButton');
-  private readonly exitButton = viewChild<ElementRef<HTMLButtonElement>>('exitButton');
-  private readonly detailsPanel = viewChild<ElementRef<HTMLElement>>('detailsPanel');
+  private readonly toolbar = viewChild(TramToolbarComponent);
+  private readonly detailsPanel = viewChild('detailsPanel', { read: ElementRef<HTMLElement> });
+  private readonly isBrowser = injectIsBrowser();
+  private readonly storage = this.document.defaultView?.localStorage;
   private readonly prefs = this.loadPrefs();
 
-  protected readonly presetOptions = PRESET_OPTIONS;
-  protected readonly glyphOptions = GLYPH_OPTIONS;
   protected readonly loadingDots = LOADING_DOTS;
-  protected readonly lineClass = lineClass;
-  protected readonly clusterGlyph = CLUSTER_GLYPH;
-  protected readonly trailGlyph = TRAIL_GLYPH;
-  protected readonly optionBase = OPTION_CLASS;
   protected readonly zoomSteps = ZOOM_STEPS;
-  protected readonly preInset = PRE_INSET_PX;
-  protected readonly noLines = NO_LINES;
 
-  readonly mapData = httpResource<TramMapData>(
-    () => new URL('data/helsinki-trams.json', this.document.baseURI).href,
+  // The map is a file of this site, but it's still fetched in the browser: the prerendered page
+  // shows the loading placeholder rather than the whole map as text.
+  readonly mapData = httpResource<TramMapData>(() =>
+    this.isBrowser ? new URL('data/helsinki-trams.json', this.document.baseURI).href : undefined,
   );
 
   /** null until the visitor picks a view; then the default follows the screen width. */
@@ -1038,7 +460,7 @@ export class TramsPageComponent {
       .map((k) => trams.get(k))
       .filter((tram): tram is TramState => !!tram);
   });
-  readonly details = computed(() => {
+  readonly details = computed((): TramDetailsView | null => {
     const tram = this.selected();
     if (!tram) return null;
     const speed = speedKmh(tram.speed);
@@ -1047,7 +469,7 @@ export class TramsPageComponent {
       desi: tram.desi,
       headsign: tram.headsign,
       name: this.tramName(tram),
-      chipClass: this.chipClass(tram),
+      chipClass: tramChipClass(tram),
       depotRun: tram.depotRun,
       speed: speed === null ? null : this.i18n.t('trams.speedValue', { speed }),
       schedule: this.scheduleText(tram),
@@ -1145,53 +567,26 @@ export class TramsPageComponent {
 
     // Leaving the browser's full screen (Esc, the back gesture on Android) leaves ours too.
     const onFullscreenChange = () => {
-      const doc = this.document as FullscreenDocument;
-      const active = !!(doc.fullscreenElement ?? doc.webkitFullscreenElement);
+      const active = isNativeFullscreen(this.document);
       if (active && !this.fullscreen()) {
         // It arrived after the map was already closed again.
-        this.exitNativeFullscreen();
+        exitNativeFullscreen(this.document);
       } else if (!active && this.nativeFullscreen) {
         // Even if it never quite started: Esc during the switch cancels it without a key event.
         this.nativeFullscreen = false;
         this.exitFullscreen();
       }
     };
-    this.document.addEventListener('fullscreenchange', onFullscreenChange);
-    this.document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    for (const event of FULLSCREEN_EVENTS) {
+      this.document.addEventListener(event, onFullscreenChange);
+    }
     this.destroyRef.onDestroy(() => {
-      this.document.removeEventListener('fullscreenchange', onFullscreenChange);
-      this.document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+      for (const event of FULLSCREEN_EVENTS) {
+        this.document.removeEventListener(event, onFullscreenChange);
+      }
       // Navigating away (e.g. with Back) mustn't leave the next page unscrollable.
       if (this.fullscreen()) this.leaveFullscreen();
     });
-  }
-
-  protected optionClass(active: boolean): string {
-    return `${OPTION_CLASS} ${active ? 'bg-pop-yellow' : 'bg-bg-card'}`;
-  }
-
-  protected lineChipClass(line: string): string {
-    return `${OPTION_CLASS} min-w-8 sm:min-w-10 font-mono ${this.follows(line) ? lineClass(line) : 'bg-bg-card line-through'}`;
-  }
-
-  protected chipClass(tram: TramState): string {
-    return tram.depotRun ? 'line-h' : lineClass(lineOf(tram.desi));
-  }
-
-  follows(line: string): boolean {
-    return this.lineSelection()?.has(line) ?? true;
-  }
-
-  /** Shows or hides one line. Once every line is on again, that's "all", depot runs included. */
-  toggleLine(line: string): void {
-    const all = this.lineChoices();
-    const next = new Set(this.lineSelection() ?? all);
-    if (!next.delete(line)) next.add(line);
-    this.lineSelection.set(all.every((l) => next.has(l)) ? null : next);
-  }
-
-  protected onDepotToggle(event: Event): void {
-    this.showDepotRuns.set((event.target as HTMLInputElement).checked);
   }
 
   choosePreset(preset: PresetId): void {
@@ -1204,32 +599,23 @@ export class TramsPageComponent {
     this.savePrefs();
   }
 
-  protected onSmoothToggle(event: Event): void {
-    this.feed.setSmooth((event.target as HTMLInputElement).checked);
+  protected setSmooth(smooth: boolean): void {
+    this.feed.setSmooth(smooth);
     this.savePrefs();
   }
 
-  protected onTrailsToggle(event: Event): void {
-    this.trailChoice.set((event.target as HTMLInputElement).checked);
+  protected setTrails(trails: boolean): void {
+    this.trailChoice.set(trails);
     this.savePrefs();
   }
 
   /** Storage can be missing or refuse (private windows, blocked site data); defaults do then. */
   private loadPrefs(): ViewPrefs {
-    let stored: Partial<Record<keyof ViewPrefs, unknown>>;
     try {
-      stored = JSON.parse(this.document.defaultView?.localStorage.getItem(PREFS_KEY) ?? '{}') ?? {};
+      return parseViewPrefs(this.storage?.getItem(PREFS_KEY));
     } catch {
       return {};
     }
-    const prefs: ViewPrefs = {};
-    if (PRESET_OPTIONS.some((o) => o.id === stored.preset))
-      prefs.preset = stored.preset as PresetId;
-    if (GLYPH_OPTIONS.some((o) => o.id === stored.glyphs))
-      prefs.glyphs = stored.glyphs as GlyphMode;
-    if (typeof stored.smooth === 'boolean') prefs.smooth = stored.smooth;
-    if (typeof stored.trails === 'boolean') prefs.trails = stored.trails;
-    return prefs;
   }
 
   private savePrefs(): void {
@@ -1240,7 +626,7 @@ export class TramsPageComponent {
       trails: this.trailChoice() ?? undefined,
     };
     try {
-      this.document.defaultView?.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      this.storage?.setItem(PREFS_KEY, JSON.stringify(prefs));
     } catch {
       // Not remembered, then.
     }
@@ -1321,26 +707,6 @@ export class TramsPageComponent {
     );
   }
 
-  /** Arrow keys, Home and End move between the tram buttons in list order. */
-  protected moveFocus(event: KeyboardEvent): void {
-    const buttons = [
-      ...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('button'),
-    ];
-    const index = buttons.indexOf(event.target as HTMLElement);
-    if (index < 0) return;
-    const next = {
-      ArrowDown: index + 1,
-      ArrowRight: index + 1,
-      ArrowUp: index - 1,
-      ArrowLeft: index - 1,
-      Home: 0,
-      End: buttons.length - 1,
-    }[event.key];
-    if (next === undefined) return;
-    event.preventDefault();
-    buttons[Math.max(0, Math.min(buttons.length - 1, next))].focus();
-  }
-
   onEscape(): void {
     if (this.fullscreen()) this.exitFullscreen();
     else if (this.selectedKey() !== null) this.closeDetails();
@@ -1353,18 +719,11 @@ export class TramsPageComponent {
     this.document.documentElement.style.overflow = 'hidden';
     // Hide the browser's own bars too where that's possible. If it isn't, or it's refused, the
     // overlay still covers the page.
-    const root = this.document.documentElement as FullscreenElement;
-    const request = root.requestFullscreen ?? root.webkitRequestFullscreen;
-    if (request) {
-      this.nativeFullscreen = true;
-      try {
-        Promise.resolve(request.call(root)).catch(() => (this.nativeFullscreen = false));
-      } catch {
-        // Not allowed here; the overlay is enough.
-        this.nativeFullscreen = false;
-      }
-    }
-    afterNextRender(() => this.exitButton()?.nativeElement.focus(), { injector: this.injector });
+    this.nativeFullscreen = requestNativeFullscreen(
+      this.document,
+      () => (this.nativeFullscreen = false),
+    );
+    afterNextRender(() => this.toolbar()?.focusFullscreenButton(), { injector: this.injector });
   }
 
   /** Zooms the full-screen map, keeping the point in the middle of the view in the middle. */
@@ -1388,7 +747,7 @@ export class TramsPageComponent {
   exitFullscreen(): void {
     if (!this.fullscreen()) return;
     this.leaveFullscreen();
-    afterNextRender(() => this.enterButton()?.nativeElement.focus(), { injector: this.injector });
+    afterNextRender(() => this.toolbar()?.focusFullscreenButton(), { injector: this.injector });
   }
 
   private leaveFullscreen(): void {
@@ -1396,40 +755,10 @@ export class TramsPageComponent {
     this.zoomStep.set(0);
     this.document.documentElement.style.overflow = '';
     this.nativeFullscreen = false;
-    this.exitNativeFullscreen();
+    exitNativeFullscreen(this.document);
   }
 
-  private exitNativeFullscreen(): void {
-    const doc = this.document as FullscreenDocument;
-    if (!(doc.fullscreenElement ?? doc.webkitFullscreenElement)) return;
-    try {
-      const exit = doc.exitFullscreen ?? doc.webkitExitFullscreen;
-      Promise.resolve(exit?.call(doc)).catch(() => undefined);
-    } catch {
-      // Already left.
-    }
-  }
-
-  /** Keeps Tab inside the full-screen dialog. */
-  protected trapFocus(event: KeyboardEvent, dialog: HTMLElement): void {
-    if (event.key !== 'Tab') return;
-    const focusable = [
-      ...dialog.querySelectorAll<HTMLElement>(
-        'button:not(:disabled):not([tabindex="-1"]), [tabindex="0"]',
-      ),
-    ];
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    const active = this.document.activeElement;
-    if (event.shiftKey && (active === first || !dialog.contains(active))) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
+  protected readonly trapFocus = trapFocus;
 
   private measureCharacter(): void {
     const probe = this.probe().nativeElement;

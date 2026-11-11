@@ -1,29 +1,21 @@
 import { Component, computed, SecurityContext, ViewEncapsulation, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { PageHeaderComponent } from '../components/shared/page-header.component';
 import { DOCUMENT } from '@angular/common';
 import { LanguageService } from '../i18n/language.service';
+import { injectIsBrowser, isWaiting } from '../platform';
 
 @Component({
   selector: 'app-third-party-notices',
   encapsulation: ViewEncapsulation.None,
-  imports: [RouterLink],
+  imports: [PageHeaderComponent],
   template: `
     <div class="min-h-screen pt-24 pb-16 px-6">
       <div class="max-w-4xl mx-auto">
-        <a
-          routerLink="/"
-          class="text-sm font-semibold text-ink hover:text-accent-light transition-transform mb-4 inline-flex items-center gap-2 border-2 border-ink bg-bg-card px-3 py-2 shadow-brutal-sm brutal-hover brutal-press"
-        >
-          ← {{ i18n.t('common.backToHome') }}
-        </a>
+        <app-page-header titleKey="thirdParty.title" />
 
-        <h1 class="text-3xl md:text-4xl font-bold text-text-primary mb-4 animate-fade-slide-up">
-          <span class="marker">{{ i18n.t('thirdParty.title') }}</span>
-        </h1>
-
-        @if (noticesResource.isLoading()) {
+        @if (waiting()) {
           <div class="space-y-4 animate-pulse">
             <div class="h-4 bg-ink/10 w-3/4"></div>
             <div class="h-4 bg-ink/10 w-1/2"></div>
@@ -155,10 +147,14 @@ export class ThirdPartyNoticesComponent {
   private readonly document = inject(DOCUMENT);
   protected readonly i18n = inject(LanguageService);
 
-  readonly noticesResource = httpResource.text(() => ({
-    url: new URL('THIRD-PARTY-NOTICES.md', this.document.baseURI).href,
-    timeout: 10_000,
-  }));
+  private readonly isBrowser = injectIsBrowser();
+
+  readonly noticesResource = httpResource.text(() =>
+    this.isBrowser
+      ? { url: new URL('THIRD-PARTY-NOTICES.md', this.document.baseURI).href, timeout: 10_000 }
+      : undefined,
+  );
+  protected readonly waiting = computed(() => isWaiting(this.noticesResource));
 
   readonly renderedHtml = computed(() => {
     const md = this.noticesResource.value();

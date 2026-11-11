@@ -30,8 +30,12 @@ describe('NavbarComponent', () => {
 
   it('renders a compact header with a home link, language controls and Explore', () => {
     const { element } = setup();
-    expect(element.querySelectorAll('nav a')).toHaveLength(1);
-    expect(element.querySelector('nav a')?.getAttribute('href')).toBe('/');
+    expect(element.querySelectorAll('nav a.logo')).toHaveLength(1);
+    expect(element.querySelector('nav a.logo')?.getAttribute('href')).toBe('/');
+    // Each language is a link to the same page at that language's address.
+    const languages = [...element.querySelectorAll('nav app-language-toggle a')];
+    expect(languages.map((a) => a.getAttribute('href'))).toEqual(['/', '/fi']);
+    expect(languages.map((a) => a.getAttribute('aria-current'))).toEqual(['true', null]);
     expect(element.querySelector('nav app-language-toggle')).toBeTruthy();
     expect(element.querySelector('.explore-button')?.getAttribute('aria-expanded')).toBe('false');
     expect(element.querySelector('dialog')?.hasAttribute('open')).toBe(false);
@@ -86,7 +90,8 @@ describe('NavbarComponent', () => {
     expect(element.querySelector('.explore-button')?.textContent).toContain('Tutustu');
     expect(element.querySelector('dialog h3')?.textContent).toBe('Pelit');
     expect(element.querySelectorAll('dialog a')).toHaveLength(1);
-    expect(element.querySelector('dialog a')?.getAttribute('href')).toBe('/pet');
+    expect(element.querySelector('dialog a')?.getAttribute('href')).toBe('/fi/pet');
+    expect(element.querySelector('nav a.logo')?.getAttribute('href')).toBe('/fi');
   });
 
   it('opens with either keyboard shortcut and cancels cleanly', () => {
