@@ -412,6 +412,15 @@ registerTranslations('en', WEATHER_EN);
           >
             {{ i18n.t('weather.attribution') }}
           </a>
+          <span class="text-xs text-text-secondary" aria-hidden="true"> · </span>
+          <a
+            href="https://www.geonames.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-xs text-text-secondary hover:text-accent-light underline underline-offset-2 transition-colors"
+          >
+            {{ i18n.t('weather.locationAttribution') }}
+          </a>
         </div>
       </div>
     </section>

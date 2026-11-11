@@ -28,6 +28,7 @@ export const WEATHER_FI = {
   'weather.temperatureTrend': 'Lämpötilan kehitys (24 h)',
   'weather.dailyForecast': '7 päivän ennuste',
   'weather.attribution': 'Säätiedot tarjoaa Open-Meteo.com (CC BY 4.0)',
+  'weather.locationAttribution': 'Sijaintihaun tiedot GeoNamesista (CC BY 4.0)',
   'weather.precipitationTitle': 'Sademäärä',
   'weather.precipitationProbabilityTitle': 'Sateen todennäköisyys',
   'weather.windTitle': 'Tuuli',
