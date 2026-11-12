@@ -11,6 +11,7 @@ test.describe('Weather Page', () => {
     await expect(page.locator('h1')).toContainText('Weather Conditions');
     await expectBackLink(page);
     await expectAttribution(page, 'https://open-meteo.com');
+    await expectAttribution(page, 'https://www.geonames.org');
   });
 
   test('shows the current conditions for Helsinki', async ({ page }) => {

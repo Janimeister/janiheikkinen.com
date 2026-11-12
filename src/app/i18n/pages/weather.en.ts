@@ -26,6 +26,7 @@ export const WEATHER_EN = {
   'weather.temperatureTrend': 'Temperature Trend (24h)',
   'weather.dailyForecast': '7-Day Forecast',
   'weather.attribution': 'Weather data provided by Open-Meteo.com (CC BY 4.0)',
+  'weather.locationAttribution': 'Location search data from GeoNames (CC BY 4.0)',
   'weather.precipitationTitle': 'Precipitation',
   'weather.precipitationProbabilityTitle': 'Precipitation probability',
   'weather.windTitle': 'Wind',

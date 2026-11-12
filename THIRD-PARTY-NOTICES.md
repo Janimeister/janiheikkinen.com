@@ -12,12 +12,12 @@ Their licenses and attribution requirements are reproduced below.
   `@angular/platform-browser`, `@angular/platform-server`, `@angular/router`, `@angular/ssr`,
   `@angular/build`, `@angular/cli`, `@angular/compiler-cli`
 - **License:** MIT
-- **Copyright:** © Google LLC
+- **Copyright:** © 2010-2026 Google LLC
 
 ```
 The MIT License
 
-Copyright (c) Google LLC.
+Copyright (c) 2010-2026 Google LLC. https://angular.dev/license
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,14 +43,14 @@ SOFTWARE.
 ### RxJS
 - **Package:** `rxjs`
 - **License:** Apache License 2.0
-- **Copyright:** © Google, Inc. and Contributors
+- **Copyright:** © 2015-2018 Google, Inc., Netflix, Inc., Microsoft Corp. and contributors
 
 ```
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
-   Copyright (c) 2011-2021 Google, Inc.
+   Copyright (c) 2015-2018 Google, Inc., Netflix, Inc., Microsoft Corp. and contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -150,12 +150,12 @@ SOFTWARE.
 ### PostCSS
 - **Package:** `postcss`
 - **License:** MIT
-- **Copyright:** © Andrey Sitnik
+- **Copyright:** © 2013 Andrey Sitnik
 
 ```
-The MIT License
+The MIT License (MIT)
 
-Copyright (c) 2013 Andrey Sitnik <andrey@sitnik.ru>
+Copyright 2013 Andrey Sitnik <andrey@sitnik.es>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -201,6 +201,16 @@ SOFTWARE.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+```
+
+NOTICE file distributed with `@playwright/test`:
+
+```
+Playwright
+Copyright (c) Microsoft Corporation
+
+This software contains code derived from the Puppeteer project (https://github.com/puppeteer/puppeteer),
+available under the Apache 2.0 license (https://github.com/puppeteer/puppeteer/blob/master/LICENSE).
 ```
 
 ---
@@ -616,12 +626,12 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 - **Package:** `vite`
 - **Usage:** Transitive build and test dependency of Angular's build tooling and Vitest
 - **License:** MIT
-- **Copyright:** © 2019-present, Yuxi (Evan) You and Vite contributors
+- **Copyright:** © 2019-present, VoidZero Inc. and Vite contributors
 
 ```
 The MIT License
 
-Copyright (c) 2019-present, Yuxi (Evan) You and Vite contributors
+Copyright (c) 2019-present, VoidZero Inc. and Vite contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -645,14 +655,14 @@ SOFTWARE.
 ---
 
 ### Vitest
-- **Package:** `vitest`
+- **Packages:** `vitest`, `@vitest/coverage-v8`
 - **License:** MIT
-- **Copyright:** © 2021-present Anthony Fu and Vitest contributors
+- **Copyright:** © 2021-present VoidZero Inc. and Vitest contributors
 
 ```
 The MIT License
 
-Copyright (c) 2021-Present Anthony Fu and Vitest contributors
+Copyright (c) 2021-Present VoidZero Inc. and Vitest contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -678,12 +688,12 @@ SOFTWARE.
 ### jsdom
 - **Package:** `jsdom`
 - **License:** MIT
-- **Copyright:** © jsdom contributors
+- **Copyright:** © 2010 Elijah Insua
 
 ```
 The MIT License
 
-Copyright (c) 2010 Elijah Insua and contributors
+Copyright (c) 2010 Elijah Insua
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -741,13 +751,19 @@ SOFTWARE.
 
 ### Open-Meteo
 - **URL:** https://open-meteo.com
-- **Usage:** Weather data for user-selected locations (temperature, wind speed, humidity, weather codes)
+- **Usage:** Weather data for user-selected locations (temperature, wind speed, humidity, weather codes) from the Forecast API (`api.open-meteo.com`), and location search on the `/weather` page from the Geocoding API (`geocoding-api.open-meteo.com`)
 - **License:** Data is provided under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) license. The Open-Meteo API software is open source under the [GNU Affero General Public License v3 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html).
 - **Attribution:** Weather data from [Open-Meteo.com](https://open-meteo.com)
 
+### GeoNames
+- **URL:** https://www.geonames.org
+- **Usage:** Place names and coordinates behind the `/weather` location search, which Open-Meteo's Geocoding API builds from the GeoNames database
+- **License:** [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
+- **Attribution:** Location data from [GeoNames](https://www.geonames.org)
+
 ### Porssisähkö API (api.porssisahko.net)
 - **URL:** https://api.porssisahko.net
-- **Usage:** Finnish Nord Pool electricity spot prices
+- **Usage:** Finnish Nord Pool electricity spot prices on the `/electricity` page, fetched through a Cloudflare Worker (`porssisahko-proxy.janimeister.workers.dev`) that passes the API's response on to the browser. Nothing is stored
 - **Notes:** Public, free-to-use API providing Finnish electricity market spot price data sourced from Nord Pool. No API key required. Please refer to the service's terms at https://porssisahko.net for any attribution requirements.
 
 ### GitHub REST API
@@ -786,21 +802,121 @@ font requests go to a third party.
 ### Archivo Black
 - **URL:** https://fontsource.org/fonts/archivo-black
 - **Author:** Omnibus-Type
+- **Copyright:** Copyright 2017 The Archivo Black Project Authors (https://github.com/Omnibus-Type/ArchivoBlack)
 - **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://openfontlicense.org)
 - **Delivery:** Self-hosted from `@fontsource/archivo-black`
 
 ### Space Grotesk
 - **URL:** https://fontsource.org/fonts/space-grotesk
 - **Author:** Florian Karsten
+- **Copyright:** Copyright 2020 The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk)
 - **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://openfontlicense.org)
 - **Delivery:** Self-hosted from `@fontsource/space-grotesk`
 
 ### JetBrains Mono
 - **URL:** https://fontsource.org/fonts/jetbrains-mono
 - **Author:** JetBrains s.r.o.
+- **Copyright:** Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
 - **License:** [SIL Open Font License 1.1 (OFL-1.1)](https://openfontlicense.org)
 - **Delivery:** Self-hosted from `@fontsource/jetbrains-mono`
 
+All three fonts are licensed under the SIL Open Font License, Version 1.1, reproduced below as
+it ships in each Fontsource package (after the copyright lines above):
+
+```
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded,
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+```
+
 ---
 
-*This file was last updated: September 2026*
+*This file was last updated: November 2026*
