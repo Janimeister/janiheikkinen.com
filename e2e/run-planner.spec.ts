@@ -60,12 +60,12 @@ test.describe('Electricity: best time to run', () => {
   test('honours a ready-by time', async ({ page }) => {
     const readyBy = page.getByLabel('Ready by (optional)');
     await readyBy.fill('14:00');
-    await readyBy.dispatchEvent('change');
+    await readyBy.blur();
     await expect(page.getByTestId('run-result')).toContainText("The run can't finish by then");
     await expect(page.locator('[data-run]')).toHaveCount(0);
 
     await readyBy.fill('17:00');
-    await readyBy.dispatchEvent('change');
+    await readyBy.blur();
     // 14:00–17:00 is the cheapest three hours that end by 17:00.
     await expect(page.getByTestId('run-result')).toContainText('Today 14:00');
 
@@ -82,7 +82,10 @@ test.describe('Electricity: best time to run', () => {
     );
     const energy = page.getByLabel('Energy per run');
     await energy.fill('10');
-    await energy.dispatchEvent('change');
-    await expect(page.getByTestId('run-result')).toContainText('Cost then');
+    // Blur commits the value, as a user tabbing away would. Firefox crashes on Playwright's
+    // dispatchEvent('change') here, so don't go back to that.
+    await energy.blur();
+    // 1 h at the cheapest 2.50 c/kWh: 2.5 c for the default 1 kWh, 25.0 c for 10 kWh.
+    await expect(page.getByTestId('run-result')).toContainText('25.0 c');
   });
 });
