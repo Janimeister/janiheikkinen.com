@@ -16,6 +16,7 @@ const PAGES = [
   { path: '/departures', name: 'Departures', waitSection: 'Find a Stop' },
   { path: '/github', name: 'GitHub', waitSection: 'Repositories' },
   { path: '/ascii', name: 'ASCII', waitSection: null },
+  { path: '/chat', name: 'Chat', waitSection: 'Conversation' },
   { path: '/snake', name: 'Snake', waitSection: null },
   { path: '/pet', name: 'Pet', waitSection: null },
   {

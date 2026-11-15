@@ -13,6 +13,7 @@ const PAGES = [
   '/departures',
   '/github',
   '/ascii',
+  '/chat',
   '/snake',
   '/pet',
   '/sorting',

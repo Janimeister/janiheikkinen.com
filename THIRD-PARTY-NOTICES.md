@@ -89,6 +89,67 @@ PERFORMANCE OF THIS SOFTWARE.
 
 ---
 
+### Transformers.js
+- **Package:** `@huggingface/transformers`
+- **Usage:** Runs the language model on the `/chat` page, in the visitor's browser
+- **License:** Apache License 2.0
+- **Copyright:** © Hugging Face
+
+```
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   Copyright Hugging Face
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+```
+
+---
+
+### ONNX Runtime Web
+- **Package:** `onnxruntime-web` (a dependency of Transformers.js). Its WebAssembly runtime
+  (`ort-wasm-simd-threaded.asyncify.mjs` and `.wasm`) is served from this site under `/ort/`
+- **License:** MIT
+- **Copyright:** © Microsoft Corporation
+
+```
+MIT License
+
+Copyright (c) Microsoft Corporation
+
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
 ### TypeScript
 - **Package:** `typescript`
 - **License:** Apache License 2.0
@@ -784,6 +845,12 @@ SOFTWARE.
 - **Usage (departures):** Stop search and next departures with real-time estimates on the `/departures` page, from the Digitransit routing API (https://digitransit.fi/en/developers/apis/1-routing-api/) through a Cloudflare Worker that adds this site's API key. Nothing is stored or passed on
 - **License:** [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
 - **Attribution:** © HSL / Digitransit
+
+### Gemma 3 270M (Google) and Hugging Face
+- **URL:** https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX
+- **Usage:** The language model on the `/chat` page. Its files (about 293 MB or 344 MB, depending on the device) are not part of this site: the visitor's browser downloads them from Hugging Face (`huggingface.co` and its file CDN), only after the visitor presses the download button, and keeps them in Cache Storage until the visitor deletes them on the same page. The model runs on the visitor's device; conversations are not sent anywhere
+- **License:** Gemma is provided under and subject to the [Gemma Terms of Use](https://ai.google.dev/gemma/terms), including the [Gemma Prohibited Use Policy](https://ai.google.dev/gemma/prohibited_use_policy)
+- **Attribution:** Gemma by Google; ONNX conversion by the [ONNX Community](https://huggingface.co/onnx-community) on Hugging Face
 
 ### OpenStreetMap
 - **URL:** https://www.openstreetmap.org

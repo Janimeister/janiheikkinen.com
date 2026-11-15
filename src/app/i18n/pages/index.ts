@@ -5,6 +5,7 @@ import type { TRAMS_EN } from './trams.en';
 import type { DEPARTURES_EN } from './departures.en';
 import type { GITHUB_EN } from './github.en';
 import type { ASCII_EN } from './ascii.en';
+import type { CHAT_EN } from './chat.en';
 import type { SNAKE_EN } from './snake.en';
 import type { PET_EN } from './pet.en';
 import type { SORTING_EN } from './sorting.en';
@@ -19,6 +20,7 @@ export type PageTranslationKey =
   | keyof typeof DEPARTURES_EN
   | keyof typeof GITHUB_EN
   | keyof typeof ASCII_EN
+  | keyof typeof CHAT_EN
   | keyof typeof SNAKE_EN
   | keyof typeof PET_EN
   | keyof typeof SORTING_EN
@@ -33,6 +35,7 @@ export const FI_PAGE_LOADERS: Readonly<Partial<Record<string, () => Promise<Dict
   departures: () => import('./departures.fi').then((m) => m.DEPARTURES_FI),
   github: () => import('./github.fi').then((m) => m.GITHUB_FI),
   ascii: () => import('./ascii.fi').then((m) => m.ASCII_FI),
+  chat: () => import('./chat.fi').then((m) => m.CHAT_FI),
   snake: () => import('./snake.fi').then((m) => m.SNAKE_FI),
   pet: () => import('./pet.fi').then((m) => m.PET_FI),
   sorting: () => import('./sorting.fi').then((m) => m.SORTING_FI),

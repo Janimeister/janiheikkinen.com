@@ -1,0 +1,11 @@
+/* The model worker (src/app/chat/chat.worker.ts) is compiled for a Web Worker, not a page. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/worker",
+    "rootDir": "./src",
+    "lib": ["ES2022", "WebWorker"],
+    "types": []
+  },
+  "include": ["src/**/*.worker.ts"]
+}

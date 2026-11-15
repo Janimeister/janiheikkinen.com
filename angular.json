@@ -45,6 +45,7 @@
             "server": "src/main.server.ts",
             "outputMode": "static",
             "tsConfig": "tsconfig.app.json",
+            "webWorkerTsConfig": "tsconfig.worker.json",
             "assets": [
               {
                 "glob": "**/*",
@@ -54,6 +55,11 @@
                 "glob": "THIRD-PARTY-NOTICES.md",
                 "input": ".",
                 "output": "."
+              },
+              {
+                "glob": "ort-wasm-simd-threaded.asyncify.{mjs,wasm}",
+                "input": "node_modules/onnxruntime-web/dist",
+                "output": "ort"
               }
             ],
             "styles": [

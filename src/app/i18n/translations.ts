@@ -35,6 +35,8 @@ export const EN_TRANSLATIONS = {
   'explore.githubKeywords': 'code repositories projects',
   'explore.asciiDescription': 'Generate art from characters',
   'explore.asciiKeywords': 'generative art fractals graphics',
+  'explore.chatDescription': 'Chat with an AI model that runs on your device',
+  'explore.chatKeywords': 'ai chat llm gemma local model webgpu assistant',
   'explore.snakeDescription': 'The classic arcade game',
   'explore.snakeKeywords': 'games arcade retro',
   'explore.petDescription': 'Meet your digital companion',
@@ -71,9 +73,9 @@ export const EN_TRANSLATIONS = {
 
   'cookie.title': 'Privacy note',
   'cookie.storage':
-    "This site sets no cookies and has no analytics. Your browser's localStorage keeps only your settings: language, tram map view, recent departure stops, appliance run settings, virtual pet, Snake high score and that you have read this note.",
+    "This site sets no cookies and has no analytics. Your browser's localStorage keeps only your settings: language, tram map view, recent departure stops, appliance run settings, virtual pet, Snake high score and that you have read this note. The AI chat's model, if you download it, stays in your browser's cache storage until you delete it on that page.",
   'cookie.services':
-    'Pages with live data fetch it straight from the source, which sees your IP address: Open-Meteo (weather and location search), a Cloudflare Worker in front of Pörssisähkö (electricity prices), a Cloudflare Worker in front of Digitransit (departures), GitHub, catfact.ninja and HSL (live trams). Fonts are served from this site.',
+    'Pages with live data fetch it straight from the source, which sees your IP address: Open-Meteo (weather and location search), a Cloudflare Worker in front of Pörssisähkö (electricity prices), a Cloudflare Worker in front of Digitransit (departures), GitHub, catfact.ninja, HSL (live trams) and Hugging Face (the AI chat model, only when you download it). Fonts are served from this site.',
   'cookie.accept': 'Got it',
 
   'hero.sticker': 'Hello there!',
@@ -98,6 +100,8 @@ export const EN_TRANSLATIONS = {
   'meta.github': "Jani Heikkinen's GitHub profile: repositories, languages and recent activity.",
   'meta.ascii':
     'Procedural ASCII art: plasma, fractals, galaxies, terrain and more, generated fresh every time.',
+  'meta.chat':
+    'Chat with Gemma 3 270M, a small AI model that runs entirely in your browser with WebGPU. Nothing you write leaves your device.',
   'meta.snake':
     'The classic Snake game in the browser, with keyboard, swipe and on-screen controls.',
   'meta.pet': 'Hatch and look after a virtual pet that lives in your browser.',
@@ -119,6 +123,7 @@ export const EN_TRANSLATIONS = {
   'departures.title': 'Departures',
   'github.title': 'GitHub Profile',
   'ascii.title': 'ASCII Art',
+  'chat.title': 'Local AI Chat',
   'snake.title': 'Snake Game',
   'pet.title': 'Virtual Pet',
   'sorting.title': 'Sorting Algorithms',

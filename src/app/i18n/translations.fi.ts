@@ -24,6 +24,8 @@ export const FI_TRANSLATIONS = {
   'explore.githubDescription': 'Tutki koodausprojektejani',
   'explore.githubKeywords': 'koodi projektit repositoriot',
   'explore.asciiDescription': 'Luo taidetta merkeistä',
+  'explore.chatDescription': 'Keskustele laitteellasi toimivan tekoälymallin kanssa',
+  'explore.chatKeywords': 'tekoäly keskustelu chat kielimalli gemma paikallinen malli webgpu',
   'explore.asciiKeywords': 'generatiivinen taide fraktaalit grafiikka',
   'explore.snakeDescription': 'Klassinen matopeli',
   'explore.snakeKeywords': 'pelit arcade retro mato',
@@ -58,9 +60,9 @@ export const FI_TRANSLATIONS = {
 
   'cookie.title': 'Tietosuoja',
   'cookie.storage':
-    'Sivusto ei käytä evästeitä eikä analytiikkaa. Selaimesi localStorage säilyttää vain asetuksesi: kielen, raitiovaunukartan näkymän, viimeksi katsotut pysäkit, laitteiden käyttöasetukset, virtuaalilemmikin, matopelin ennätyksen ja tiedon, että olet lukenut tämän ilmoituksen.',
+    'Sivusto ei käytä evästeitä eikä analytiikkaa. Selaimesi localStorage säilyttää vain asetuksesi: kielen, raitiovaunukartan näkymän, viimeksi katsotut pysäkit, laitteiden käyttöasetukset, virtuaalilemmikin, matopelin ennätyksen ja tiedon, että olet lukenut tämän ilmoituksen. Tekoälychatin malli, jos lataat sen, pysyy selaimesi välimuistissa, kunnes poistat sen chatin sivulla.',
   'cookie.services':
-    'Sivut, joilla on ajantasaista tietoa, hakevat sen suoraan lähteestä, joka näkee IP-osoitteesi: Open-Meteo (sää ja sijaintihaku), Pörssisähkön edessä oleva Cloudflare Worker (sähkön hinnat), Digitransitin edessä oleva Cloudflare Worker (lähdöt), GitHub, catfact.ninja ja HSL (raitiovaunut livenä). Fontit tulevat tältä sivustolta.',
+    'Sivut, joilla on ajantasaista tietoa, hakevat sen suoraan lähteestä, joka näkee IP-osoitteesi: Open-Meteo (sää ja sijaintihaku), Pörssisähkön edessä oleva Cloudflare Worker (sähkön hinnat), Digitransitin edessä oleva Cloudflare Worker (lähdöt), GitHub, catfact.ninja, HSL (raitiovaunut livenä) ja Hugging Face (tekoälychatin malli, vain kun lataat sen). Fontit tulevat tältä sivustolta.',
   'cookie.accept': 'Selvä',
 
   'hero.sticker': 'Moikka!',
@@ -81,6 +83,8 @@ export const FI_TRANSLATIONS = {
   'meta.trams':
     'Helsingin raitiovaunuverkko ASCII-merkein, ja jokainen ratikka liikkuu livenä HSL:n reaaliaikaisen syötteen mukaan.',
   'meta.github': 'Jani Heikkisen GitHub-profiili: repositoriot, kielet ja viimeaikainen toiminta.',
+  'meta.chat':
+    'Keskustele Gemma 3 270M:n kanssa. Pieni tekoälymalli toimii kokonaan selaimessasi WebGPU:lla, eikä kirjoittamasi lähde laitteeltasi.',
   'meta.ascii':
     'Proseduraalista ASCII-taidetta: plasmaa, fraktaaleja, galakseja, maastoa ja muuta, joka kerta uutena.',
   'meta.snake':
@@ -113,6 +117,7 @@ export const FI_TRANSLATIONS = {
   'departures.title': 'Lähdöt',
   'github.title': 'GitHub-profiili',
   'ascii.title': 'ASCII-taide',
+  'chat.title': 'Paikallinen tekoälychat',
   'snake.title': 'Matopeli',
   'pet.title': 'Virtuaalilemmikki',
   'sorting.title': 'Lajittelualgoritmit',

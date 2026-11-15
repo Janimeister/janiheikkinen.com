@@ -44,6 +44,7 @@ src/app/
 │   ├── departures.component.ts  # Live departures from any HSL stop (Digitransit)
 │   ├── github.component.ts      # GitHub activity (GitHub REST API)
 │   ├── ascii.component.ts       # Procedural ASCII art generator
+│   ├── chat.component.ts        # AI chat with a model that runs in the browser
 │   ├── snake.component.ts       # Classic Snake game
 │   ├── pet.component.ts         # Virtual pet simulator
 │   ├── sorting.component.ts     # Sorting algorithms visualizer
@@ -67,6 +68,8 @@ src/app/
 ├── departures/               # Digitransit GraphQL queries, response parsing and recent stops
 │   └── components/           # The departures page's parts: stop search and departure board
 ├── ascii/                    # The ASCII art generators
+├── chat/                     # The chat's model worker, engine and model storage
+│   └── components/           # The chat page's parts: model card and conversation
 ├── electricity/              # Cheapest-run search and the "Best time to run" planner
 ├── visualization/            # Shared playback, metadata types and category nav
 ├── i18n/                    # Signal-based runtime translations and language URLs
@@ -132,6 +135,7 @@ Static UI copy is translated in the app. External content such as GitHub reposit
 | GitHub | [GitHub REST API](https://docs.github.com/en/rest) | Unauthenticated — 60 req/hr |
 | Home | [Cat Facts](https://catfact.ninja) | Random cat fact in the hero section |
 | Trams | [HSL GTFS](https://www.hsl.fi/en/hsl/open-data) and [OpenStreetMap](https://www.openstreetmap.org) | Build time only, via `scripts/build-tram-map.mjs`; the page reads the committed `public/data/helsinki-trams.json` |
+| Chat | [Hugging Face](https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX) | Model files only, downloaded by the browser when the visitor asks; no key |
 | Trams (live) | [HSL High-frequency positioning](https://github.com/HSLdevcom/digitransit-site/blob/master/src/pages/en/developers/apis/5-realtime-api/vehicle-positions/high-frequency-positioning/index.md) | MQTT over WebSocket, `wss://mqtt.hsl.fi`, no key; the browser connects directly |
 
 ## Electricity: Best Time to Run
@@ -165,6 +169,18 @@ The `/trams` page draws Helsinki's tram network and its trams live in ASCII, fol
 - **Phones.** Narrow screens open on the *Compact* view, the controls are smaller and wrap in groups, trams have larger tap areas on touch screens, and selecting a tram scrolls its details into view.
 - **Full screen.** The **Full screen** button opens the map over the whole viewport (and the browser's own full screen where the Fullscreen API exists; iPhone Safari gets the overlay only). The map starts fitted to the screen, `−`/`+` zoom it, and it pans by scrolling. **Exit full screen**, `Esc` or leaving the browser's full screen closes it.
 - **Map data.** `node scripts/build-tram-map.mjs` downloads the HSL GTFS feed (tram routes are `route_type` 0, which leaves out line 15; `stop_times.txt` is never unzipped), keeps the busiest shape per line plus any branches the other shapes add, and fetches coastline, lakes, parks and place names from Overpass with retries across mirrors. If Overpass is down it falls back to the osmdata.openstreetmap.de land polygons (sea only). Geometry is simplified to 10 m and rounded to 5 decimals. Downloads are cached in `.cache/tram-map/`; use `--refresh` to fetch again. Set `NODE_USE_ENV_PROXY=1` behind a proxy. Re-run it when the network changes, and commit the JSON.
+
+## Local AI Chat Page
+
+The `/chat` page is a chat with [Gemma 3 270M](https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX), a small language model that runs in the visitor's browser with [Transformers.js](https://huggingface.co/docs/transformers.js) on WebGPU. There is no server: what is typed never leaves the device.
+
+- **Download on request.** Nothing is fetched until the visitor presses **Download model**. The browser then gets the model from Hugging Face, pinned to one revision (`MODEL_REVISION` in `src/app/chat/model.ts`): about 293 MB (`q4f16`) on GPUs with 16-bit floats (`shader-f16`), about 344 MB (`q4`) on the rest. The card shows the progress and the download can be cancelled.
+- **Storage and deletion.** Transformers.js keeps the files in Cache Storage (`transformers-cache`). The card reads that cache to say what is on the device and how much space it takes (`src/app/chat/model-storage.ts`); **Delete model** ends the worker and deletes the cache. On a later visit a stored model only needs **Start the model**.
+- **Worker.** The model runs in a Web Worker (`src/app/chat/chat.worker.ts`), so the page stays responsive, and the library (about 550 kB) loads only when the model is started. Ending the worker is what frees the model's memory: cancelling, deleting and leaving the page all do it. The page and the worker talk through the messages in `src/app/chat/protocol.ts`; `ChatEngine` (`src/app/chat/chat-engine.ts`) holds the state.
+- **Runtime files.** The ONNX Runtime WebAssembly files are copied from `node_modules/onnxruntime-web` to `/ort/` at build time (`assets` in `angular.json`) and served by this site, so Hugging Face is the only third party involved.
+- **Conversation.** Answers stream in word by word and can be stopped. The model is shown only the last few messages (`contextWindow()`), there is no system prompt, and the conversation lives in memory until the page is left.
+- **Requirements.** WebGPU: recent Chrome, Edge and Safari. Other browsers get a message instead of the download button. GitHub Pages can't send the headers multi-threaded WebAssembly needs, so there is no CPU fallback.
+- **Tests.** The e2e tests replace WebGPU and the worker with a stand-in (`e2e/chat-model.ts`) that speaks the same protocol and writes to the real Cache Storage, so they never download the model.
 
 ## ASCII Art Page
 
