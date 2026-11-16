@@ -9,6 +9,7 @@ import {
 } from '@huggingface/transformers';
 import { MODEL_ID, MODEL_REVISION } from './model';
 import type { ChatEvent, ChatRequest } from './protocol';
+import { RUNTIME_FILES, RUNTIME_PATH } from './runtime';
 
 // The model runs here, off the page's thread, so typing and scrolling stay smooth while it
 // thinks. Ending this worker is also how the page frees the model's memory.
@@ -16,16 +17,21 @@ import type { ChatEvent, ChatRequest } from './protocol';
 /** The longest answer, in tokens: a few paragraphs. */
 const MAX_NEW_TOKENS = 512;
 
-// The ONNX runtime is served by this site (see the `ort` assets in angular.json) instead of the
-// CDN the library would use, so the model's files are the only thing fetched from elsewhere.
-const runtime = new URL('/ort/', self.location.origin).href;
+// The ONNX runtime is served by this site (see `runtime.ts`) instead of the CDN the library
+// would use, so the model's files are the only thing fetched from elsewhere.
+const runtime = new URL(RUNTIME_PATH, self.location.origin).href;
 env.backends.onnx.wasm!.wasmPaths = {
-  mjs: `${runtime}ort-wasm-simd-threaded.asyncify.mjs`,
-  wasm: `${runtime}ort-wasm-simd-threaded.asyncify.wasm`,
+  mjs: `${runtime}${RUNTIME_FILES.mjs}`,
+  wasm: `${runtime}${RUNTIME_FILES.wasm}`,
 };
 // The browser's HTTP cache already keeps the runtime; the model's cache holds the model alone.
 env.useWasmCache = false;
 env.allowLocalModels = false;
+// The revision is fixed in the address of every file, not only passed as the `revision` option:
+// before it loads anything the library looks its files up without that option, under `main`.
+// Those lookups miss the stored files, so a model that is on the device would still need
+// Hugging Face to start, and would fail to without a connection.
+env.remotePathTemplate = `{model}/resolve/${MODEL_REVISION}/`;
 
 const send = (event: ChatEvent) => self.postMessage(event);
 const reason = (error: unknown) => (error instanceof Error ? error.message : String(error));

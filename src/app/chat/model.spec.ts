@@ -33,6 +33,16 @@ describe('chat model', () => {
     expect(shown).toHaveLength(7);
   });
 
+  it('leaves out a question that got no answer, so the two sides take turns', () => {
+    const messages = [user('hi'), gemma('hello'), user('unanswered'), user('still unanswered')];
+
+    expect(contextWindow([...messages, user('how are you?')])).toEqual([
+      user('hi'),
+      gemma('hello'),
+      user('how are you?'),
+    ]);
+  });
+
   it('drops old messages that are too long, but never the newest', () => {
     const long = 'x'.repeat(3000);
 

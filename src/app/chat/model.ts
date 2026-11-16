@@ -58,14 +58,18 @@ const CONTEXT_MAX_CHARS = 4000;
 /**
  * The end of the conversation that fits the budget, starting from a user message as the
  * model's chat format expects. The newest message is always kept.
+ *
+ * The format also refuses two messages in a row from the same side, so a question that got no
+ * answer (it was stopped, or failed, before its first word) is left out.
  */
 export function contextWindow(messages: readonly ChatMessage[]): ChatMessage[] {
+  const turns = messages.filter(({ role }, i) => role !== messages[i + 1]?.role);
   const kept: ChatMessage[] = [];
   let chars = 0;
-  for (let i = messages.length - 1; i >= 0 && kept.length < CONTEXT_MAX_MESSAGES; i--) {
-    chars += messages[i].content.length;
+  for (let i = turns.length - 1; i >= 0 && kept.length < CONTEXT_MAX_MESSAGES; i--) {
+    chars += turns[i].content.length;
     if (kept.length && chars > CONTEXT_MAX_CHARS) break;
-    kept.unshift(messages[i]);
+    kept.unshift(turns[i]);
   }
   while (kept.length > 1 && kept[0].role !== 'user') kept.shift();
   return kept;

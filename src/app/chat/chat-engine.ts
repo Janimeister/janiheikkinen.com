@@ -1,7 +1,13 @@
 import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, InjectionToken, signal } from '@angular/core';
 import { contextWindow, pickVariant, type ChatMessage, type ModelVariant } from './model';
-import { deleteModel, inspectModel, type ModelCaches, type StoredModel } from './model-storage';
+import {
+  deleteModel,
+  deleteOutdated,
+  inspectModel,
+  type ModelCaches,
+  type StoredModel,
+} from './model-storage';
 import type { ChatEvent, ChatRequest } from './protocol';
 
 /** The worker as the engine uses it; tests hand in a stand-in. */
@@ -41,9 +47,9 @@ export class ChatEngine {
   private readonly window = inject(DOCUMENT).defaultView;
   private readonly startWorker = inject(CHAT_WORKER);
   private worker: ChatWorker | null = null;
-  /** Which variant this device's GPU runs. */
-  private preferred: ModelVariant | null = null;
 
+  /** Which variant this device's GPU runs. */
+  private readonly _preferred = signal<ModelVariant | null>(null);
   private readonly _phase = signal<ModelPhase>('checking');
   private readonly _stored = signal<StoredModel | null>(null);
   private readonly _progress = signal<{ loaded: number; total: number } | null>(null);
@@ -64,7 +70,7 @@ export class ChatEngine {
   readonly deleting = this._deleting.asReadonly();
 
   /** The variant in use: the one stored here, else the one this device should download. */
-  readonly variant = computed(() => this._stored()?.variant ?? this.preferred);
+  readonly variant = computed(() => this._stored()?.variant ?? this._preferred());
   /** The weights are on the device, so loading needs no download. */
   readonly downloaded = computed(() => !!this._stored()?.variant);
 
@@ -85,7 +91,12 @@ export class ChatEngine {
       this._phase.set('unsupported');
       return;
     }
-    this.preferred = pickVariant(adapter.features);
+    this._preferred.set(pickVariant(adapter.features));
+    try {
+      await deleteOutdated(this.caches);
+    } catch {
+      // They stay, and are counted in what the card says is stored, until the model is deleted.
+    }
     await this.refreshStored();
     this._phase.set('idle');
   }
@@ -163,9 +174,7 @@ export class ChatEngine {
         this._progress.set({ loaded: event.loaded, total: event.total });
         break;
       case 'ready':
-        this._progress.set(null);
-        this._phase.set('ready');
-        void this.refreshStored();
+        void this.becomeReady();
         break;
       case 'token':
         this.appendToAnswer(event.text);
@@ -179,6 +188,16 @@ export class ChatEngine {
     }
   }
 
+  /** Looks at the device before saying the model runs, so the card never shows a guess. */
+  private async becomeReady(): Promise<void> {
+    const worker = this.worker;
+    await this.refreshStored();
+    // Cancelled while looking.
+    if (!worker || this.worker !== worker || this._phase() !== 'loading') return;
+    this._progress.set(null);
+    this._phase.set('ready');
+  }
+
   private appendToAnswer(text: string): void {
     this._messages.update((messages) => {
       const answer = messages.at(-1);
@@ -188,7 +207,10 @@ export class ChatEngine {
     });
   }
 
-  /** An answer that never got a word is dropped, so the model isn't shown its own silence. */
+  /**
+   * An answer that never got a word is dropped, so the model isn't shown its own silence. Its
+   * question stays in the conversation; `contextWindow()` leaves it out of what the model sees.
+   */
   private finishAnswer(): void {
     this._generating.set(false);
     this._messages.update((messages) => {
@@ -199,13 +221,13 @@ export class ChatEngine {
     });
   }
 
+  /**
+   * A model that failed to start, or a worker that died, is gone. One that failed in the middle
+   * of an answer (its GPU was taken away, memory ran out) would most likely fail the next one
+   * too, with no way to start it again. Either way: end it and start over from idle.
+   */
   private fail(stage: 'load' | 'generate'): void {
     this._failure.set(stage);
-    if (stage === 'generate' && this._phase() === 'ready') {
-      this.finishAnswer();
-      return;
-    }
-    // A model that failed to start, or a worker that died, is gone; start over from idle.
     this.unload();
     void this.refreshStored();
   }

@@ -26,6 +26,7 @@ export class FakeCaches implements ModelCaches {
     return {
       keys: async () => [...store.keys()].map((url) => ({ url }) as Request),
       match: async (request: Request) => store.get(request.url)?.clone(),
+      delete: async (request: Request) => store.delete(request.url),
     } as unknown as Cache;
   }
 

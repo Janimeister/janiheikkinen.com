@@ -27,7 +27,8 @@ export const CHAT_FI = {
   'chat.deleted': 'Malli on poistettu tältä laitteelta.',
   'chat.errorLoad':
     'Mallia ei voitu käynnistää. Lataus on voinut keskeytyä, tai laitteen muisti ei ehkä riitä mallille.',
-  'chat.errorGenerate': 'Malli pysähtyi ennen kuin vastaus valmistui.',
+  'chat.errorGenerate':
+    'Malli pysähtyi ennen kuin vastaus valmistui. Käynnistä se uudelleen, niin voit jatkaa keskustelua.',
   'chat.errorDelete':
     'Mallia ei voitu poistaa. Se poistuu myös, kun tyhjennät tämän sivuston tiedot selaimen asetuksista.',
   'chat.conversationHeading': 'Keskustelu',

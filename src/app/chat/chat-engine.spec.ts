@@ -72,9 +72,12 @@ describe('ChatEngine', () => {
     const worker = workers.at(-1)!;
     caches.put(MODEL_CACHE, WEIGHTS, 500);
     worker.say({ type: 'ready' });
-    await Promise.resolve();
+    await expect.poll(() => engine.phase()).toBe('ready');
     return worker;
   }
+
+  const asked = (worker: FakeWorker) =>
+    worker.requests.filter((request) => request.type === 'generate');
 
   it('cannot run without WebGPU', async () => {
     setGpu(null);
@@ -115,6 +118,26 @@ describe('ChatEngine', () => {
     expect(engine.variant()?.dtype).toBe('q4');
   });
 
+  it('knows the variant once the GPU is known, even if it was asked before', async () => {
+    setGpu(['shader-f16']);
+    expect(engine.variant()).toBeNull();
+
+    await engine.init();
+
+    expect(engine.variant()?.dtype).toBe('q4f16');
+  });
+
+  it('removes the files of a revision the site no longer runs, and asks to download again', async () => {
+    const old = WEIGHTS.replace(MODEL_REVISION, 'an-older-revision');
+    caches.put(MODEL_CACHE, old, 500);
+
+    await engine.init();
+
+    expect(engine.stored()).toBeNull();
+    expect(engine.downloaded()).toBe(false);
+    expect(caches.stores.get(MODEL_CACHE)?.has(old)).toBe(false);
+  });
+
   it('reports the download and becomes ready', async () => {
     await engine.init();
     engine.load();
@@ -125,11 +148,26 @@ describe('ChatEngine', () => {
 
     caches.put(MODEL_CACHE, WEIGHTS, 500);
     workers[0].say({ type: 'ready' });
-    await Promise.resolve();
+    // Still loading while it looks at what was stored: the card must not say "ready" and guess.
+    expect(engine.phase()).toBe('loading');
+    await expect.poll(() => engine.phase()).toBe('ready');
 
-    expect(engine.phase()).toBe('ready');
     expect(engine.progress()).toBeNull();
-    await expect.poll(() => engine.stored()?.bytes).toBe(500);
+    expect(engine.stored()?.bytes).toBe(500);
+    expect(engine.downloaded()).toBe(true);
+  });
+
+  it('stays cancelled when the download is cancelled just as it finishes', async () => {
+    await engine.init();
+    engine.load();
+    caches.put(MODEL_CACHE, WEIGHTS, 500);
+
+    workers[0].say({ type: 'ready' });
+    await engine.cancel();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(engine.phase()).toBe('idle');
+    expect(workers[0].terminated).toBe(true);
   });
 
   it('cancels a download by ending the worker', async () => {
@@ -189,14 +227,13 @@ describe('ChatEngine', () => {
 
   it('ignores empty messages and messages sent while it is answering', async () => {
     const worker = await start();
-    const asked = () => worker.requests.filter((request) => request.type === 'generate').length;
 
     engine.send('   ');
-    expect(asked()).toBe(0);
+    expect(asked(worker)).toHaveLength(0);
 
     engine.send('One');
     engine.send('Two');
-    expect(asked()).toBe(1);
+    expect(asked(worker)).toHaveLength(1);
   });
 
   it('stops an answer and keeps what was written', async () => {
@@ -212,14 +249,59 @@ describe('ChatEngine', () => {
     expect(engine.generating()).toBe(false);
   });
 
-  it('drops an answer that failed before its first word, and stays ready', async () => {
+  it('keeps a question whose answer was stopped before its first word, but not for the model', async () => {
+    const worker = await start();
+    engine.send('Hello');
+    engine.stop();
+    worker.say({ type: 'done' });
+    expect(engine.messages()).toEqual([{ role: 'user', content: 'Hello' }]);
+
+    engine.send('Are you there?');
+
+    // Two questions in a row would be refused by the model's chat format.
+    expect(asked(worker).at(-1)).toEqual({
+      type: 'generate',
+      messages: [{ role: 'user', content: 'Are you there?' }],
+    });
+    expect(engine.messages().map(({ content }) => content)).toEqual([
+      'Hello',
+      'Are you there?',
+      '',
+    ]);
+  });
+
+  it('ends a model that fails in the middle of an answer, to be started again', async () => {
+    const worker = await start();
+    engine.send('Hello');
+    worker.say({ type: 'token', text: 'Hi' });
+
+    worker.say({ type: 'error', stage: 'generate', message: 'Device lost' });
+
+    expect(engine.failure()).toBe('generate');
+    expect(engine.phase()).toBe('idle');
+    expect(engine.generating()).toBe(false);
+    expect(worker.terminated).toBe(true);
+    expect(engine.messages().at(-1)).toEqual({ role: 'assistant', content: 'Hi' });
+
+    // The conversation goes on with the model that is started next.
+    engine.load();
+    expect(engine.failure()).toBeNull();
+    workers.at(-1)!.say({ type: 'ready' });
+    await expect.poll(() => engine.phase()).toBe('ready');
+    engine.send('And now?');
+    expect(asked(workers.at(-1)!)[0]).toEqual({
+      type: 'generate',
+      messages: [...engine.messages().slice(0, 3)],
+    });
+  });
+
+  it('drops an answer that failed before its first word', async () => {
     const worker = await start();
     engine.send('Hello');
 
     worker.say({ type: 'error', stage: 'generate', message: 'Device lost' });
 
     expect(engine.failure()).toBe('generate');
-    expect(engine.phase()).toBe('ready');
     expect(engine.messages()).toEqual([{ role: 'user', content: 'Hello' }]);
   });
 

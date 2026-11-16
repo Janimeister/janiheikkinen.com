@@ -2,9 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { LanguageService } from '../../i18n/language.service';
 import { ChatEngine } from '../chat-engine';
 import { megabytes } from '../model';
-
-const BUTTON =
-  'px-4 py-2 text-sm font-bold border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+import { CHAT_BUTTON_CLASS } from './chat-styles';
 
 /**
  * The model's card: what it is, the button that downloads or starts it, the progress of that,
@@ -36,10 +34,12 @@ const BUTTON =
         @case ('loading') {
           <p class="text-sm font-semibold" id="chat-progress-label">
             {{ i18n.t(engine.downloaded() ? 'chat.starting' : 'chat.downloading') }}…
+            <!--
+              Hidden from screen readers: in this live region every megabyte would be read out.
+              They get the same figures from the progress bar's value.
+            -->
             @if (progress(); as progress) {
-              <span class="font-mono font-normal">{{
-                i18n.t('chat.progress', { loaded: progress.loaded, total: progress.total })
-              }}</span>
+              <span class="font-mono font-normal" aria-hidden="true">{{ progress.text }}</span>
             }
           </p>
           <div
@@ -49,6 +49,7 @@ const BUTTON =
             aria-valuemin="0"
             aria-valuemax="100"
             [attr.aria-valuenow]="progress()?.percent ?? null"
+            [attr.aria-valuetext]="progress()?.text ?? null"
           >
             <div class="h-full bg-pop-lime" [style.width.%]="progress()?.percent ?? 0"></div>
           </div>
@@ -115,7 +116,7 @@ const BUTTON =
 export class ModelPanelComponent {
   protected readonly i18n = inject(LanguageService);
   protected readonly engine = inject(ChatEngine);
-  protected readonly button = BUTTON;
+  protected readonly button = CHAT_BUTTON_CLASS;
 
   /** The model was deleted here, so the card can say so once it is gone. */
   protected readonly deleted = signal(false);
@@ -132,8 +133,10 @@ export class ModelPanelComponent {
     const progress = this.engine.progress();
     if (!progress?.total) return null;
     return {
-      loaded: megabytes(progress.loaded),
-      total: megabytes(progress.total),
+      text: this.i18n.t('chat.progress', {
+        loaded: megabytes(progress.loaded),
+        total: megabytes(progress.total),
+      }),
       percent: Math.min(100, Math.round((progress.loaded / progress.total) * 100)),
     };
   });

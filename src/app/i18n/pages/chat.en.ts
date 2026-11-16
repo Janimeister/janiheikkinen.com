@@ -25,7 +25,8 @@ export const CHAT_EN = {
   'chat.deleted': 'The model has been deleted from this device.',
   'chat.errorLoad':
     'The model could not be started. The download may have been interrupted, or this device may not have enough memory for it.',
-  'chat.errorGenerate': 'The model stopped before it finished its answer.',
+  'chat.errorGenerate':
+    'The model stopped before it finished its answer. Start it again to go on with the conversation.',
   'chat.errorDelete':
     "The model could not be deleted. Clearing this site's data in your browser's settings removes it too.",
   'chat.conversationHeading': 'Conversation',

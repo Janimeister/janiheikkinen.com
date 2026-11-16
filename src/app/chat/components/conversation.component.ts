@@ -1,10 +1,16 @@
-import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+  afterRenderEffect,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { LanguageService } from '../../i18n/language.service';
 import { ChatEngine } from '../chat-engine';
 import { MESSAGE_MAX_LENGTH } from '../model';
-
-const BUTTON =
-  'px-4 py-2 text-sm font-bold border-2 border-ink text-ink shadow-brutal-sm brutal-hover brutal-press transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+import { CHAT_BUTTON_CLASS } from './chat-styles';
 
 /** The conversation: what has been said, and the field for saying more. */
 @Component({
@@ -126,7 +132,7 @@ const BUTTON =
 export class ConversationComponent {
   protected readonly i18n = inject(LanguageService);
   protected readonly engine = inject(ChatEngine);
-  protected readonly button = BUTTON;
+  protected readonly button = CHAT_BUTTON_CLASS;
   protected readonly maxLength = MESSAGE_MAX_LENGTH;
 
   private readonly log = viewChild<ElementRef<HTMLElement>>('log');
@@ -143,8 +149,8 @@ export class ConversationComponent {
   });
 
   constructor() {
-    // Follow the answer as it grows.
-    effect(() => {
+    // Follow the answer as it grows. After rendering: the log's height is only then the new one.
+    afterRenderEffect(() => {
       this.engine.messages();
       const log = this.log()?.nativeElement;
       if (log) log.scrollTop = log.scrollHeight;

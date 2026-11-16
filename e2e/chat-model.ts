@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { MODEL_CACHE, MODEL_ID, MODEL_REVISION } from '../src/app/chat/model';
 
 /** What the stand-in model does. */
 export interface ChatModelOptions {
@@ -13,6 +14,10 @@ export interface ChatModelOptions {
   failLoad?: boolean;
   /** Holds each answer after its first word until the page asks it to stop. */
   holdAnswer?: boolean;
+  /** The model breaks down after the first word of its first answer; started again, it works. */
+  failAnswer?: boolean;
+  /** The first answer ends before its first word, as one that is stopped at once does. */
+  emptyAnswer?: boolean;
 }
 
 /** The answer the stand-in gives to everything. */
@@ -29,13 +34,15 @@ const MODEL_BYTES = 343_502_950;
  */
 export async function mockChatModel(page: Page, options: ChatModelOptions = {}): Promise<void> {
   await page.addInitScript(
-    ({ options, answer, bytes }) => {
-      const weights =
-        'https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/test/onnx/model_q4.onnx_data';
-      const state = window as unknown as { releaseDownload?: () => void };
+    ({ options, answer, bytes, weights, cacheName }) => {
+      const state = window as unknown as {
+        releaseDownload?: () => void;
+        failed?: boolean;
+        emptied?: boolean;
+      };
 
       const store = async () => {
-        const cache = await caches.open('transformers-cache');
+        const cache = await caches.open(cacheName);
         await cache.put(
           weights,
           new Response('weights', { headers: { 'content-length': String(bytes) } }),
@@ -64,9 +71,9 @@ export async function mockChatModel(page: Page, options: ChatModelOptions = {}):
           if (!this.ended) this.onmessage?.({ data });
         }
 
-        postMessage(request: { type: string }): void {
+        postMessage(request: { type: string; messages?: { role: string }[] }): void {
           if (request.type === 'load') void this.load();
-          else if (request.type === 'generate') void this.generate();
+          else if (request.type === 'generate') void this.generate(request.messages ?? []);
           else this.stopAnswer?.();
         }
 
@@ -89,9 +96,24 @@ export async function mockChatModel(page: Page, options: ChatModelOptions = {}):
           this.say({ type: 'ready' });
         }
 
-        private async generate(): Promise<void> {
+        private async generate(messages: { role: string }[]): Promise<void> {
+          // Like the real model's chat format: the two sides must take turns.
+          if (messages.some(({ role }, i) => role === messages[i + 1]?.role)) {
+            this.say({ type: 'error', stage: 'generate', message: 'Roles must alternate' });
+            return;
+          }
+          if (options.emptyAnswer && !state.emptied) {
+            state.emptied = true;
+            this.say({ type: 'done' });
+            return;
+          }
           const [first, ...rest] = answer.split(/(?= )/);
           this.say({ type: 'token', text: first });
+          if (options.failAnswer && !state.failed) {
+            state.failed = true;
+            this.say({ type: 'error', stage: 'generate', message: 'Device lost' });
+            return;
+          }
           if (options.holdAnswer) {
             await new Promise<void>((resolve) => (this.stopAnswer = resolve));
           } else {
@@ -103,7 +125,14 @@ export async function mockChatModel(page: Page, options: ChatModelOptions = {}):
 
       (window as unknown as { Worker: unknown }).Worker = FakeModelWorker;
     },
-    { options, answer: ANSWER, bytes: MODEL_BYTES },
+    {
+      options,
+      answer: ANSWER,
+      bytes: MODEL_BYTES,
+      // Where the model's library keeps the weights of the revision the site runs.
+      weights: `https://huggingface.co/${MODEL_ID}/resolve/${MODEL_REVISION}/onnx/model_q4.onnx_data`,
+      cacheName: MODEL_CACHE,
+    },
   );
 }
 
