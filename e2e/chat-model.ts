@@ -2,6 +2,11 @@ import type { Page } from '@playwright/test';
 
 /** What the stand-in model does. */
 export interface ChatModelOptions {
+  /**
+   * The model is already on the device, as on a later visit. Reloading can't show that:
+   * WebKit's throwaway test profile empties Cache Storage on every page load.
+   */
+  stored?: boolean;
   /** Holds the download at a quarter until the test lets it go on (see `finishDownload`). */
   holdDownload?: boolean;
   /** The model fails to start. */
@@ -29,9 +34,24 @@ export async function mockChatModel(page: Page, options: ChatModelOptions = {}):
         'https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/test/onnx/model_q4.onnx_data';
       const state = window as unknown as { releaseDownload?: () => void };
 
+      const store = async () => {
+        const cache = await caches.open('transformers-cache');
+        await cache.put(
+          weights,
+          new Response('weights', { headers: { 'content-length': String(bytes) } }),
+        );
+      };
+      const seeded = options.stored ? store() : Promise.resolve();
+
       Object.defineProperty(navigator, 'gpu', {
         configurable: true,
-        value: { requestAdapter: async () => ({ features: new Set<string>() }) },
+        value: {
+          // The page asks for the GPU before it looks at what is stored, so it sees the seed.
+          requestAdapter: async () => {
+            await seeded;
+            return { features: new Set<string>() };
+          },
+        },
       });
 
       class FakeModelWorker {
@@ -64,11 +84,7 @@ export async function mockChatModel(page: Page, options: ChatModelOptions = {}):
             return;
           }
           if (this.ended) return;
-          const cache = await caches.open('transformers-cache');
-          await cache.put(
-            weights,
-            new Response('weights', { headers: { 'content-length': String(bytes) } }),
-          );
+          await store();
           this.say({ type: 'progress', loaded: bytes, total: bytes });
           this.say({ type: 'ready' });
         }

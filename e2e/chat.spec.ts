@@ -105,14 +105,10 @@ test.describe('Chat Page', () => {
     await expect(page.getByTestId('chat-messages').locator('li').nth(1)).toHaveText(/The$/);
   });
 
-  test('keeps the model for the next visit and deletes it on request', async ({ page }) => {
-    await mockChatModel(page);
+  test('offers a stored model on a later visit and deletes it on request', async ({ page }) => {
+    await mockChatModel(page, { stored: true });
     await page.goto('/chat');
-    await page.getByTestId('chat-load').click();
-    await expect(page.getByTestId('chat-input')).toBeEnabled();
-    expect(await cacheNames(page)).toEqual(['transformers-cache']);
 
-    await page.reload();
     await expect(page.getByTestId('chat-model-status')).toContainText(
       'The model is on this device and takes 344 MB.',
     );
@@ -134,6 +130,7 @@ test.describe('Chat Page', () => {
     await page.goto('/chat');
     await page.getByTestId('chat-load').click();
     await expect(page.getByTestId('chat-input')).toBeEnabled();
+    expect(await cacheNames(page)).toEqual(['transformers-cache']);
 
     await page.getByTestId('chat-delete').click();
 
