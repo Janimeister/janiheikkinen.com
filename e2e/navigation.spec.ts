@@ -12,6 +12,7 @@ const NAV_ROUTES = [
   { label: 'Departures', path: '/departures', heading: 'Departures' },
   { label: 'GitHub', path: '/github', heading: 'GitHub Profile' },
   { label: 'ASCII', path: '/ascii', heading: 'ASCII Art' },
+  { label: 'Local AI Chat', path: '/chat', heading: 'Local AI Chat' },
   { label: 'Snake', path: '/snake', heading: 'Snake Game' },
   { label: 'Pet', path: '/pet', heading: 'Virtual Pet' },
 ] as const;
@@ -175,7 +176,7 @@ test.describe('Explore navigation', () => {
   test('homepage cards expose all destinations and use normal links', async ({ page }) => {
     await page.goto('/');
     const directory = page.locator('app-home app-page-directory');
-    await expect(directory.getByRole('link')).toHaveCount(12);
+    await expect(directory.getByRole('link')).toHaveCount(13);
     await expect(directory.getByRole('heading', { level: 3 })).toHaveText([
       'Everyday',
       'Experiments',

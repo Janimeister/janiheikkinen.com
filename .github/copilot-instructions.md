@@ -8,7 +8,7 @@ This is **janiheikkinen.com** — a personal portfolio/dashboard site built with
 ### Architecture
 
 - **Root shell** (`app.ts`): Navbar + `<router-outlet>` + Footer. Uses inline template/styles.
-- **Pages** (`src/app/pages/`): Routed page components, one per entry in `src/app/navigation/page-registry.ts`. Large pages keep their parts beside their logic (`src/app/trams/components/`, `src/app/departures/components/`).
+- **Pages** (`src/app/pages/`): Routed page components, one per entry in `src/app/navigation/page-registry.ts`. Large pages keep their parts beside their logic (`src/app/trams/components/`, `src/app/departures/components/`, `src/app/chat/components/`).
 - **Shared components** (`src/app/components/shared/`): `PageHeaderComponent`, `GlowCardComponent`, `FloatingOrbComponent`.
 - **Hero components** (`src/app/components/hero/`): `HeroComponent`, `TypingEffectComponent`.
 - **Layout components**: `NavbarComponent`, `FooterComponent`.
@@ -38,6 +38,7 @@ Every page is prerendered to static HTML at build time (`@angular/ssr`, `outputM
 - Departures: Digitransit routing API (GraphQL, needs a subscription key; proxied via `proxy.conf.mjs` in dev and `workers/digitransit-proxy` in production)
 - GitHub: GitHub REST API (rate-limited to 60 req/hr for unauthenticated)
 - Cat Facts: catfact.ninja
+- Chat: no API. A Gemma model runs in the browser with Transformers.js in a Web Worker (`src/app/chat/`); its files come from Hugging Face only when the visitor downloads them
 
 ### Testing
 

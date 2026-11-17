@@ -63,7 +63,14 @@ describe('CookieNoticeComponent', () => {
     expect(aside).toBeTruthy();
     const title = aside.querySelector(`#${aside.getAttribute('aria-labelledby')}`);
     expect(title?.textContent).toContain('Privacy note');
-    for (const service of ['Open-Meteo', 'Cloudflare', 'GitHub', 'catfact.ninja', 'HSL']) {
+    for (const service of [
+      'Open-Meteo',
+      'Cloudflare',
+      'GitHub',
+      'catfact.ninja',
+      'HSL',
+      'Hugging Face',
+    ]) {
       expect(aside.textContent).toContain(service);
     }
     expect(aside.textContent).toContain('tram map view');

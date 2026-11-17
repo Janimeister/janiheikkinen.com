@@ -90,7 +90,7 @@ Fonts are self-hosted from the [Fontsource](https://fontsource.org) packages lis
 | `.sticker` | Small rotated mono label: pop-yellow fill, ink border, small shadow |
 
 ### Page marker color assignments
-home: yellow · weather: sky · electricity: orange · trams: lime · departures: pink · github: pink · ascii: lime · snake: lime · pet: orange · sorting: sky · searching: pink · pathfinding: lime · notices: yellow. A page sets its color with the `marker` input of `app-page-header` (§6). New pages pick the pop color that fits their topic; reuse is fine.
+home: yellow · weather: sky · electricity: orange · trams: lime · departures: pink · github: pink · ascii: lime · chat: orange · snake: lime · pet: orange · sorting: sky · searching: pink · pathfinding: lime · notices: yellow. A page sets its color with the `marker` input of `app-page-header` (§6). New pages pick the pop color that fits their topic; reuse is fine.
 
 ## 6. Components
 

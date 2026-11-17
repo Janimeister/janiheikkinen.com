@@ -7,6 +7,8 @@ const root = resolve(process.argv[2]);
 const types = {
   '.html': 'text/html',
   '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.wasm': 'application/wasm',
   '.css': 'text/css',
   '.json': 'application/json',
   '.svg': 'image/svg+xml',

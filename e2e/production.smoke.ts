@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { RUNTIME_FILES, RUNTIME_PATH } from '../src/app/chat/runtime';
 
 for (const route of [
   { path: '/', status: 200, selector: 'app-hero h1', text: 'Jani Heikkinen' },
@@ -96,5 +97,19 @@ test('pages are written without live data, which loads in the browser', async ({
     const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
     expect(main, path).toContain('animate-pulse');
     expect(main, path).not.toContain('text-red-400');
+  }
+});
+
+// The chat's model runs on these. They are copied out of a dependency of a dependency, and a
+// copy that matches nothing doesn't fail the build: the chat would only break for visitors.
+test("the chat model's runtime ships with the build", async ({ request }) => {
+  for (const [file, type] of [
+    [RUNTIME_FILES.mjs, 'text/javascript'],
+    [RUNTIME_FILES.wasm, 'application/wasm'],
+  ]) {
+    const response = await request.get(RUNTIME_PATH + file);
+    expect(response.status(), file).toBe(200);
+    expect(response.headers()['content-type'], file).toContain(type);
+    expect((await response.body()).byteLength, file).toBeGreaterThan(10_000);
   }
 });

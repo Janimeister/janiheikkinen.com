@@ -78,7 +78,7 @@ describe('NavbarComponent', () => {
     component.open();
     fixture.detectChanges();
     expect(search.value).toBe('');
-    expect(element.querySelectorAll('dialog a')).toHaveLength(12);
+    expect(element.querySelectorAll('dialog a')).toHaveLength(13);
   });
 
   it('reacts to language changes in labels, groups, and search', async () => {
@@ -154,7 +154,7 @@ describe('NavbarComponent', () => {
     await router.navigateByUrl('/ascii');
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     component.surprise();
-    expect(['/sorting', '/searching', '/pathfinding', '/snake', '/pet']).toContain(
+    expect(['/sorting', '/searching', '/pathfinding', '/chat', '/snake', '/pet']).toContain(
       navigate.mock.calls[0][0],
     );
   });

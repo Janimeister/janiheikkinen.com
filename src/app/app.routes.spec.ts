@@ -10,6 +10,7 @@ const EXPECTED_ROUTES = [
   'departures',
   'github',
   'ascii',
+  'chat',
   'snake',
   'pet',
   'sorting',

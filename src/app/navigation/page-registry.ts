@@ -134,6 +134,16 @@ export const SITE_PAGES: readonly SitePage[] = [
     loadComponent: () => import('../pages/ascii.component').then((m) => m.AsciiArtPageComponent),
   },
   {
+    path: 'chat',
+    titleKey: 'chat.title',
+    metaKey: 'meta.chat',
+    labelKey: 'chat.title',
+    descriptionKey: 'explore.chatDescription',
+    keywordsKey: 'explore.chatKeywords',
+    group: 'experiments',
+    loadComponent: () => import('../pages/chat.component').then((m) => m.ChatPageComponent),
+  },
+  {
     path: 'snake',
     titleKey: 'snake.title',
     metaKey: 'meta.snake',
